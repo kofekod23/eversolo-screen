@@ -607,6 +607,7 @@
       const step = wrapEl.clientHeight * 0.6;
       const off = Math.min((p.scroll || 0) * step, max);
       txt.style.transform = `translateY(${-off}px)`;
+      const overflow = max > 4;
       $("p_hint").style.display = "block";
       $("p_fade").style.opacity = overflow && off < max ? "1" : "0";
       $("p_rail").style.opacity = overflow ? "1" : "0";
@@ -636,7 +637,7 @@
     }
     $("transport").classList.toggle("islive", !!s.live);
 
-    renderPanel(s);
+    try { renderPanel(s); } catch (e) { console.error('volet:', e); }
 
     if (s.model) $("model").textContent = s.model;
     $("title").textContent = s.title;

@@ -1048,8 +1048,23 @@ def api_ir_status():
     if not logged_in():
         return jsonify({"error": "unauthorized"}), 401
     rx, tx = lirc_devices()
-    kernel_rx = bool(glob.glob("/sys/class/rc/rc*"))
-    return jsonify({"rx": bool(rx) or kernel_rx, "tx": bool(tx)})
+    # Un peripherique /dev/lirc* n'existe que si l'overlay gpio-ir est actif:
+    # c'est la seule preuve fiable que le recepteur est en place.
+    lirc_present = bool(glob.glob("/dev/lirc*"))
+    overlay = False
+    for cfg in ("/boot/firmware/config.txt", "/boot/config.txt"):
+        try:
+            with open(cfg, encoding="utf-8", errors="ignore") as f:
+                if any(l.strip().startswith("dtoverlay=gpio-ir") for l in f):
+                    overlay = True
+                    break
+        except OSError:
+            continue
+    return jsonify({
+        "rx": bool(rx) or (lirc_present and overlay),
+        "tx": bool(tx),
+        "overlay": overlay,
+    })
 
 
 @app.route("/api/detect")

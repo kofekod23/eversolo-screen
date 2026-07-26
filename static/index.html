@@ -247,38 +247,75 @@
   .paused .tip { background: var(--muted); box-shadow: none; }
 
 
-  /* Panneau infos artiste */
+  /* Volet infos artiste */
+  #dimmer {
+    position: fixed; inset: 0; z-index: 2;
+    background: rgba(8, 7, 5, 0.55);
+    opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+  }
+  #dimmer.on { opacity: 1; }
   #panel {
-    position: fixed;
-    right: clamp(24px, 5vw, 72px);
-    bottom: clamp(60px, 12vh, 120px);
-    width: min(420px, 80vw);
-    background: rgba(22, 19, 14, 0.96);
-    border: 1px solid var(--line);
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 3;
+    width: min(40vw, 580px); min-width: 340px;
+    background: #14110d;
     border-left: 2px solid var(--tube);
-    border-radius: 8px;
-    padding: 20px 22px;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
-    z-index: 3;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    pointer-events: none;
+    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.6);
+    transform: translateX(106%);
+    transition: transform 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
+    display: flex; flex-direction: column;
+    padding: clamp(20px, 4vh, 40px) clamp(20px, 2.5vw, 40px);
   }
-  #panel.on { opacity: 1; transform: none; }
-  #panel .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-  #panel img {
-    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
-    background: var(--chassis); display: none;
+  #panel.on { transform: none; }
+  #p_img {
+    width: 100%; height: clamp(120px, 24vh, 220px);
+    object-fit: cover; border-radius: 6px; display: none;
+    background: var(--chassis);
   }
-  #panel .pname { font-family: "Fraunces", Georgia, serif; font-weight: 560; font-size: 20px; }
+  #panel .pname {
+    font-family: "Fraunces", Georgia, serif; font-weight: 560;
+    font-size: clamp(24px, 4.6vh, 44px); margin-top: clamp(10px, 2vh, 18px);
+  }
+  #panel .pfacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  #panel .pfacts span {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(11px, 1.7vh, 15px); letter-spacing: 0.06em;
+    color: #b8b1a0; border: 1px solid var(--line); border-radius: 4px;
+    padding: 5px 10px;
+  }
+  #panel .pwrap { position: relative; flex: 1; overflow: hidden; margin-top: clamp(12px, 2.2vh, 20px); }
   #panel .ptext {
-    font-size: 13.5px; line-height: 1.55; color: var(--ivory); opacity: 0.9;
-    display: -webkit-box; -webkit-line-clamp: 9; -webkit-box-orient: vertical; overflow: hidden;
+    font-size: clamp(15px, 2.5vh, 23px); line-height: 1.55;
+    color: #ded8c8; transition: transform 0.35s ease;
+    padding-right: 18px;
+  }
+  #panel .pfade {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
+    background: linear-gradient(transparent, #14110d);
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+  }
+  #panel .prail {
+    position: absolute; top: 0; bottom: 0; right: 2px; width: 4px;
+    background: var(--line); border-radius: 2px; opacity: 0; transition: opacity 0.3s;
+  }
+  #panel .pthumb {
+    position: absolute; right: 0; width: 4px; height: 25%;
+    background: var(--tube); border-radius: 2px;
+    box-shadow: 0 0 8px rgba(232, 163, 61, 0.5);
+    transition: top 0.35s ease;
+  }
+  #panel .phint {
+    margin-top: clamp(10px, 2vh, 16px);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 10px 14px; text-align: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(10px, 1.5vh, 13px); letter-spacing: 0.06em;
+    color: #c8a25a; background: rgba(16, 13, 9, 0.8);
+    display: none;
   }
   #panel .psrc {
-    margin-top: 12px; font-family: "IBM Plex Mono", monospace;
-    font-size: 10px; letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase;
+    margin-top: 10px; font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(9px, 1.3vh, 11px); letter-spacing: 0.12em;
+    color: var(--faint); text-transform: uppercase;
   }
 
   /* Écran d'attente */
@@ -359,9 +396,17 @@
     </footer>
   </main>
 
+  <div id="dimmer"></div>
   <div id="panel">
-    <div class="phead"><img id="p_img" alt=""><div class="pname" id="p_name"></div></div>
-    <div class="ptext" id="p_text"></div>
+    <img id="p_img" alt="">
+    <div class="pname" id="p_name"></div>
+    <div class="pfacts" id="p_facts"></div>
+    <div class="pwrap" id="p_wrap">
+      <div class="ptext" id="p_text"></div>
+      <div class="pfade" id="p_fade"></div>
+      <div class="prail" id="p_rail"><div class="pthumb" id="p_thumb"></div></div>
+    </div>
+    <div class="phint" id="p_hint"></div>
     <div class="psrc" id="p_src"></div>
   </div>
 
@@ -374,10 +419,10 @@
 <script>
   const $ = id => document.getElementById(id);
   const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct" },
-    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live" },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo" },
-    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live" }
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hint: "VOL − DESCENDRE · VOL + REMONTER · INFO FERMER" },
+    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hint: "VOL − DOWN · VOL + UP · INFO CLOSE" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hint: "VOL − BAJAR · VOL + SUBIR · INFO CERRAR" },
+    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hint: "VOL − RUNTER · VOL + HOCH · INFO SCHLIESSEN" }
   };
   let L = I18N.fr;
 
@@ -419,6 +464,47 @@
     }
   }
 
+
+  let panelVisible = false;
+  function renderPanel(s) {
+    const p = s.panel;
+    const on = !!(p && p.text);
+    $("panel").classList.toggle("on", on);
+    $("dimmer").classList.toggle("on", on);
+    panelVisible = on;
+    if (!on) return;
+    $("p_name").textContent = p.artist || "";
+    $("p_text").textContent = p.text;
+    $("p_src").textContent = p.source || "";
+    const facts = $("p_facts");
+    facts.textContent = "";
+    (p.facts || []).forEach(f => {
+      const el = document.createElement("span");
+      el.textContent = f;
+      facts.appendChild(el);
+    });
+    const im = $("p_img");
+    if (p.image) { im.src = p.image; im.style.display = "block"; }
+    else { im.style.display = "none"; }
+
+    requestAnimationFrame(() => {
+      const wrapEl = $("p_wrap"), txt = $("p_text");
+      const max = Math.max(0, txt.scrollHeight - wrapEl.clientHeight);
+      const step = wrapEl.clientHeight * 0.6;
+      const off = Math.min((p.scroll || 0) * step, max);
+      txt.style.transform = `translateY(${-off}px)`;
+      const overflow = max > 4;
+      $("p_hint").style.display = overflow ? "block" : "none";
+      $("p_hint").textContent = L.hint;
+      $("p_fade").style.opacity = overflow && off < max ? "1" : "0";
+      $("p_rail").style.opacity = overflow ? "1" : "0";
+      const railH = wrapEl.clientHeight;
+      const thumbH = railH * 0.25;
+      const top = max > 0 ? (off / max) * (railH - thumbH) : 0;
+      $("p_thumb").style.top = top + "px";
+    });
+  }
+
   function render() {
     const s = state;
     const hasTrack = s && s.connected && s.title;
@@ -434,19 +520,7 @@
     $("status").textContent = s.playing ? L.playing : L.paused;
     $("transport").classList.toggle("islive", !!s.live);
 
-    const p = s.panel;
-    const panelEl = $("panel");
-    if (p && p.text) {
-      $("p_name").textContent = p.artist || "";
-      $("p_text").textContent = p.text;
-      $("p_src").textContent = p.source || "";
-      const im = $("p_img");
-      if (p.image) { im.src = p.image; im.style.display = "block"; }
-      else { im.style.display = "none"; }
-      panelEl.classList.add("on");
-    } else {
-      panelEl.classList.remove("on");
-    }
+    renderPanel(s);
 
     if (s.model) $("model").textContent = s.model;
     $("title").textContent = s.title;
@@ -512,8 +586,9 @@
     window._cursorTimer = setTimeout(() => document.body.classList.remove("pointer"), 3000);
   });
 
-  poll();
-  setInterval(poll, 1000);
+  (function loop() {
+    Promise.resolve(poll()).finally(() => setTimeout(loop, panelVisible ? 300 : 1000));
+  })();
   tick();
 </script>
 </body>

@@ -255,6 +255,12 @@ def do_action(action):
     """Envoie une commande de pilotage a l'Eversolo."""
     if not CONFIG.get("eversolo_ip"):
         return False
+    if action in ("vol_up", "vol_down") and ARTIST_PANEL["until"] > time.time():
+        # volet ouvert: les volumes defilent le texte au lieu d'agir sur le son
+        delta = -1 if action == "vol_up" else 1
+        ARTIST_PANEL["scroll"] = max(0, ARTIST_PANEL["scroll"] + delta)
+        ARTIST_PANEL["until"] = time.time() + 60
+        return True
     if action == "info":
         return toggle_artist_panel()
     if action == "mute":
@@ -321,7 +327,37 @@ def send_raw(path):
 
 
 ARTIST_CACHE = {}
-ARTIST_PANEL = {"until": 0.0, "data": None}
+ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0}
+
+
+def fetch_artist_facts(artist):
+    """Pastilles genre / période / pays via MusicBrainz, sans clé d'API."""
+    try:
+        r = http.get(
+            "https://musicbrainz.org/ws/2/artist/",
+            params={"query": f'artist:"{artist}"', "fmt": "json", "limit": 1},
+            headers={"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"},
+            timeout=4,
+        )
+        artists = r.json().get("artists") or []
+        if not artists:
+            return []
+        a = artists[0]
+        facts = []
+        tags = sorted(a.get("tags") or [], key=lambda t: -t.get("count", 0))
+        if tags:
+            facts.append(tags[0]["name"].capitalize())
+        span = a.get("life-span") or {}
+        begin = (span.get("begin") or "")[:4]
+        end = (span.get("end") or "")[:4]
+        if begin:
+            facts.append(f"{begin}–{end}" if end else begin)
+        area = (a.get("area") or {}).get("name") or a.get("country")
+        if area:
+            facts.append(area)
+        return facts[:3]
+    except Exception:
+        return []
 
 
 def fetch_artist_info(artist, lang):
@@ -353,7 +389,8 @@ def fetch_artist_info(artist, lang):
                     "artist": artist,
                     "text": extract,
                     "image": "/api/cover?u=" + requests.utils.quote(thumb, safe="") if thumb else None,
-                    "source": f"Wikipedia ({lang})",
+                    "facts": fetch_artist_facts(artist),
+                    "source": f"Wikipedia ({lang}) · MusicBrainz",
                 }
     except Exception:
         data = None
@@ -366,7 +403,7 @@ def fetch_artist_info(artist, lang):
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
-        ARTIST_PANEL.update({"until": 0.0, "data": None})
+        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0})
         return True
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
@@ -378,7 +415,7 @@ def toggle_artist_panel():
     data = fetch_artist_info(artist, CONFIG.get("language", "fr"))
     if not data:
         return False
-    ARTIST_PANEL.update({"until": time.time() + 45, "data": data})
+    ARTIST_PANEL.update({"until": time.time() + 60, "data": data, "scroll": 0})
     return True
 
 
@@ -1226,7 +1263,8 @@ def api_state():
             print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)
         STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
         if ARTIST_PANEL["until"] > time.time():
-            info["panel"] = ARTIST_PANEL["data"]
+            info["panel"] = dict(ARTIST_PANEL["data"])
+            info["panel"]["scroll"] = ARTIST_PANEL["scroll"]
         return jsonify(info)
     except Exception:
         # Un rate isole (Wi-Fi, streamer occupe) ne doit pas faire clignoter

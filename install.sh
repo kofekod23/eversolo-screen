@@ -32,6 +32,8 @@ sudo systemctl restart "eversolo-screen@$CURRENT_USER"
 if [ "$KIOSK" = "--kiosk" ]; then
     sudo cp "$APP_DIR/eversolo-kiosk.service" /etc/systemd/system/eversolo-kiosk@.service
     sudo systemctl daemon-reload
+    sudo systemctl disable getty@tty1.service || true
+    sudo systemctl set-default graphical.target || true
     sudo systemctl enable "eversolo-kiosk@$CURRENT_USER"
     sudo systemctl restart "eversolo-kiosk@$CURRENT_USER"
 fi

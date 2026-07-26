@@ -6,9 +6,11 @@ protegee : mot de passe hache (scrypt), sessions signees, anti force brute,
 jeton CSRF, proxy pochettes limite au streamer, en-tetes de securite.
 """
 
+import glob
 import ipaddress
 import json
 import re
+import subprocess
 import os
 import secrets
 import socket
@@ -63,6 +65,7 @@ T = {
         "saved": "Enregistre.",
         "back_display": "Retour a l'affichage",
         "invalid_ip": "Adresse IP invalide.",
+        "blaster_title": "Emetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos telecommandes, le Pi pourra les reemettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face au capteur...", "learned": "Commande enregistree.", "learn_failed": "Rien recu. Verifiez le capteur et reessayez.", "no_tx": "Emetteur introuvable (option --ir-tx installee et redemarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caracteres max.", "blaster_link": "Emetteur infrarouge",
         "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
         "session_expired": "Session expiree, reconnectez-vous.",
     },
@@ -90,6 +93,7 @@ T = {
         "saved": "Saved.",
         "back_display": "Back to display",
         "invalid_ip": "Invalid IP address.",
+        "blaster_title": "Infrared blaster", "blaster_intro": "Record buttons from your remotes, the Pi can replay them (TV, amp...).", "new_name": "Command name (e.g. tv_power)", "learn": "Learn", "send_cmd": "Send", "delete_cmd": "Delete", "learn_hint": "Now press the button to learn, facing the sensor...", "learned": "Command recorded.", "learn_failed": "Nothing received. Check the sensor and retry.", "no_tx": "Emitter not found (--ir-tx installed and rebooted?).", "bad_name": "Invalid name: letters, digits, dash, 32 chars max.", "blaster_link": "Infrared blaster",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -117,6 +121,7 @@ T = {
         "saved": "Guardado.",
         "back_display": "Volver a la pantalla",
         "invalid_ip": "Direccion IP no valida.",
+        "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibio nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opcion --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caracteres max.", "blaster_link": "Emisor infrarrojo",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesion caducada, inicie sesion de nuevo.",
     },
@@ -144,6 +149,7 @@ T = {
         "saved": "Gespeichert.",
         "back_display": "Zurueck zur Anzeige",
         "invalid_ip": "Ungueltige IP-Adresse.",
+        "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstaerker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Loeschen", "learn_hint": "Jetzt die Taste druecken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor pruefen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungueltiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -254,6 +260,55 @@ def do_action(action):
         return False
     try:
         http.get(url, timeout=3)
+        return True
+    except Exception:
+        return False
+
+
+IR_CODES_DIR = os.path.join(BASE_DIR, "ir_codes")
+NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+
+
+def lirc_devices():
+    """Detecte les peripheriques infrarouges: (recepteur, emetteur)."""
+    rx = tx = None
+    for dev in sorted(glob.glob("/dev/lirc*")):
+        try:
+            out = subprocess.run(
+                ["ir-ctl", "-d", dev, "--features"],
+                capture_output=True, text=True, timeout=5,
+            ).stdout.lower()
+        except Exception:
+            continue
+        if rx is None and "receive" in out:
+            rx = dev
+        if tx is None and "send" in out:
+            tx = dev
+    return rx, tx
+
+
+def record_raw(path, timeout_s=15):
+    """Enregistre une pression de touche en signal brut (tous protocoles)."""
+    rx, _ = lirc_devices()
+    if not rx:
+        return False
+    try:
+        subprocess.run(
+            ["ir-ctl", "-d", rx, "-1", "--receive=" + path],
+            timeout=timeout_s, capture_output=True,
+        )
+    except subprocess.TimeoutExpired:
+        pass
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
+
+def send_raw(path):
+    """Rejoue un signal enregistre via la LED emettrice."""
+    _, tx = lirc_devices()
+    if not tx or not os.path.exists(path):
+        return False
+    try:
+        subprocess.run(["ir-ctl", "-d", tx, "--send=" + path], timeout=8)
         return True
     except Exception:
         return False
@@ -722,7 +777,7 @@ def remote_page():
   <input type="hidden" name="action" id="pf_action">
   <input type="hidden" name="code" id="pf_code">
 </form>
-<div class="foot"><a href="/config">{t['config_title']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
+<div class="foot"><a href="/blaster">{t['blaster_link']}</a> &nbsp;·&nbsp; <a href="/config">{t['config_title']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
 <script>
 document.querySelectorAll('.pairbtn').forEach(function(btn) {{
   btn.onclick = async function() {{
@@ -750,6 +805,113 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
 </script>
 """
     return page(t["remote_title"], body, lang)
+
+
+@app.route("/api/blast/<name>", methods=["POST"])
+def api_blast(name):
+    if request.headers.get("X-Requested-With") != "eversolo":
+        return jsonify({"error": "forbidden"}), 403
+    if not NAME_RE.match(name):
+        return jsonify({"error": "bad name"}), 400
+    path = os.path.join(IR_CODES_DIR, name + ".ir")
+    if not os.path.exists(path):
+        return jsonify({"error": "unknown"}), 404
+    return jsonify({"ok": send_raw(path)})
+
+
+@app.route("/blaster", methods=["GET", "POST"])
+def blaster_page():
+    if load_auth() is None:
+        return redirect("/setup")
+    if not logged_in():
+        return redirect("/login")
+    t = tr()
+    lang = CONFIG.get("language", "fr")
+    message = error = None
+    os.makedirs(IR_CODES_DIR, exist_ok=True)
+
+    if request.method == "POST":
+        if not csrf_ok():
+            error = t["session_expired"]
+        else:
+            op = request.form.get("op", "")
+            name = request.form.get("name", "").strip()
+            if not NAME_RE.match(name):
+                error = t["bad_name"]
+            elif op == "learn":
+                # capture synchrone: la page attend la pression de touche
+                if record_raw(os.path.join(IR_CODES_DIR, name + ".ir")):
+                    message = t["learned"]
+                else:
+                    error = t["learn_failed"]
+            elif op == "delete":
+                try:
+                    os.remove(os.path.join(IR_CODES_DIR, name + ".ir"))
+                    message = t["saved"]
+                except FileNotFoundError:
+                    pass
+
+    _, tx = lirc_devices()
+    warn = "" if tx else f'<div class="msg err">{t["no_tx"]}</div>'
+    rows = []
+    for f in sorted(glob.glob(os.path.join(IR_CODES_DIR, "*.ir"))):
+        n = os.path.basename(f)[:-3]
+        rows.append(f'''
+<div class="rrow">
+  <div class="rname">{n}</div>
+  <div class="rbtns">
+    <button type="button" class="pairbtn sendbtn" data-name="{n}">{t['send_cmd']}</button>
+    <form method="post" style="margin:0">
+      <input type="hidden" name="csrf" value="{csrf_token()}">
+      <input type="hidden" name="op" value="delete">
+      <input type="hidden" name="name" value="{n}">
+      <button class="ghost" style="margin:0;width:auto;padding:10px 14px">{t['delete_cmd']}</button>
+    </form>
+  </div>
+</div>''')
+
+    body = f'''
+<style>
+.rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
+.rname{{font-family:"IBM Plex Mono",monospace;font-size:14px}}
+.rbtns{{display:flex;gap:8px;align-items:center}}
+.pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
+</style>
+<h1>{t['blaster_title']}</h1>
+<p class="intro">{t['blaster_intro']}</p>
+{warn}
+{f'<div class="msg">{message}</div>' if message else ''}
+{f'<div class="msg err">{error}</div>' if error else ''}
+<form method="post" id="learnform">
+  <input type="hidden" name="csrf" value="{csrf_token()}">
+  <input type="hidden" name="op" value="learn">
+  <label>{t['new_name']}</label>
+  <div class="row">
+    <input type="text" name="name" pattern="[A-Za-z0-9_-]{{1,32}}" required>
+    <button type="submit" id="learnbtn">{t['learn']}</button>
+  </div>
+</form>
+{''.join(rows)}
+<div class="foot"><a href="/remote">{t['remote_title']}</a> &nbsp;·&nbsp; <a href="/config">{t['config_title']}</a></div>
+<script>
+document.getElementById('learnform').addEventListener('submit', function() {{
+  const b = document.getElementById('learnbtn');
+  b.textContent = {json.dumps(t['learn_hint'])}; b.disabled = false;
+}});
+document.querySelectorAll('.sendbtn').forEach(function(btn) {{
+  btn.onclick = async function() {{
+    btn.disabled = true;
+    try {{
+      await fetch('/api/blast/' + btn.dataset.name, {{
+        method: 'POST', headers: {{'X-Requested-With': 'eversolo'}}
+      }});
+    }} catch (e) {{}}
+    setTimeout(() => btn.disabled = false, 500);
+  }};
+}});
+</script>
+'''
+    return page(t["blaster_title"], body, lang)
 
 
 @app.route("/api/detect")

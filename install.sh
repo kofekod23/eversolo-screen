@@ -9,10 +9,12 @@ APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURRENT_USER="$(whoami)"
 KIOSK=""
 IR=""
+IRTX=""
 for arg in "$@"; do
     case "$arg" in
         --kiosk) KIOSK="--kiosk" ;;
         --ir) IR="--ir" ;;
+        --ir-tx) IRTX="--ir-tx" ;;
     esac
 done
 
@@ -58,6 +60,19 @@ if [ "$IR" = "--ir" ]; then
     sudo systemctl daemon-reload
     sudo systemctl enable "eversolo-ir@$CURRENT_USER"
     sudo systemctl restart "eversolo-ir@$CURRENT_USER" || true
+fi
+
+# 7. Emetteur infrarouge (optionnel)
+if [ "$IRTX" = "--ir-tx" ]; then
+    sudo apt-get install -y ir-keytable
+    BOOTCFG="/boot/firmware/config.txt"
+    [ -f "$BOOTCFG" ] || BOOTCFG="/boot/config.txt"
+    if ! grep -q "^dtoverlay=gpio-ir-tx" "$BOOTCFG"; then
+        echo "dtoverlay=gpio-ir-tx,gpio_pin=18" | sudo tee -a "$BOOTCFG" > /dev/null
+        echo "Overlay emetteur ajoute a $BOOTCFG (GPIO18): un redemarrage sera necessaire."
+    fi
+    echo 'SUBSYSTEM=="lirc", MODE="0660", GROUP="video"' | sudo tee /etc/udev/rules.d/71-eversolo-lirc.rules > /dev/null
+    sudo usermod -aG video "$CURRENT_USER" || true
 fi
 
 PI_IP="$(hostname -I | awk '{print $1}')"

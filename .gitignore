@@ -2,3 +2,4 @@ venv/
 __pycache__/
 auth.json
 .secret_key
+ir_codes/

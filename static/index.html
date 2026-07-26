@@ -534,7 +534,7 @@
 
   function renderPanel(s) {
     const p = s.panel;
-    const on = !!(p && p.text);
+    const on = !!(p && (p.artist || p.text));
     $("panel").classList.toggle("on", on);
     $("dimmer").classList.toggle("on", on);
     panelVisible = on;
@@ -587,7 +587,7 @@
       }
       $("p_src").textContent = (alb && alb.source) || "";
       $("p_hint").textContent = L.hintAlbum;
-      montrerImage(im, alb ? cover.src || null : null);
+      montrerImage(im, alb ? ($("cover").src || null) : null);
     }
 
     requestAnimationFrame(() => {

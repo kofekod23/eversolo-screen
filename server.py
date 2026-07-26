@@ -661,7 +661,15 @@ def _mb_release_details(rgid, lang):
                 for rel in (t.get("recording") or {}).get("relations") or []:
                     ajouter(rel)
 
-        credits[:] = credits[:16]
+        # regroupement par role: "Production - A, B, C" plutot que dix lignes
+        groupes = {}
+        ordre = []
+        for c in credits:
+            if c["role"] not in groupes:
+                groupes[c["role"]] = []
+                ordre.append(c["role"])
+            groupes[c["role"]].append(c["name"])
+        credits[:] = [{"role": r, "name": ", ".join(groupes[r][:8])} for r in ordre][:10]
         for lab in labels[:1]:
             prod_facts.append(lab)
         if date:

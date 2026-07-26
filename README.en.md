@@ -63,7 +63,7 @@ Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (
 |---|---|
 | Artist and album identity | MusicBrainz (the playing album disambiguates homonyms) |
 | Biographies | TheAudioDB, Last.fm, Wikipedia via Wikidata |
-| Tracks, credits, studios | MusicBrainz, Discogs |
+| Tracks, credits, studios | MusicBrainz, Discogs, Genius (current track) |
 
 Everything works without any key. Optional keys on `/config` widen coverage: Last.fm (free), Discogs (free personal token, credits of recent releases), TheAudioDB.
 

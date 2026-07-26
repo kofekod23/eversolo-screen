@@ -63,7 +63,7 @@ Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande
 |---|---|
 | Identité artiste et album | MusicBrainz (l'album en cours lève les homonymies) |
 | Biographies | TheAudioDB, Last.fm, Wikipédia via Wikidata |
-| Plages, crédits, studios | MusicBrainz, Discogs |
+| Plages, crédits, studios | MusicBrainz, Discogs, Genius (plage en cours) |
 
 Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargir la couverture : Last.fm (gratuite), Discogs (jeton personnel gratuit, crédits des sorties récentes), TheAudioDB.
 

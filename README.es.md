@@ -63,7 +63,7 @@ Opciones acumulables: `--kiosk` (pantalla TV), `--ir` (receptor del mando), `--i
 |---|---|
 | Identidad de artista y álbum | MusicBrainz (el álbum en curso resuelve los homónimos) |
 | Biografías | TheAudioDB, Last.fm, Wikipedia vía Wikidata |
-| Pistas, créditos, estudios | MusicBrainz, Discogs |
+| Pistas, créditos, estudios | MusicBrainz, Discogs, Genius (pista en curso) |
 
 Todo funciona sin ninguna clave. Claves opcionales en `/config`: Last.fm (gratuita), Discogs (token personal gratuito), TheAudioDB.
 

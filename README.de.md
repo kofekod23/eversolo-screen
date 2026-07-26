@@ -63,7 +63,7 @@ Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänge
 |---|---|
 | Identität von Künstler und Album | MusicBrainz (das laufende Album löst Namensgleichheiten auf) |
 | Biografien | TheAudioDB, Last.fm, Wikipedia über Wikidata |
-| Titel, Credits, Studios | MusicBrainz, Discogs |
+| Titel, Credits, Studios | MusicBrainz, Discogs, Genius (laufender Titel) |
 
 Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.fm (kostenlos), Discogs (kostenloses persönliches Token), TheAudioDB.
 

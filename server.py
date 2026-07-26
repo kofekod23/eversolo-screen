@@ -38,6 +38,7 @@ DEFAULTS = {
     "theaudiodb_key": "2",
     "lastfm_api_key": "",
     "discogs_token": "",
+    "genius_token": "",
 }
 
 LANGS = ("fr", "en", "es", "de")
@@ -76,6 +77,7 @@ T = {
         "searching": "Recherche des informations sur l'artiste et le disque...",
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
         "update_avail": "Nouvelle version disponible", "update_btn": "Mettre à jour maintenant", "update_started": "Mise à jour lancée. Le serveur redémarre, l'écran se rechargera tout seul dans une minute.", "up_to_date": "Application à jour",
+        "genius_token_lbl": "Jeton Genius (crédits de la plage en cours, optionnel)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
     },
@@ -110,6 +112,7 @@ T = {
         "searching": "Looking up artist and record information...",
         "discogs_token": "Discogs token (detailed production credits, optional)",
         "update_avail": "New version available", "update_btn": "Update now", "update_started": "Update started. The server restarts, the display will reload by itself within a minute.", "up_to_date": "Application up to date",
+        "genius_token_lbl": "Genius token (credits of the current track, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -144,6 +147,7 @@ T = {
         "searching": "Buscando información del artista y del disco...",
         "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
         "update_avail": "Nueva versión disponible", "update_btn": "Actualizar ahora", "update_started": "Actualización iniciada. El servidor se reinicia, la pantalla se recargará sola en un minuto.", "up_to_date": "Aplicación al día",
+        "genius_token_lbl": "Token Genius (créditos de la pista en curso, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
@@ -178,6 +182,7 @@ T = {
         "searching": "Informationen zu Künstler und Album werden gesucht...",
         "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
         "update_avail": "Neue Version verfügbar", "update_btn": "Jetzt aktualisieren", "update_started": "Aktualisierung gestartet. Der Server startet neu, der Bildschirm lädt sich in einer Minute selbst neu.", "up_to_date": "Anwendung aktuell",
+        "genius_token_lbl": "Genius-Token (Credits des laufenden Titels, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -634,6 +639,7 @@ ROLES_CREDITS = {
     "recording": {"fr": "Prise de son", "en": "Recording", "es": "Grabación", "de": "Aufnahme"},
     "performer": {"fr": "Interprète", "en": "Performer", "es": "Intérprete", "de": "Interpret"},
     "vocal": {"fr": "Chant", "en": "Vocals", "es": "Voz", "de": "Gesang"},
+    "writing": {"fr": "Écriture", "en": "Writing", "es": "Escritura", "de": "Komposition"},
 }
 
 
@@ -907,6 +913,81 @@ def fetch_artist_info(artist, lang, album=None):
     return data
 
 
+TRACK_CACHE = {}
+GENIUS_ROLES = {
+    "mixing engineer": "mix", "mastering engineer": "mastering",
+    "recording engineer": "recording", "engineer": "engineer",
+    "executive producer": "producer",
+}
+
+
+def fetch_track_credits(artist, titre, lang):
+    """Crédits de la plage en cours via Genius: la seule base structurée qui
+    couvre les sorties du jour, plage par plage."""
+    token = (CONFIG.get("genius_token") or "").strip()
+    if not token or not artist or not titre:
+        return []
+    key = (artist.lower(), titre.lower(), lang)
+    cached = TRACK_CACHE.get(key)
+    if _cache_valide(cached):
+        return cached[1]
+    credits = []
+    try:
+        entetes = dict(_entetes_api())
+        entetes["Authorization"] = f"Bearer {token}"
+        r = http.get(
+            "https://api.genius.com/search",
+            params={"q": f"{artist} {titre}"}, headers=entetes, timeout=5,
+        )
+        chanson = None
+        for hit in ((r.json() or {}).get("response") or {}).get("hits") or []:
+            res = hit.get("result") or {}
+            interprete = ((res.get("primary_artist") or {}).get("name") or "").lower()
+            if artist.lower() in interprete or interprete in artist.lower():
+                chanson = res
+                break
+        if chanson:
+            r2 = http.get(
+                f"https://api.genius.com/songs/{chanson['id']}",
+                params={"text_format": "plain"}, headers=entetes, timeout=5,
+            )
+            song = ((r2.json() or {}).get("response") or {}).get("song") or {}
+            for p in song.get("producer_artists") or []:
+                credits.append({"role": ROLES_CREDITS["producer"].get(lang, "Producer"),
+                                "name": p.get("name", "")})
+            for w in song.get("writer_artists") or []:
+                credits.append({"role": ROLES_CREDITS["writing"].get(lang, "Writing"),
+                                "name": w.get("name", "")})
+            for perf in song.get("custom_performances") or []:
+                etiquette = (perf.get("label") or "").strip()
+                cle = GENIUS_ROLES.get(etiquette.lower())
+                role = ROLES_CREDITS[cle].get(lang, etiquette) if cle else etiquette
+                for a in perf.get("artists") or []:
+                    credits.append({"role": role, "name": a.get("name", "")})
+            credits = [c for c in credits if c["name"]][:40]
+    except Exception:
+        credits = []
+    if len(TRACK_CACHE) > 80:
+        TRACK_CACHE.clear()
+    TRACK_CACHE[key] = (time.time(), credits)
+    return credits
+
+
+def enrichir_album(album_info, artist, titre, lang):
+    """Si le disque n'a pas de crédits, ceux de la plage en cours (Genius)."""
+    if album_info is None or album_info.get("credits") or not titre:
+        return album_info
+    plage = fetch_track_credits(artist, titre, lang)
+    if not plage:
+        return album_info
+    album_info = dict(album_info)
+    album_info["credits"] = _grouper_credits(plage)
+    faits = [f"« {titre} »"] + list(album_info.get("prod_facts") or [])
+    album_info["prod_facts"] = faits[:4]
+    album_info["source"] = ((album_info.get("source") or "").strip() + " · Genius").strip(" ·")
+    return album_info
+
+
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
@@ -917,6 +998,7 @@ def toggle_artist_panel():
         etat = normalize(r.json())
         artist = etat.get("artist")
         album_titre = etat.get("album")
+        titre_courant = etat.get("title")
     except Exception:
         return False
     if not artist:
@@ -938,8 +1020,9 @@ def toggle_artist_panel():
 
     if art_pret and alb_pret:
         # tout est en cache (cas normal grace au prechargement): reponse immediate
-        data, duree = assembler(fetch_artist_info(artist, lang, album_titre),
-                                fetch_album_info(artist, album_titre, lang))
+        alb = enrichir_album(fetch_album_info(artist, album_titre, lang),
+                             artist, titre_courant, lang)
+        data, duree = assembler(fetch_artist_info(artist, lang, album_titre), alb)
         ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
                              "scroll": 0, "page": "artist"})
         return True
@@ -957,7 +1040,9 @@ def toggle_artist_panel():
     def completer():
         try:
             bio = fetch_artist_info(artist, lang, album_titre)
-            album_info = fetch_album_info(artist, album_titre, lang)
+            album_info = enrichir_album(
+                fetch_album_info(artist, album_titre, lang),
+                artist, titre_courant, lang)
         except Exception:
             bio, album_info = None, None
         if ARTIST_PANEL.get("token") == jeton and ARTIST_PANEL["until"] > time.time():
@@ -1334,6 +1419,7 @@ def config_page():
                     "theaudiodb_key": request.form.get("tadb_key", "").strip() or "2",
                     "lastfm_api_key": request.form.get("lastfm_key", "").strip(),
                     "discogs_token": request.form.get("discogs_token", "").strip(),
+                    "genius_token": request.form.get("genius_token", "").strip(),
                 })
                 save_config(CONFIG)
                 t = tr()
@@ -1365,6 +1451,8 @@ __VERSION_HTML__
   <input type="text" name="lastfm_key" value="{CONFIG.get('lastfm_api_key', '')}" autocomplete="off">
   <label>{t['discogs_token']}</label>
   <input type="text" name="discogs_token" value="{CONFIG.get('discogs_token', '')}" autocomplete="off">
+  <label>{t['genius_token_lbl']}</label>
+  <input type="text" name="genius_token" value="{CONFIG.get('genius_token', '')}" autocomplete="off">
   <label>{t['new_password']}</label>
   <input type="password" name="new_password" autocomplete="new-password">
   <label>{t['current_password']}</label>
@@ -1893,10 +1981,11 @@ def api_state():
         cle_pf = (artiste, info.get("album"))
         if artiste and cle_pf != PREFETCH["artist"]:
             PREFETCH["artist"] = cle_pf
-            def _precharge(a=artiste, al=info.get("album")):
+            def _precharge(a=artiste, al=info.get("album"), ti=info.get("title")):
                 lg = CONFIG.get("language", "fr")
                 fetch_artist_info(a, lg, al)
                 fetch_album_info(a, al, lg)
+                fetch_track_credits(a, ti, lg)
             threading.Thread(target=_precharge, daemon=True).start()
         if STATE_CACHE["down_since"]:
             durée = int(time.time() - STATE_CACHE["down_since"])

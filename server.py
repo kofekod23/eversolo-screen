@@ -368,6 +368,33 @@ def _entetes_api():
     return {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
 
 
+def _cache_valide(entree):
+    """Succès gardés 24 h; échecs retentés après 2 minutes seulement."""
+    if not entree:
+        return False
+    ts, valeur = entree
+    return time.time() - ts < (86400 if valeur else 120)
+
+
+_MB_DERNIER = {"t": 0.0}
+
+
+def _mb_get(url, **kwargs):
+    """Appel MusicBrainz espacé (1 requête/s, sa limite) et réessayé sur 503."""
+    r = None
+    for tentative in range(2):
+        pause = _MB_DERNIER["t"] + 1.0 - time.time()
+        if pause > 0:
+            time.sleep(min(pause, 1.0))
+        _MB_DERNIER["t"] = time.time()
+        r = http.get(url, **kwargs)
+        if getattr(r, "status_code", 200) == 503 and tentative == 0:
+            time.sleep(1.2)
+            continue
+        return r
+    return r
+
+
 def _couper(texte, maxi=2600):
     texte = texte.strip()
     if len(texte) <= maxi:
@@ -386,7 +413,7 @@ def musicbrainz_artist(artist, album=None):
         a = None
         if album:
             try:
-                r = http.get(
+                r = _mb_get(
                     "https://musicbrainz.org/ws/2/release-group/",
                     params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
                             "fmt": "json", "limit": 1},
@@ -395,7 +422,7 @@ def musicbrainz_artist(artist, album=None):
                 groups = r.json().get("release-groups") or []
                 credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") if groups else None
                 if credit and credit.get("id"):
-                    r2 = http.get(
+                    r2 = _mb_get(
                         f"https://musicbrainz.org/ws/2/artist/{credit['id']}",
                         params={"inc": "url-rels+tags", "fmt": "json"},
                         headers=_entetes_api(), timeout=4,
@@ -407,7 +434,7 @@ def musicbrainz_artist(artist, album=None):
             except Exception:
                 a = None
         if a is None:
-            r = http.get(
+            r = _mb_get(
                 "https://musicbrainz.org/ws/2/artist/",
                 params={"query": f'artist:"{artist}"', "fmt": "json", "limit": 1},
                 headers=_entetes_api(), timeout=4,
@@ -432,7 +459,7 @@ def musicbrainz_artist(artist, album=None):
         try:
             rels = a.get("relations") if a.get("_rels_incluses") else None
             if rels is None:
-                r2 = http.get(
+                r2 = _mb_get(
                     f"https://musicbrainz.org/ws/2/artist/{a['id']}",
                     params={"inc": "url-rels", "fmt": "json"},
                     headers=_entetes_api(), timeout=4,
@@ -615,7 +642,7 @@ def _mb_release_details(rgid, lang):
     production (label, date, studios) d'un disque."""
     tracks, credits, prod_facts = [], [], []
     try:
-        r = http.get(
+        r = _mb_get(
             "https://musicbrainz.org/ws/2/release/",
             params={"release-group": rgid, "fmt": "json", "limit": 1, "inc": "labels"},
             headers=_entetes_api(), timeout=4,
@@ -628,7 +655,7 @@ def _mb_release_details(rgid, lang):
         labels = [li["label"]["name"] for li in rel0.get("label-info") or []
                   if li.get("label", {}).get("name")]
 
-        r2 = http.get(
+        r2 = _mb_get(
             f"https://musicbrainz.org/ws/2/release/{rel0['id']}",
             params={"inc": "recordings+artist-rels+recording-level-rels+place-rels",
                     "fmt": "json"},
@@ -758,12 +785,12 @@ def fetch_album_info(artist, album, lang):
         return None
     key = (artist.lower(), album.lower(), lang)
     cached = ALBUM_CACHE.get(key)
-    if cached and time.time() - cached[0] < 86400:
+    if _cache_valide(cached):
         return cached[1]
 
     nom, annee, rgid = artist, None, None
     try:
-        r = http.get(
+        r = _mb_get(
             "https://musicbrainz.org/ws/2/release-group/",
             params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
                     "fmt": "json", "limit": 1},
@@ -840,6 +867,8 @@ def fetch_album_info(artist, album, lang):
         data["credits"] = _grouper_credits(credits)
         data["prod_facts"] = prod_facts
 
+    if data is None:
+        print(f"[diagnostic] aucune fiche album pour {artist} - {album}", flush=True)
     if len(ALBUM_CACHE) > 50:
         ALBUM_CACHE.clear()
     ALBUM_CACHE[key] = (time.time(), data)
@@ -850,7 +879,7 @@ def fetch_artist_info(artist, lang, album=None):
     """Chaîne de sources, spécialisées musique d'abord, identité levée par le disque."""
     key = (artist.lower(), (album or "").lower(), lang)
     cached = ARTIST_CACHE.get(key)
-    if cached and time.time() - cached[0] < 86400:
+    if _cache_valide(cached):
         return cached[1]
 
     mb = musicbrainz_artist(artist, album)
@@ -903,10 +932,9 @@ def toggle_artist_panel():
         return {"artist": art, "album": album_info}, (60 if (bio or album_info) else 8)
 
     cle_art = (artist.lower(), (album_titre or "").lower(), lang)
-    art_pret = cle_art in ARTIST_CACHE and time.time() - ARTIST_CACHE[cle_art][0] < 86400
+    art_pret = _cache_valide(ARTIST_CACHE.get(cle_art))
     cle_alb = (artist.lower(), (album_titre or "").lower(), lang)
-    alb_pret = (not album_titre) or (
-        cle_alb in ALBUM_CACHE and time.time() - ALBUM_CACHE[cle_alb][0] < 86400)
+    alb_pret = (not album_titre) or _cache_valide(ALBUM_CACHE.get(cle_alb))
 
     if art_pret and alb_pret:
         # tout est en cache (cas normal grace au prechargement): reponse immediate

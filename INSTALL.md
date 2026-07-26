@@ -186,3 +186,16 @@ sudo reboot
 ```
 
 Utilisation : `http://IP_DU_PI:8080/blaster` (mot de passe administrateur). Donnez un nom a la commande (ex: tv_power), cliquez Apprendre, pressez la touche face au capteur : c'est memorise. Chaque commande apprise a ensuite son bouton Envoyer, utilisable depuis le telephone. Les options se combinent : `./install.sh --kiosk --ir --ir-tx` installe tout d'un coup.
+
+### Mot de passe administrateur oublie ou refuse
+
+Sur le Pi, dans le dossier du projet :
+
+```bash
+venv/bin/python tools/motdepasse.py etat                    # diagnostic
+venv/bin/python tools/motdepasse.py verifier MonMotDePasse  # tester un mot de passe
+venv/bin/python tools/motdepasse.py nouveau MonMotDePasse   # en definir un nouveau
+sudo systemctl restart eversolo-screen@$(whoami)
+```
+
+Si l'interface affiche "Trop de tentatives", le verrouillage anti force brute est actif (5 echecs, 15 minutes). Un redemarrage du serveur le leve immediatement.

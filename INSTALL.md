@@ -165,7 +165,7 @@ sudo reboot
 ```
 
 Le redémarrage active le récepteur. Ensuite, appairage depuis le navigateur : `http://IP_DU_PI:8080/remote` (connexion avec le mot de passe administrateur). Pour chaque action, cliquez sur Associer puis pressez la touche voulue de votre télécommande : le code est mémorisé instantanément. Chaque action est réassociable ou retirable a tout moment.
-Une septieme action est disponible a l'appairage : Infos artiste. Une pression sur la touche associée affiche sur l'écran un panneau avec la biographie et la photo de l'artiste en cours (sources en cascade : MusicBrainz pour l'identité, Wikipédia pour le texte, puis TheAudioDB et Last.fm en repli pour les artistes confidentiels ; tout fonctionne sans clé, et les clés optionnelles TheAudioDB et Last.fm se renseignent sur la page de configuration pour élargir la couverture). Le panneau disparait tout seul après 45 secondes, ou immédiatement en pressant a nouveau la touche.
+Une septieme action est disponible a l'appairage : Infos artiste. Une pression sur la touche associée affiche sur l'écran un panneau avec la biographie et la photo de l'artiste en cours (sources en cascade, spécialisées musique d'abord : TheAudioDB puis Last.fm pour les biographies et les descriptions de disques, Wikipédia en repli, MusicBrainz pour l'identité et les faits ; le volet présente le disque en cours puis l'artiste ; tout fonctionne sans clé, et les clés optionnelles TheAudioDB et Last.fm se renseignent sur la page de configuration pour élargir la couverture). Le panneau disparait tout seul après 45 secondes, ou immédiatement en pressant a nouveau la touche.
 
 ## 11. Émetteur infrarouge (optionnel)
 

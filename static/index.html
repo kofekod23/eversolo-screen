@@ -289,6 +289,17 @@
     padding: 5px 10px;
   }
   #panel .pwrap { position: relative; flex: 1; overflow: hidden; margin-top: clamp(12px, 2.2vh, 20px); }
+  #panel .pseclabel {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(10px, 1.5vh, 13px); letter-spacing: 0.2em;
+    color: var(--tube); margin-bottom: 8px;
+  }
+  #panel .palbumtitle {
+    font-family: "Fraunces", Georgia, serif; font-weight: 560;
+    font-size: clamp(18px, 3vh, 28px); margin-bottom: 8px;
+  }
+  #panel .psec + .psec { margin-top: clamp(18px, 3.5vh, 30px); }
+  #panel .psec .pfacts { margin: 0 0 10px 0; }
   #panel .ptext {
     font-size: clamp(15px, 2.5vh, 23px); line-height: 1.55;
     color: #ded8c8; transition: transform 0.35s ease;
@@ -412,7 +423,18 @@
       </div>
     </div>
     <div class="pwrap" id="p_wrap">
-      <div class="ptext" id="p_text"></div>
+      <div class="ptext" id="p_text">
+        <div class="psec" id="s_album" style="display:none">
+          <div class="pseclabel" id="l_album"></div>
+          <div class="palbumtitle" id="a_title"></div>
+          <div class="pfacts" id="a_facts"></div>
+          <div class="pbody" id="a_text"></div>
+        </div>
+        <div class="psec">
+          <div class="pseclabel" id="l_artist"></div>
+          <div class="pbody" id="b_text"></div>
+        </div>
+      </div>
       <div class="pfade" id="p_fade"></div>
       <div class="prail" id="p_rail"><div class="pthumb" id="p_thumb"></div></div>
     </div>
@@ -429,10 +451,10 @@
 <script>
   const $ = id => document.getElementById(id);
   const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hint: "VOL − DESCENDRE · VOL + REMONTER · INFO FERMER" },
-    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hint: "VOL − DOWN · VOL + UP · INFO CLOSE" },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hint: "VOL − BAJAR · VOL + SUBIR · INFO CERRAR" },
-    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hint: "VOL − RUNTER · VOL + HOCH · INFO SCHLIESSEN" }
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hint: "VOL − DESCENDRE · VOL + REMONTER · INFO FERMER", albumSec: "L\u2019ALBUM", artistSec: "L\u2019ARTISTE" },
+    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hint: "VOL − DOWN · VOL + UP · INFO CLOSE", albumSec: "THE ALBUM", artistSec: "THE ARTIST" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hint: "VOL − BAJAR · VOL + SUBIR · INFO CERRAR", albumSec: "EL \u00c1LBUM", artistSec: "EL ARTISTA" },
+    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hint: "VOL − RUNTER · VOL + HOCH · INFO SCHLIESSEN", albumSec: "DAS ALBUM", artistSec: "DER K\u00dcNSTLER" }
   };
   let L = I18N.fr;
 
@@ -484,8 +506,26 @@
     panelVisible = on;
     if (!on) return;
     $("p_name").textContent = p.artist || "";
-    $("p_text").textContent = p.text;
+    $("l_artist").textContent = L.artistSec;
+    $("b_text").textContent = p.text;
     $("p_src").textContent = p.source || "";
+    const alb = p.album;
+    const sAlb = $("s_album");
+    if (alb && (alb.text || (alb.facts || []).length)) {
+      sAlb.style.display = "block";
+      $("l_album").textContent = L.albumSec;
+      $("a_title").textContent = alb.title || "";
+      $("a_text").textContent = alb.text || "";
+      const af = $("a_facts");
+      af.textContent = "";
+      (alb.facts || []).forEach(f => {
+        const el = document.createElement("span");
+        el.textContent = f;
+        af.appendChild(el);
+      });
+    } else {
+      sAlb.style.display = "none";
+    }
     const facts = $("p_facts");
     facts.textContent = "";
     (p.facts || []).forEach(f => {

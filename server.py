@@ -544,6 +544,85 @@ def lastfm_bio(artist, lang, facts):
         return None
 
 
+ALBUM_CACHE = {}
+
+
+def fetch_album_info(artist, album, lang):
+    """Description et faits du disque en cours: TheAudioDB > Last.fm > MusicBrainz."""
+    if not album:
+        return None
+    key = (artist.lower(), album.lower(), lang)
+    cached = ALBUM_CACHE.get(key)
+    if cached and time.time() - cached[0] < 86400:
+        return cached[1]
+    data = None
+
+    try:
+        k = (CONFIG.get("theaudiodb_key") or "2").strip()
+        r = http.get(
+            f"https://www.theaudiodb.com/api/v1/json/{k}/searchalbum.php",
+            params={"s": artist, "a": album}, headers=_entetes_api(), timeout=5,
+        )
+        albums = (r.json() or {}).get("album") or []
+        if albums:
+            al = albums[0]
+            desc = (al.get(f"strDescription{lang.upper()}") or al.get("strDescriptionEN") or "").strip()
+            facts = []
+            if al.get("intYearReleased"):
+                facts.append(str(al["intYearReleased"]))
+            if al.get("strLabel"):
+                facts.append(al["strLabel"])
+            if al.get("strGenre"):
+                facts.append(al["strGenre"])
+            if desc or facts:
+                data = {"title": album, "facts": facts[:3],
+                        "text": _couper(desc, 1200), "source": "TheAudioDB"}
+    except Exception:
+        pass
+
+    if not data:
+        cle = (CONFIG.get("lastfm_api_key") or "").strip()
+        if cle:
+            try:
+                r = http.get(
+                    "https://ws.audioscrobbler.com/2.0/",
+                    params={"method": "album.getinfo", "artist": artist, "album": album,
+                            "api_key": cle, "format": "json", "lang": lang, "autocorrect": 1},
+                    headers=_entetes_api(), timeout=5,
+                )
+                al = (r.json() or {}).get("album") or {}
+                texte = ((al.get("wiki") or {}).get("content") or "")
+                texte = re.sub(r"<a href=[^>]*>.*$", "", texte, flags=re.S)
+                texte = re.sub(r"<[^>]+>", "", texte).strip()
+                if len(texte) > 40:
+                    data = {"title": album, "facts": [], "text": _couper(texte, 1200),
+                            "source": "Last.fm"}
+            except Exception:
+                pass
+
+    if not data:
+        try:
+            r = http.get(
+                "https://musicbrainz.org/ws/2/release-group/",
+                params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
+                        "fmt": "json", "limit": 1},
+                headers=_entetes_api(), timeout=4,
+            )
+            groups = r.json().get("release-groups") or []
+            if groups:
+                annee = (groups[0].get("first-release-date") or "")[:4]
+                if annee:
+                    data = {"title": album, "facts": [annee], "text": "",
+                            "source": "MusicBrainz"}
+        except Exception:
+            pass
+
+    if len(ALBUM_CACHE) > 50:
+        ALBUM_CACHE.clear()
+    ALBUM_CACHE[key] = (time.time(), data)
+    return data
+
+
 def fetch_artist_info(artist, lang):
     """Chaîne de sources: MusicBrainz+Wikidata > Wikipédia recherche > TheAudioDB > Last.fm."""
     key = (artist.lower(), lang)
@@ -555,7 +634,11 @@ def fetch_artist_info(artist, lang):
     facts = mb["facts"] if mb else []
     data = None
 
-    if mb and mb.get("qid"):
+    # Sources specialisees musique en premier, Wikipedia en repli
+    data = theaudiodb_bio(artist, lang, facts)
+    if not data:
+        data = lastfm_bio(artist, lang, facts)
+    if not data and mb and mb.get("qid"):
         title, wl = wikidata_titre(mb["qid"], lang)
         if title:
             try:
@@ -564,10 +647,6 @@ def fetch_artist_info(artist, lang):
                 data = None
     if not data:
         data = _wiki_recherche(artist, lang, facts)
-    if not data:
-        data = theaudiodb_bio(artist, lang, facts)
-    if not data:
-        data = lastfm_bio(artist, lang, facts)
 
     if len(ARTIST_CACHE) > 50:
         ARTIST_CACHE.clear()
@@ -582,13 +661,28 @@ def toggle_artist_panel():
         return True
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
-        artist = normalize(r.json()).get("artist")
+        etat = normalize(r.json())
+        artist = etat.get("artist")
+        album_titre = etat.get("album")
     except Exception:
         return False
     if not artist:
         return False
     lang = CONFIG.get("language", "fr")
     data = fetch_artist_info(artist, lang)
+    album_info = fetch_album_info(artist, album_titre, lang)
+    if data and album_info:
+        data = dict(data)
+        data["album"] = album_info
+        srcs = []
+        if album_info.get("source"):
+            srcs.append(f"Album : {album_info['source']}")
+        srcs.append(f"Artiste : {data['source']}")
+        data["source"] = " · ".join(srcs)
+    elif album_info and not data:
+        data = {"artist": artist, "text": T.get(lang, T["fr"])["no_bio"],
+                "image": None, "facts": [], "album": album_info,
+                "source": f"Album : {album_info['source']}"}
     if not data:
         # retour visuel bref: une touche pressee doit toujours repondre
         data = {"artist": artist, "text": T.get(lang, T["fr"])["no_bio"],
@@ -1446,12 +1540,14 @@ def api_state():
         r.raise_for_status()
         info = normalize(r.json())
         artiste = info.get("artist")
-        if artiste and artiste != PREFETCH["artist"]:
-            PREFETCH["artist"] = artiste
-            threading.Thread(
-                target=lambda a=artiste: fetch_artist_info(a, CONFIG.get("language", "fr")),
-                daemon=True,
-            ).start()
+        cle_pf = (artiste, info.get("album"))
+        if artiste and cle_pf != PREFETCH["artist"]:
+            PREFETCH["artist"] = cle_pf
+            def _precharge(a=artiste, al=info.get("album")):
+                lg = CONFIG.get("language", "fr")
+                fetch_artist_info(a, lg)
+                fetch_album_info(a, al, lg)
+            threading.Thread(target=_precharge, daemon=True).start()
         if STATE_CACHE["down_since"]:
             durée = int(time.time() - STATE_CACHE["down_since"])
             print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)

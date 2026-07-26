@@ -692,21 +692,45 @@ def api_state():
         })
 
 
+def host_is_private(hostname):
+    """Vrai si l'hote resout vers une adresse privee, locale ou reservee."""
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except Exception:
+        return True
+    for info in infos:
+        try:
+            addr = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            return True
+        if (addr.is_private or addr.is_loopback or addr.is_link_local
+                or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
+            return True
+    return False
+
+
 @app.route("/api/cover")
 def api_cover():
     url = unquote(request.args.get("u", ""))
     parsed = urlparse(url)
-    allowed = {
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        return Response(status=403)
+    streamer = {
         f"{CONFIG['eversolo_ip']}:{CONFIG['eversolo_port']}",
         CONFIG["eversolo_ip"],
     }
-    # Le proxy ne sert que des images venant du streamer configure (anti SSRF).
-    if parsed.scheme not in ("http", "https") or parsed.netloc not in allowed:
+    # Anti SSRF: le streamer configure est toujours autorise; tout autre hote
+    # doit etre public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
+    # CDN externes) et repondre avec une image. Le reseau prive reste interdit.
+    if parsed.netloc not in streamer and host_is_private(parsed.hostname):
         return Response(status=403)
     try:
         r = http.get(url, timeout=5)
         r.raise_for_status()
-        resp = Response(r.content, content_type=r.headers.get("Content-Type", "image/jpeg"))
+        ctype = r.headers.get("Content-Type", "image/jpeg")
+        if parsed.netloc not in streamer and not ctype.lower().startswith("image/"):
+            return Response(status=403)
+        resp = Response(r.content, content_type=ctype)
         resp.headers["Cache-Control"] = "max-age=86400"
         return resp
     except Exception:

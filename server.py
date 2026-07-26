@@ -1127,11 +1127,17 @@ def find_quality(state):
         if v and 8 <= v <= 64:
             cleaned["bit_depth"] = int(v)
     if "bitrate" in found:
-        v = num(found["bitrate"])
-        if v and v > 0:
-            v = int(v / 1000) if v > 10000 else int(v)
-            if v >= 32:
-                cleaned["bitrate"] = v
+        raw = str(found["bitrate"]).lower()
+        if "mb" in raw:
+            # exprime en megabits ("1,4 Mbps"): virgule decimale, x1000
+            m = re.search(r"\d+(?:[.,]\d+)?", raw)
+            v = float(m.group(0).replace(",", ".")) * 1000 if m else None
+        else:
+            v = num(found["bitrate"])
+            if v and v > 10000:
+                v = v / 1000
+        if v and int(v) >= 32:
+            cleaned["bitrate"] = int(v)
     if "format" in found:
         tokens = re.findall(r"[A-Za-z]{2,}", str(found["format"]))
         word = next((t for t in tokens if t.lower() not in

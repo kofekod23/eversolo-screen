@@ -73,6 +73,26 @@ L'installation prend 5 a 10 minutes selon le modele. A la fin, le script affiche
 
 Lancez un morceau sur l'Eversolo : l'ecran HDMI du Pi affiche la pochette, le titre et la progression. Le modele exact de votre streamer (DMP-A6, A8, A10...) apparait dans le bandeau du haut.
 
+
+## Variante : tout preparer depuis le Mac, sans jamais ouvrir de terminal SSH
+
+Si vous preferez que le Pi s'installe entierement tout seul au premier demarrage :
+
+1. Flashez la carte avec Raspberry Pi Imager comme decrit a l'etape 2, reglages compris (utilisateur, Wi-Fi, SSH). Ne retirez pas la carte du Mac.
+2. Si le Mac ne montre plus la carte apres le flash, debranchez et rebranchez le lecteur : un volume `bootfs` apparait.
+3. Dans le Terminal du Mac :
+
+```bash
+curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/prepare-sd.sh
+bash prepare-sd.sh
+```
+
+4. Ejectez la carte, inserez-la dans le Raspberry, branchez l'ecran puis l'alimentation.
+5. Patientez 10 a 15 minutes : le Pi telecharge et installe tout, y compris le kiosque plein ecran, puis l'affichage apparait sur la TV.
+6. Derniere etape, depuis votre telephone : `http://eversolo.local:8080` pour l'assistant (langue, mot de passe, detection du streamer).
+
+Le Pi a besoin d'Internet a ce premier demarrage (le Wi-Fi configure dans Imager suffit). En cas de souci, le journal d'installation est dans `/var/log/eversolo-provision.log` sur le Pi.
+
 ## 7. Verifications et depannage
 
 L'ecran reste noir apres l'installation :

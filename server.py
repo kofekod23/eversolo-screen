@@ -368,21 +368,59 @@ def fetch_artist_info(artist, lang):
         return cached[1]
     headers = {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
     data = None
-    try:
+
+    MOTS_MUSIQUE = (
+        "musi", "chant", "groupe", "band", "singer", "rapp", "composit", "composer",
+        "dj", "produc", "guitar", "pian", "trompett", "saxo", "batteur", "drummer",
+        "auteur-compositeur", "songwriter", "s\u00e4nger", "cantante", "grupo",
+        "banda", "orchestr", "soprano", "t\u00e9nor", "tenor", "violon", "violin",
+    )
+
+    def parle_de_musique(texte):
+        texte = (texte or "").lower()
+        return any(mot in texte for mot in MOTS_MUSIQUE)
+
+    def chercher(query):
         r = http.get(
             f"https://{lang}.wikipedia.org/w/rest.php/v1/search/page",
-            params={"q": artist, "limit": 1}, headers=headers, timeout=4,
+            params={"q": query, "limit": 5}, headers=headers, timeout=4,
         )
-        pages = r.json().get("pages") or []
-        if pages:
-            title = pages[0]["title"]
-            r = http.get(
-                f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
-                + requests.utils.quote(title, safe=""),
-                headers=headers, timeout=4,
-            )
-            j = r.json()
+        return r.json().get("pages") or []
+
+    def resume(title):
+        r = http.get(
+            f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
+            + requests.utils.quote(title, safe=""),
+            headers=headers, timeout=4,
+        )
+        return r.json()
+
+    try:
+        # 1er passage: recherche simple, on retient le premier resultat dont
+        # la description evoque la musique. 2e passage: recherche orientee.
+        title = None
+        for tentative in (artist, f"{artist} musique groupe"):
+            for page in chercher(tentative):
+                if parle_de_musique(page.get("description", "")) or (
+                    tentative != artist and page.get("title", "").lower() == artist.lower()
+                ):
+                    title = page["title"]
+                    break
+            if title:
+                break
+        # dernier recours: premier resultat brut, mais uniquement si son resume
+        # parle de musique, sinon on prefere ne rien afficher qu'afficher faux
+        pages = chercher(artist) if not title else []
+        if not title and pages:
+            j0 = resume(pages[0]["title"])
+            if parle_de_musique(j0.get("extract", "")):
+                title = pages[0]["title"]
+
+        if title:
+            j = resume(title)
             extract = (j.get("extract") or "").strip()
+            if extract and not parle_de_musique(extract):
+                extract = ""
             if extract:
                 thumb = (j.get("thumbnail") or {}).get("source")
                 data = {

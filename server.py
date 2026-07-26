@@ -45,7 +45,7 @@ T = {
         "password_confirm": "Confirmer le mot de passe",
         "password_short": "8 caracteres minimum.",
         "password_mismatch": "Les deux mots de passe ne correspondent pas.",
-        "device_ip": "Adresse IP du DMP-A6",
+        "device_ip": "Adresse IP du streamer",
         "detect": "Detecter sur le reseau",
         "detecting": "Recherche en cours...",
         "detect_none": "Aucun streamer trouve. Saisissez l'IP manuellement.",
@@ -71,7 +71,7 @@ T = {
         "password_confirm": "Confirm password",
         "password_short": "8 characters minimum.",
         "password_mismatch": "Passwords do not match.",
-        "device_ip": "DMP-A6 IP address",
+        "device_ip": "Streamer IP address",
         "detect": "Detect on network",
         "detecting": "Scanning...",
         "detect_none": "No streamer found. Enter the IP manually.",
@@ -97,7 +97,7 @@ T = {
         "password_confirm": "Confirmar contrasena",
         "password_short": "Minimo 8 caracteres.",
         "password_mismatch": "Las contrasenas no coinciden.",
-        "device_ip": "Direccion IP del DMP-A6",
+        "device_ip": "Direccion IP del streamer",
         "detect": "Detectar en la red",
         "detecting": "Buscando...",
         "detect_none": "No se encontro ningun streamer. Introduzca la IP manualmente.",
@@ -123,7 +123,7 @@ T = {
         "password_confirm": "Passwort bestaetigen",
         "password_short": "Mindestens 8 Zeichen.",
         "password_mismatch": "Die Passwoerter stimmen nicht ueberein.",
-        "device_ip": "IP-Adresse des DMP-A6",
+        "device_ip": "IP-Adresse des Streamers",
         "detect": "Im Netzwerk suchen",
         "detecting": "Suche laeuft...",
         "detect_none": "Kein Streamer gefunden. IP manuell eingeben.",
@@ -203,6 +203,25 @@ app.config.update(
 )
 
 http = requests.Session()
+
+MODEL_CACHE = {"ip": None, "name": ""}
+
+
+def device_model(ip=None, port=None):
+    """Nom du modele (DMP-A6, A8, A10...), mis en cache par adresse."""
+    ip = ip or CONFIG.get("eversolo_ip")
+    port = port or CONFIG.get("eversolo_port", 9529)
+    if not ip:
+        return ""
+    if MODEL_CACHE["ip"] == ip and MODEL_CACHE["name"]:
+        return MODEL_CACHE["name"]
+    try:
+        r = http.get(f"http://{ip}:{port}/ControlCenter/getModel", timeout=2)
+        name = r.json().get("model", "") if r.ok else ""
+    except Exception:
+        name = ""
+    MODEL_CACHE.update({"ip": ip, "name": name})
+    return name
 
 # ------------------------------------------------------------ anti force brute
 
@@ -287,7 +306,7 @@ def probe(ip, port, timeout=0.4):
             f"http://{ip}:{port}/ZidooMusicControl/v2/getState", timeout=1.5
         )
         if r.ok and isinstance(r.json(), dict):
-            return ip
+            return {"ip": ip, "model": device_model(ip, port)}
     except Exception:
         pass
     return None
@@ -348,7 +367,7 @@ button:hover{filter:brightness(1.08)}
 .foot a:hover{color:var(--ivory)}
 </style></head><body>
 <div class="card">
-  <div class="brand"><span class="lamp"></span><span><b>Eversolo</b>&ensp;DMP-A6</span></div>
+  <div class="brand"><span class="lamp"></span><span><b>Eversolo</b></span></div>
   {{ body }}
 </div>
 </body></html>
@@ -430,7 +449,7 @@ document.getElementById('scan').onclick = async function() {{
   this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
   try {{
     const r = await fetch('/api/detect'); const d = await r.json();
-    if (d.found && d.found.length) document.getElementById('ip').value = d.found[0];
+    if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
     else alert({json.dumps(t['detect_none'])});
   }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
@@ -552,7 +571,7 @@ document.getElementById('scan').onclick = async function() {{
   this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
   try {{
     const r = await fetch('/api/detect'); const d = await r.json();
-    if (d.found && d.found.length) document.getElementById('ip').value = d.found[0];
+    if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
     else alert({json.dumps(t['detect_none'])});
   }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
@@ -614,6 +633,7 @@ def normalize(state):
         "duration": (state.get("duration") or 0) / 1000,
         "quality": find_quality(state),
         "lang": CONFIG.get("language", "fr"),
+        "model": device_model(),
         "server_time": time.time(),
     }
 

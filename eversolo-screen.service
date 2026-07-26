@@ -1,5 +1,5 @@
 [Unit]
-Description=Serveur eversolo-screen (now playing DMP-A6)
+Description=Serveur eversolo-screen (now playing Eversolo)
 After=network-online.target
 Wants=network-online.target
 

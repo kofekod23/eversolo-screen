@@ -2,15 +2,15 @@
 
 [Français](README.md) · [English] · [Español](README.es.md) · [Deutsch](README.de.md)
 
-A "now playing" display for the Eversolo DMP-A6, designed like an amplifier faceplate: album art, title, artist, album, stream quality and progress, full screen on a Raspberry Pi or from any browser on your local network.
+A "now playing" display for Eversolo streamers (DMP-A6, A6 Master Edition, A8, A10), designed like an amplifier faceplate: album art, title, artist, album, stream quality and progress, full screen on a Raspberry Pi or from any browser on your local network.
 
-The DMP-A6 exposes a local HTTP API on port 9529. Everything stays on your network, no account, no cloud.
+These devices expose a local HTTP API on port 9529. Everything stays on your network, no account, no cloud.
 
 ## Hardware
 
 - Raspberry Pi (3, 4, 5 or Zero 2 W), Raspberry Pi OS Lite is enough
 - HDMI screen (optional, the interface also works from a phone)
-- Pi and DMP-A6 on the same network
+- Pi and streamer on the same network
 
 ## Automatic installation
 
@@ -20,7 +20,7 @@ cd eversolo-screen
 ./install.sh --kiosk
 ```
 
-Then open `http://PI_IP:8080`: the first-time setup wizard starts. It asks for a language and an administrator password, and finds the DMP-A6 on the network by itself ("Detect" button). Nothing to edit by hand.
+Then open `http://PI_IP:8080`: the first-time setup wizard starts. It asks for a language and an administrator password, and finds the streamer on the network by itself ("Detect" button). Nothing to edit by hand.
 
 - With `--kiosk`: the Pi's HDMI screen shows the interface full screen at boot (cage + Chromium, works without a desktop).
 - Without it: only the server is installed, reachable from any device on the network.

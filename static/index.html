@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eversolo · En lecture</title>
+<title>Eversolo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..640;1,9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
 
   <main class="stage" id="stage">
     <header class="faceplate">
-      <a class="brand" href="/config" style="text-decoration:none;color:inherit"><b>Eversolo</b>&ensp;DMP-A6</a>
+      <a class="brand" href="/config" style="text-decoration:none;color:inherit"><b>Eversolo</b>&ensp;<span id="model"></span></a>
       <div class="clock" id="clock"></div>
     </header>
 
@@ -379,6 +379,7 @@
 
     $("stage").classList.toggle("paused", !s.playing);
     $("status").textContent = s.playing ? L.playing : L.paused;
+    if (s.model) $("model").textContent = s.model;
     $("title").textContent = s.title;
     $("artist").textContent = s.artist || "";
     $("album").textContent = s.album || "";

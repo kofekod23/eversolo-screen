@@ -30,10 +30,34 @@ def listen_port():
 
 
 def find_rc_device():
-    """Trouve le peripherique d'entree du recepteur infrarouge."""
-    for path in glob.glob("/sys/class/rc/rc*/input*/event*"):
-        return "/dev/input/" + os.path.basename(path)
-    return None
+    """Trouve le peripherique du recepteur infrarouge GPIO.
+
+    Plusieurs peripheriques rc coexistent souvent (le CEC du HDMI en expose
+    un aussi): on identifie explicitement le capteur gpio_ir_recv, sinon on
+    ecouterait le mauvais et aucune touche ne serait vue.
+    """
+    candidates = []
+    for rc in sorted(glob.glob("/sys/class/rc/rc*")):
+        events = sorted(glob.glob(os.path.join(rc, "input*/event*")))
+        if not events:
+            continue
+        dev = "/dev/input/" + os.path.basename(events[0])
+        info = ""
+        for meta in glob.glob(os.path.join(rc, "input*/name")) + [
+            os.path.join(rc, "uevent")
+        ]:
+            try:
+                with open(meta, encoding="utf-8", errors="ignore") as f:
+                    info += f.read().lower()
+            except OSError:
+                pass
+        link = os.path.join(rc, "device", "driver")
+        if os.path.islink(link):
+            info += os.path.basename(os.path.realpath(link)).lower()
+        if "gpio_ir_recv" in info or "gpio-ir" in info:
+            return dev
+        candidates.append(dev)
+    return candidates[0] if candidates else None
 
 
 def forward(port, code, when_ok=None):

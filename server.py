@@ -37,6 +37,7 @@ DEFAULTS = {
     "language": "fr",
     "theaudiodb_key": "2",
     "lastfm_api_key": "",
+    "discogs_token": "",
 }
 
 LANGS = ("fr", "en", "es", "de")
@@ -73,6 +74,7 @@ T = {
         "no_bio": "Aucune biographie trouvée pour cet artiste dans les sources consultées.",
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
+        "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
     },
@@ -105,6 +107,7 @@ T = {
         "no_bio": "No biography found for this artist in the available sources.",
         "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
         "searching": "Looking up artist and record information...",
+        "discogs_token": "Discogs token (detailed production credits, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -137,6 +140,7 @@ T = {
         "no_bio": "No se encontró ninguna biografía de este artista en las fuentes consultadas.",
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
         "searching": "Buscando información del artista y del disco...",
+        "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
@@ -169,6 +173,7 @@ T = {
         "no_bio": "Keine Biografie zu diesem Künstler in den verfügbaren Quellen gefunden.",
         "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
         "searching": "Informationen zu Künstler und Album werden gesucht...",
+        "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -661,15 +666,7 @@ def _mb_release_details(rgid, lang):
                 for rel in (t.get("recording") or {}).get("relations") or []:
                     ajouter(rel)
 
-        # regroupement par role: "Production - A, B, C" plutot que dix lignes
-        groupes = {}
-        ordre = []
-        for c in credits:
-            if c["role"] not in groupes:
-                groupes[c["role"]] = []
-                ordre.append(c["role"])
-            groupes[c["role"]].append(c["name"])
-        credits[:] = [{"role": r, "name": ", ".join(groupes[r][:8])} for r in ordre][:10]
+        pass
         for lab in labels[:1]:
             prod_facts.append(lab)
         if date:
@@ -679,6 +676,75 @@ def _mb_release_details(rgid, lang):
     except Exception:
         pass
     return tracks, credits, prod_facts
+
+
+def _grouper_credits(bruts):
+    """Une ligne par métier: Production - A, B, C."""
+    groupes, ordre = {}, []
+    for c in bruts:
+        if c["role"] not in groupes:
+            groupes[c["role"]] = []
+            ordre.append(c["role"])
+        if c["name"] not in groupes[c["role"]]:
+            groupes[c["role"]].append(c["name"])
+    return [{"role": r, "name": ", ".join(groupes[r][:8])} for r in ordre][:10]
+
+
+def discogs_credits(artist, album, lang):
+    """Crédits de production via Discogs, la référence des livrets, jeton requis."""
+    token = (CONFIG.get("discogs_token") or "").strip()
+    if not token:
+        return []
+    try:
+        r = http.get(
+            "https://api.discogs.com/database/search",
+            params={"artist": artist, "release_title": album, "type": "release",
+                    "per_page": 1, "token": token},
+            headers=_entetes_api(), timeout=5,
+        )
+        resultats = (r.json() or {}).get("results") or []
+        if not resultats:
+            return []
+        r2 = http.get(
+            f"https://api.discogs.com/releases/{resultats[0]['id']}",
+            params={"token": token}, headers=_entetes_api(), timeout=6,
+        )
+        j = r2.json() or {}
+        CORRESPONDANCES = {
+            "producer": "producer", "co-producer": "producer",
+            "executive-producer": "producer", "executive producer": "producer",
+            "mixed by": "mix", "mastered by": "mastering",
+            "recorded by": "recording", "engineer": "engineer",
+        }
+        bruts = []
+        sources = list(j.get("extraartists") or [])
+        for piste in j.get("tracklist") or []:
+            sources.extend(piste.get("extraartists") or [])
+        for ea in sources:
+            nom = re.sub(r" \(\d+\)$", "", (ea.get("name") or "").strip())
+            if not nom:
+                continue
+            # Discogs cumule les metiers ("Recorded By, Mixed By"): un par un
+            for role_brut in (ea.get("role") or "").split(","):
+                role_brut = role_brut.strip()
+                if not role_brut:
+                    continue
+                cle = role_brut.lower()
+                correspondance = None
+                for motif, typ in CORRESPONDANCES.items():
+                    if motif in cle:
+                        correspondance = typ
+                        break
+                if correspondance:
+                    role = ROLES_CREDITS[correspondance].get(lang, ROLES_CREDITS[correspondance]["en"])
+                elif "written" in cle or "management" in cle or "art" in cle or "photo" in cle:
+                    continue
+                else:
+                    role = role_brut
+                bruts.append({"role": role, "name": nom})
+        return bruts
+    except Exception:
+        return []
 
 
 def fetch_album_info(artist, album, lang):
@@ -761,8 +827,13 @@ def fetch_album_info(artist, album, lang):
         data = {"title": album, "facts": [annee] if annee else [], "text": "",
                 "source": "MusicBrainz"}
     if data:
+        if len(credits) < 2:
+            supplement = discogs_credits(nom, album, lang)
+            if supplement:
+                credits = credits + supplement
+                data["source"] += " · Discogs"
         data["tracks"] = tracks
-        data["credits"] = credits
+        data["credits"] = _grouper_credits(credits)
         data["prod_facts"] = prod_facts
 
     if len(ALBUM_CACHE) > 50:
@@ -1177,6 +1248,7 @@ def config_page():
                     "language": new_lang if new_lang in LANGS else lang,
                     "theaudiodb_key": request.form.get("tadb_key", "").strip() or "2",
                     "lastfm_api_key": request.form.get("lastfm_key", "").strip(),
+                    "discogs_token": request.form.get("discogs_token", "").strip(),
                 })
                 save_config(CONFIG)
                 t = tr()
@@ -1205,6 +1277,8 @@ def config_page():
   <input type="text" name="tadb_key" value="{CONFIG.get('theaudiodb_key', '2')}" autocomplete="off">
   <label>{t['lastfm_key']}</label>
   <input type="text" name="lastfm_key" value="{CONFIG.get('lastfm_api_key', '')}" autocomplete="off">
+  <label>{t['discogs_token']}</label>
+  <input type="text" name="discogs_token" value="{CONFIG.get('discogs_token', '')}" autocomplete="off">
   <label>{t['new_password']}</label>
   <input type="password" name="new_password" autocomplete="new-password">
   <label>{t['current_password']}</label>

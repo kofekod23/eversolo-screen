@@ -1102,8 +1102,19 @@ def find_quality(state):
     # Les appareils renvoient parfois du texte ("44.1kHz", "24bit", "320 kbps"):
     # on extrait des valeurs numeriques propres, sinon on ecarte le champ.
     def num(value):
-        m = re.search(r"\d+(?:[.,]\d+)?", str(value))
-        return float(m.group(0).replace(",", ".")) if m else None
+        m = re.search(r"\d+(?:[.,]\d+)*", str(value))
+        if not m:
+            return None
+        token = m.group(0)
+        # "1,411" ou "44.100" sont des separateurs de milliers, pas des decimales
+        if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", token):
+            token = re.sub(r"[.,]", "", token)
+        else:
+            token = token.replace(",", ".")
+        try:
+            return float(token)
+        except ValueError:
+            return None
 
     cleaned = {}
     if "sample_rate" in found:
@@ -1118,7 +1129,9 @@ def find_quality(state):
     if "bitrate" in found:
         v = num(found["bitrate"])
         if v and v > 0:
-            cleaned["bitrate"] = int(v / 1000) if v > 10000 else int(v)
+            v = int(v / 1000) if v > 10000 else int(v)
+            if v >= 32:
+                cleaned["bitrate"] = v
     if "format" in found:
         tokens = re.findall(r"[A-Za-z]{2,}", str(found["format"]))
         word = next((t for t in tokens if t.lower() not in
@@ -1189,6 +1202,9 @@ def normalize(state):
     return info
 
 
+STATE_CACHE = {"info": None, "failures": 0}
+
+
 @app.route("/api/state")
 def api_state():
     if not is_configured():
@@ -1197,10 +1213,18 @@ def api_state():
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
         info = normalize(r.json())
+        STATE_CACHE.update({"info": info, "failures": 0})
         if ARTIST_PANEL["until"] > time.time():
             info["panel"] = ARTIST_PANEL["data"]
         return jsonify(info)
     except Exception:
+        # Un rate isole (Wi-Fi, streamer occupe) ne doit pas faire clignoter
+        # "introuvable": on ressert le dernier etat connu quelques secondes.
+        STATE_CACHE["failures"] += 1
+        if STATE_CACHE["info"] and STATE_CACHE["failures"] < 3:
+            stale = dict(STATE_CACHE["info"])
+            stale["server_time"] = time.time()
+            return jsonify(stale)
         return jsonify({
             "connected": False,
             "lang": CONFIG.get("language", "fr"),

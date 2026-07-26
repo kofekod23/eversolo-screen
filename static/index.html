@@ -383,6 +383,7 @@
   let state = null;
   let receivedAt = 0;
   let lastCover = null;
+  let coverTitle = null;
 
   function fmt(s) {
     s = Math.max(0, Math.floor(s));
@@ -455,17 +456,30 @@
     $("stream").innerHTML = chips.map(c => `<span>${c}</span>`).join("");
 
     if (s.cover && s.cover !== lastCover) {
+      // Prechargement invisible puis echange: la pochette actuelle reste
+      // affichee tant que la nouvelle n'est pas prete, aucun clignotement.
       lastCover = s.cover;
-      const img = $("cover");
-      img.classList.remove("on");
-      img.onload = () => {
+      const wanted = s.cover;
+      const probe = new Image();
+      probe.onload = () => {
+        if (lastCover !== wanted) return;
+        const img = $("cover");
+        img.src = wanted;
         img.classList.add("on");
-        $("ambient").style.backgroundImage = `url("${s.cover}")`;
+        $("ambient").style.backgroundImage = `url("${wanted}")`;
         $("ambient").classList.add("on");
+        coverTitle = s.title;
       };
-      img.src = s.cover;
-    } else if (!s.cover) {
+      probe.onerror = () => {
+        // echec passager (CDN, reseau): on garde l'ancienne image et on
+        // retentera dans quelques secondes
+        setTimeout(() => { if (lastCover === wanted) lastCover = null; }, 5000);
+      };
+      probe.src = wanted;
+    } else if (!s.cover && s.title !== coverTitle) {
+      // nouveau morceau reellement sans pochette: on efface
       lastCover = null;
+      coverTitle = null;
       $("cover").classList.remove("on");
       $("ambient").classList.remove("on");
     }

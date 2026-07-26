@@ -1,2 +1,2 @@
-pygame>=2.5
+flask>=3.0
 requests>=2.31

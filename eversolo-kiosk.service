@@ -1,0 +1,16 @@
+[Unit]
+Description=Kiosque Chromium eversolo-screen
+After=eversolo-screen@%i.service
+Wants=eversolo-screen@%i.service
+
+[Service]
+Type=simple
+User=%i
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+ExecStartPre=/bin/sh -c 'until curl -s -o /dev/null http://localhost:8080; do sleep 1; done'
+ExecStart=/usr/bin/cage -- /usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --app=http://localhost:8080
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eversolo · En lecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..640;1,9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --chassis: #0d0b08;
+    --panel: #16130e;
+    --line: #2a251c;
+    --ivory: #ece6d8;
+    --muted: #918a79;
+    --faint: #5c564a;
+    --tube: #e8a33d;
+    --tube-hot: #ffc46b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--chassis);
+    color: var(--ivory);
+    font-family: "Archivo", system-ui, sans-serif;
+    overflow: hidden;
+    cursor: none;
+  }
+  body.pointer { cursor: default; }
+
+  /* Ambiance coloree tiree de la pochette */
+  #ambient {
+    position: fixed;
+    inset: -12%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(90px) saturate(1.3) brightness(0.5);
+    opacity: 0;
+    transition: opacity 2.5s ease, background-image 1s ease;
+    z-index: 0;
+  }
+  #ambient.on { opacity: 0.32; }
+  #ambient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 45%, transparent 0%, rgba(13,11,8,0.75) 75%);
+  }
+
+  .stage {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: clamp(20px, 4vh, 48px) clamp(24px, 5vw, 72px);
+  }
+
+  /* Bandeau de facade */
+  .faceplate {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: clamp(10px, 1.8vh, 18px);
+  }
+  .brand {
+    font-size: clamp(11px, 1.4vh, 14px);
+    font-weight: 600;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .brand b { color: var(--ivory); font-weight: 600; }
+  .clock {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(11px, 1.4vh, 14px);
+    color: var(--faint);
+    letter-spacing: 0.12em;
+  }
+
+  /* Scene centrale */
+  .now {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: clamp(28px, 5vw, 80px);
+    min-height: 0;
+    padding: clamp(16px, 3.5vh, 40px) 0;
+  }
+
+  .cover-mount { position: relative; height: min(62vh, 44vw); aspect-ratio: 1; }
+  .cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--panel);
+    box-shadow:
+      0 30px 80px -20px rgba(0, 0, 0, 0.85),
+      0 0 0 1px rgba(236, 230, 216, 0.07);
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+  .cover.on { opacity: 1; }
+  .cover-mount::after {
+    /* reflet de vitre, discret */
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: linear-gradient(155deg, rgba(255,255,255,0.09) 0%, transparent 34%);
+    pointer-events: none;
+  }
+
+  .meta { min-width: 0; }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: clamp(10px, 1.3vh, 13px);
+    font-weight: 500;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--tube);
+    margin-bottom: clamp(14px, 2.6vh, 28px);
+  }
+  .lamp {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--tube);
+    box-shadow: 0 0 10px 2px rgba(232, 163, 61, 0.55);
+    animation: breathe 3.2s ease-in-out infinite;
+  }
+  .paused .lamp { background: var(--faint); box-shadow: none; animation: none; }
+  .paused .eyebrow { color: var(--muted); }
+  @keyframes breathe { 50% { box-shadow: 0 0 16px 4px rgba(232, 163, 61, 0.8); } }
+
+  .title {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 560;
+    font-size: clamp(30px, 7.2vh, 76px);
+    line-height: 1.06;
+    letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-wrap: balance;
+  }
+  .artist {
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    font-weight: 420;
+    font-size: clamp(19px, 3.6vh, 38px);
+    color: var(--ivory);
+    opacity: 0.86;
+    margin-top: clamp(8px, 1.6vh, 16px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .album {
+    font-size: clamp(13px, 2vh, 19px);
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-top: clamp(6px, 1.2vh, 12px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stream {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: clamp(16px, 3vh, 32px);
+  }
+  .stream span {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(10px, 1.4vh, 13px);
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 5px 10px;
+    background: rgba(22, 19, 14, 0.6);
+  }
+
+  /* Filament de progression */
+  .transport { padding-top: clamp(10px, 2vh, 20px); }
+  .times {
+    display: flex;
+    justify-content: space-between;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(11px, 1.5vh, 14px);
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .filament {
+    position: relative;
+    height: 2px;
+    background: var(--line);
+    border-radius: 2px;
+  }
+  .filament .glow {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #b5771f, var(--tube) 70%, var(--tube-hot));
+    border-radius: 2px;
+    box-shadow: 0 0 12px 1px rgba(232, 163, 61, 0.5);
+    transition: width 0.25s linear;
+  }
+  .filament .tip {
+    position: absolute;
+    top: 50%;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--tube-hot);
+    box-shadow: 0 0 14px 3px rgba(255, 196, 107, 0.7);
+    transform: translate(-50%, -50%);
+    transition: left 0.25s linear;
+  }
+  .paused .glow { background: var(--faint); box-shadow: none; }
+  .paused .tip { background: var(--muted); box-shadow: none; }
+
+  /* Ecran d'attente */
+  #idle {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    background: var(--chassis);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s ease;
+  }
+  #idle.on { opacity: 1; pointer-events: auto; }
+  #idle .mark {
+    font-size: clamp(16px, 3vh, 26px);
+    font-weight: 600;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    padding-left: 0.5em;
+  }
+  #idle .sub {
+    margin-top: 18px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: clamp(11px, 1.6vh, 14px);
+    color: var(--faint);
+    letter-spacing: 0.14em;
+  }
+  #idle .lamp { margin: 0 auto 26px; }
+
+  @media (max-aspect-ratio: 1/1) {
+    .now { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 24px; }
+    .cover-mount { height: min(44vh, 78vw); }
+    .artist, .album { white-space: normal; }
+    .stream { justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lamp { animation: none; }
+    #ambient, .cover, #idle { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="ambient"></div>
+
+  <main class="stage" id="stage">
+    <header class="faceplate">
+      <div class="brand"><b>Eversolo</b>&ensp;DMP-A6</div>
+      <div class="clock" id="clock"></div>
+    </header>
+
+    <section class="now">
+      <div class="cover-mount">
+        <img class="cover" id="cover" alt="">
+      </div>
+      <div class="meta">
+        <div class="eyebrow"><span class="lamp"></span><span id="status">En lecture</span></div>
+        <h1 class="title" id="title"></h1>
+        <div class="artist" id="artist"></div>
+        <div class="album" id="album"></div>
+        <div class="stream" id="stream"></div>
+      </div>
+    </section>
+
+    <footer class="transport">
+      <div class="times"><span id="pos">0:00</span><span id="dur">0:00</span></div>
+      <div class="filament"><div class="glow" id="glow"></div><div class="tip" id="tip"></div></div>
+    </footer>
+  </main>
+
+  <div id="idle" class="on">
+    <span class="lamp"></span>
+    <div class="mark">Eversolo</div>
+    <div class="sub" id="idleMsg">En attente de lecture</div>
+  </div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let state = null;
+  let receivedAt = 0;
+  let lastCover = null;
+
+  function fmt(s) {
+    s = Math.max(0, Math.floor(s));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+
+  function qualityChips(q) {
+    const chips = [];
+    if (q.format) chips.push(String(q.format).toUpperCase());
+    if (q.sample_rate) {
+      const v = Number(q.sample_rate);
+      chips.push(v > 1000 ? (v / 1000).toFixed(1).replace(".0", "") + " kHz" : v + " kHz");
+    }
+    if (q.bit_depth) chips.push(q.bit_depth + " bit");
+    if (q.bitrate) chips.push(q.bitrate + " kbps");
+    return chips;
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch("/api/state", { cache: "no-store" });
+      state = await r.json();
+      receivedAt = performance.now();
+      render();
+    } catch (e) {
+      state = { connected: false };
+      render();
+    }
+  }
+
+  function render() {
+    const s = state;
+    const hasTrack = s && s.connected && s.title;
+
+    $("idle").classList.toggle("on", !hasTrack);
+    if (!hasTrack) {
+      $("idleMsg").textContent = s && s.connected
+        ? "En attente de lecture"
+        : "Streamer introuvable sur le reseau";
+      $("ambient").classList.remove("on");
+      return;
+    }
+
+    $("stage").classList.toggle("paused", !s.playing);
+    $("status").textContent = s.playing ? "En lecture" : "Pause";
+    $("title").textContent = s.title;
+    $("artist").textContent = s.artist || "";
+    $("album").textContent = s.album || "";
+
+    const chips = qualityChips(s.quality || {});
+    $("stream").innerHTML = chips.map(c => `<span>${c}</span>`).join("");
+
+    if (s.cover && s.cover !== lastCover) {
+      lastCover = s.cover;
+      const img = $("cover");
+      img.classList.remove("on");
+      img.onload = () => {
+        img.classList.add("on");
+        $("ambient").style.backgroundImage = `url("${s.cover}")`;
+        $("ambient").classList.add("on");
+      };
+      img.src = s.cover;
+    } else if (!s.cover) {
+      lastCover = null;
+      $("cover").classList.remove("on");
+      $("ambient").classList.remove("on");
+    }
+  }
+
+  function tick() {
+    if (state && state.connected && state.duration > 0) {
+      let pos = state.position;
+      if (state.playing) pos += (performance.now() - receivedAt) / 1000;
+      pos = Math.min(pos, state.duration);
+      const pct = (pos / state.duration) * 100;
+      $("glow").style.width = pct + "%";
+      $("tip").style.left = pct + "%";
+      $("pos").textContent = fmt(pos);
+      $("dur").textContent = fmt(state.duration);
+    }
+    const now = new Date();
+    $("clock").textContent =
+      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+    requestAnimationFrame(tick);
+  }
+
+  document.addEventListener("mousemove", () => {
+    document.body.classList.add("pointer");
+    clearTimeout(window._cursorTimer);
+    window._cursorTimer = setTimeout(() => document.body.classList.remove("pointer"), 3000);
+  });
+
+  poll();
+  setInterval(poll, 1000);
+  tick();
+</script>
+</body>
+</html>

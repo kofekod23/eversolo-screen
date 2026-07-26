@@ -1,7 +1,5 @@
 {
   "eversolo_ip": "192.168.1.50",
   "eversolo_port": 9529,
-  "poll_interval": 1.0,
-  "fullscreen": true,
-  "background": [10, 10, 14]
+  "listen_port": 8080
 }

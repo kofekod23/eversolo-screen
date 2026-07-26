@@ -235,6 +235,13 @@
     transition: left 0.25s linear;
   }
   .paused .glow { background: var(--faint); box-shadow: none; }
+  .islive .glow {
+    width: 100% !important;
+    opacity: 0.3;
+    animation: liveglow 4s ease-in-out infinite;
+  }
+  .islive .tip { display: none; }
+  @keyframes liveglow { 50% { opacity: 0.55; } }
   .paused .tip { background: var(--muted); box-shadow: none; }
 
   /* Ecran d'attente */
@@ -309,7 +316,7 @@
       </div>
     </section>
 
-    <footer class="transport">
+    <footer class="transport" id="transport">
       <div class="times"><span id="pos">0:00</span><span id="dur">0:00</span></div>
       <div class="filament"><div class="glow" id="glow"></div><div class="tip" id="tip"></div></div>
     </footer>
@@ -324,10 +331,10 @@
 <script>
   const $ = id => document.getElementById(id);
   const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le reseau" },
-    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network" },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproduccion", offline: "Streamer no encontrado en la red" },
-    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden" }
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le reseau", live: "En direct" },
+    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproduccion", offline: "Streamer no encontrado en la red", live: "En directo" },
+    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live" }
   };
   let L = I18N.fr;
 
@@ -379,6 +386,7 @@
 
     $("stage").classList.toggle("paused", !s.playing);
     $("status").textContent = s.playing ? L.playing : L.paused;
+    $("transport").classList.toggle("islive", !!s.live);
     if (s.model) $("model").textContent = s.model;
     $("title").textContent = s.title;
     $("artist").textContent = s.artist || "";
@@ -405,7 +413,10 @@
   }
 
   function tick() {
-    if (state && state.connected && state.duration > 0) {
+    if (state && state.connected && state.live) {
+      $("pos").textContent = L.live;
+      $("dur").textContent = "";
+    } else if (state && state.connected && state.duration > 0) {
       let pos = state.position;
       if (state.playing) pos += (performance.now() - receivedAt) / 1000;
       pos = Math.min(pos, state.duration);

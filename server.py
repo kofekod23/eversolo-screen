@@ -637,24 +637,39 @@ def normalize(state):
         "server_time": time.time(),
     }
 
-    if play_type in (4, 6):
-        audio = state.get("everSoloPlayInfo", {}).get("everSoloPlayAudioInfo", {})
-        info["title"] = audio.get("songName")
-        info["artist"] = audio.get("artistName")
-        info["album"] = audio.get("albumName")
-        info["cover"] = absolute_url(state.get("everSoloPlayInfo", {}).get("icon"))
-    else:
-        music = state.get("playingMusic") or {}
-        info["title"] = music.get("title")
-        info["artist"] = music.get("artist")
-        info["album"] = music.get("album")
-        cover = music.get("albumArt")
-        if cover:
-            info["cover"] = absolute_url(cover)
-        elif music.get("id") is not None:
-            info["cover"] = (
-                f"{eversolo_base()}/ZidooMusicControl/v2/getImage?id={music['id']}&target=16"
-            )
+    # Deux emplacements possibles selon la source:
+    # - apps de streaming (Spotify Connect, AirPlay) et Bluetooth -> everSoloPlayInfo
+    # - lecteur interne (Tidal, Qobuz, fichiers, web radios) -> playingMusic
+    # Fusion avec repli croise pour rester robuste face aux playType inconnus.
+    audio = state.get("everSoloPlayInfo", {}).get("everSoloPlayAudioInfo", {}) or {}
+    music = state.get("playingMusic") or {}
+
+    def pick(*values):
+        for v in values:
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        return None
+
+    app_first = play_type in (4, 6)
+    a_title = pick(audio.get("songName"), audio.get("title"), audio.get("name"))
+    m_title = pick(music.get("title"), music.get("name"), music.get("songName"))
+    info["title"] = pick(a_title, m_title) if app_first else pick(m_title, a_title)
+    a_artist = pick(audio.get("artistName"), audio.get("artist"))
+    m_artist = pick(music.get("artist"), music.get("artistName"))
+    info["artist"] = pick(a_artist, m_artist) if app_first else pick(m_artist, a_artist)
+    a_album = pick(audio.get("albumName"), audio.get("album"))
+    m_album = pick(music.get("album"), music.get("albumName"))
+    info["album"] = pick(a_album, m_album) if app_first else pick(m_album, a_album)
+
+    icon = absolute_url(pick(state.get("everSoloPlayInfo", {}).get("icon")))
+    art = absolute_url(pick(music.get("albumArt"), music.get("albumArtUrl"), music.get("icon")))
+    by_id = None
+    if music.get("id") is not None:
+        by_id = f"{eversolo_base()}/ZidooMusicControl/v2/getImage?id={music['id']}&target=16"
+    info["cover"] = (icon or art or by_id) if app_first else (art or by_id or icon)
+
+    # Flux en direct (web radio): pas de duree exploitable
+    info["live"] = bool(info["title"]) and info["duration"] <= 0
 
     if info["cover"]:
         info["cover"] = "/api/cover?u=" + requests.utils.quote(info["cover"], safe="")

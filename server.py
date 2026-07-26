@@ -378,7 +378,7 @@ def _cache_valide(entree):
     if not entree:
         return False
     ts, valeur = entree
-    return time.time() - ts < (86400 if valeur else 120)
+    return time.time() - ts < (259200 if valeur else 120)
 
 
 _MB_DERNIER = {"t": 0.0}
@@ -421,14 +421,8 @@ def musicbrainz_artist(artist, album=None):
         a = None
         if album:
             try:
-                r = _mb_get(
-                    "https://musicbrainz.org/ws/2/release-group/",
-                    params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
-                            "fmt": "json", "limit": 1},
-                    headers=_entetes_api(), timeout=4,
-                )
-                groups = r.json().get("release-groups") or []
-                credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") if groups else None
+                groupe = _mb_release_group(artist, album)
+                credit = (groupe.get("artist-credit") or [{}])[0].get("artist") if groupe else None
                 if credit and credit.get("id"):
                     r2 = _mb_get(
                         f"https://musicbrainz.org/ws/2/artist/{credit['id']}",
@@ -799,18 +793,12 @@ def fetch_album_info(artist, album, lang):
 
     nom, annee, rgid = artist, None, None
     try:
-        r = _mb_get(
-            "https://musicbrainz.org/ws/2/release-group/",
-            params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
-                    "fmt": "json", "limit": 1},
-            headers=_entetes_api(), timeout=4,
-        )
-        groups = r.json().get("release-groups") or []
-        if groups:
-            credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") or {}
+        groupe = _mb_release_group(artist, album)
+        if groupe:
+            credit = (groupe.get("artist-credit") or [{}])[0].get("artist") or {}
             nom = credit.get("name") or artist
-            annee = (groups[0].get("first-release-date") or "")[:4] or None
-            rgid = groups[0].get("id")
+            annee = (groupe.get("first-release-date") or "")[:4] or None
+            rgid = groupe.get("id")
     except Exception:
         pass
     tracks, credits, prod_facts = _mb_release_details(rgid, lang) if rgid else ([], [], [])
@@ -878,9 +866,10 @@ def fetch_album_info(artist, album, lang):
 
     if data is None:
         print(f"[diagnostic] aucune fiche album pour {artist} - {album}", flush=True)
-    if len(ALBUM_CACHE) > 50:
-        ALBUM_CACHE.clear()
+    _elaguer(ALBUM_CACHE)
     ALBUM_CACHE[key] = (time.time(), data)
+    if data:
+        planifier_sauvegarde()
     return data
 
 
@@ -910,9 +899,10 @@ def fetch_artist_info(artist, lang, album=None):
     if not data:
         data = _wiki_recherche(nom, lang, facts)
 
-    if len(ARTIST_CACHE) > 50:
-        ARTIST_CACHE.clear()
+    _elaguer(ARTIST_CACHE)
     ARTIST_CACHE[key] = (time.time(), data)
+    if data:
+        planifier_sauvegarde()
     return data
 
 
@@ -970,9 +960,10 @@ def fetch_track_credits(artist, titre, lang):
             credits = [c for c in credits if c["name"]][:40]
     except Exception:
         credits = []
-    if len(TRACK_CACHE) > 80:
-        TRACK_CACHE.clear()
+    _elaguer(TRACK_CACHE)
     TRACK_CACHE[key] = (time.time(), credits)
+    if credits:
+        planifier_sauvegarde()
     return credits
 
 
@@ -989,6 +980,91 @@ def enrichir_album(album_info, artist, titre, lang):
     album_info["prod_facts"] = faits[:4]
     album_info["source"] = ((album_info.get("source") or "").strip() + " · Genius").strip(" ·")
     return album_info
+
+
+FICHIER_FICHES = os.path.join(BASE_DIR, "cache_fiches.json")
+_SAUVEGARDE = {"minuteur": None, "verrou": threading.Lock()}
+RG_CACHE = {}
+
+
+def _elaguer(cache, maxi=500):
+    """Garde le cache borné en retirant la moitié la plus ancienne."""
+    if len(cache) > maxi:
+        for k in sorted(cache, key=lambda c: cache[c][0])[:len(cache) // 2]:
+            cache.pop(k, None)
+
+
+def sauver_fiches():
+    """Écrit les fiches réussies sur disque: le savoir survit aux redémarrages.
+    Écriture atomique, débit négligeable (quelques Ko par album, une fois)."""
+    try:
+        contenu = {}
+        for nom, cache in (("artistes", ARTIST_CACHE), ("albums", ALBUM_CACHE),
+                           ("plages", TRACK_CACHE)):
+            contenu[nom] = [[list(k), ts, v] for k, (ts, v) in list(cache.items()) if v]
+        temporaire = FICHIER_FICHES + ".tmp"
+        with open(temporaire, "w", encoding="utf-8") as f:
+            json.dump(contenu, f, ensure_ascii=False)
+        os.replace(temporaire, FICHIER_FICHES)
+    except Exception:
+        pass
+
+
+def planifier_sauvegarde():
+    """Sauvegarde au plus une fois toutes les 5 secondes, en arrière-plan."""
+    with _SAUVEGARDE["verrou"]:
+        if _SAUVEGARDE["minuteur"] is None:
+            def _faire():
+                with _SAUVEGARDE["verrou"]:
+                    _SAUVEGARDE["minuteur"] = None
+                sauver_fiches()
+            _SAUVEGARDE["minuteur"] = threading.Timer(5.0, _faire)
+            _SAUVEGARDE["minuteur"].daemon = True
+            _SAUVEGARDE["minuteur"].start()
+
+
+def charger_fiches():
+    try:
+        with open(FICHIER_FICHES, encoding="utf-8") as f:
+            contenu = json.load(f)
+        for nom, cache in (("artistes", ARTIST_CACHE), ("albums", ALBUM_CACHE),
+                           ("plages", TRACK_CACHE)):
+            for k, ts, v in contenu.get(nom, []):
+                if time.time() - ts < 259200 and v:
+                    cache[tuple(k)] = (ts, v)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+
+charger_fiches()
+
+
+def _mb_release_group(artist, album):
+    """Le groupe de parution MusicBrainz du disque, demandé une seule fois
+    puis partagé entre l'identification de l'artiste et la fiche album."""
+    if not album:
+        return None
+    k = (artist.lower(), album.lower())
+    entree = RG_CACHE.get(k)
+    if entree and time.time() - entree[0] < (259200 if entree[1] else 120):
+        return entree[1]
+    groupe = None
+    try:
+        r = _mb_get(
+            "https://musicbrainz.org/ws/2/release-group/",
+            params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
+                    "fmt": "json", "limit": 1},
+            headers=_entetes_api(), timeout=4,
+        )
+        groupes = r.json().get("release-groups") or []
+        groupe = groupes[0] if groupes else None
+    except Exception:
+        groupe = None
+    _elaguer(RG_CACHE)
+    RG_CACHE[k] = (time.time(), groupe)
+    return groupe
 
 
 def toggle_artist_panel():

@@ -4,3 +4,4 @@ auth.json
 .secret_key
 ir_codes/
 config.json
+cache_fiches.json

@@ -273,7 +273,10 @@ def do_action(action):
         return False
     if action in ("next", "previous") and ARTIST_PANEL["until"] > time.time():
         # volet ouvert: on tourne les pages au lieu de changer de plage
-        ARTIST_PANEL["page"] = "album" if action == "next" else "artist"
+        ordre = ["artist", "album", "prod"]
+        i = ordre.index(ARTIST_PANEL.get("page", "artist"))
+        i = min(len(ordre) - 1, i + 1) if action == "next" else max(0, i - 1)
+        ARTIST_PANEL["page"] = ordre[i]
         ARTIST_PANEL["scroll"] = 0
         ARTIST_PANEL["until"] = time.time() + 60
         return True
@@ -593,27 +596,61 @@ ROLES_CREDITS = {
     "mix": {"fr": "Mixage", "en": "Mixing", "es": "Mezcla", "de": "Mischung"},
     "mastering": {"fr": "Mastering", "en": "Mastering", "es": "Masterización", "de": "Mastering"},
     "recording": {"fr": "Prise de son", "en": "Recording", "es": "Grabación", "de": "Aufnahme"},
+    "performer": {"fr": "Interprète", "en": "Performer", "es": "Intérprete", "de": "Interpret"},
+    "vocal": {"fr": "Chant", "en": "Vocals", "es": "Voz", "de": "Gesang"},
 }
 
 
 def _mb_release_details(rgid, lang):
-    """Plages (titres, durées) et crédits (production, ingénieurs) d'un disque."""
-    tracks, credits = [], []
+    """Plages, crédits (deux niveaux: disque et enregistrements) et faits de
+    production (label, date, studios) d'un disque."""
+    tracks, credits, prod_facts = [], [], []
     try:
         r = http.get(
             "https://musicbrainz.org/ws/2/release/",
-            params={"release-group": rgid, "fmt": "json", "limit": 1},
+            params={"release-group": rgid, "fmt": "json", "limit": 1, "inc": "labels"},
             headers=_entetes_api(), timeout=4,
         )
         releases = r.json().get("releases") or []
         if not releases:
-            return tracks, credits
+            return tracks, credits, prod_facts
+        rel0 = releases[0]
+        date = rel0.get("date") or ""
+        labels = [li["label"]["name"] for li in rel0.get("label-info") or []
+                  if li.get("label", {}).get("name")]
+
         r2 = http.get(
-            f"https://musicbrainz.org/ws/2/release/{releases[0]['id']}",
-            params={"inc": "recordings+artist-rels", "fmt": "json"},
-            headers=_entetes_api(), timeout=5,
+            f"https://musicbrainz.org/ws/2/release/{rel0['id']}",
+            params={"inc": "recordings+artist-rels+recording-level-rels+place-rels",
+                    "fmt": "json"},
+            headers=_entetes_api(), timeout=6,
         )
         j = r2.json()
+
+        vus, studios = set(), []
+
+        def ajouter(rel):
+            typ = rel.get("type")
+            lieu = (rel.get("place") or {}).get("name")
+            if lieu and typ and typ.endswith(" at") and lieu not in studios:
+                studios.append(lieu)
+                return
+            nom = (rel.get("artist") or {}).get("name")
+            if not nom:
+                return
+            if typ == "instrument":
+                attrs = rel.get("attributes") or []
+                role = attrs[0].capitalize() if attrs else "Instrument"
+            elif typ in ROLES_CREDITS:
+                role = ROLES_CREDITS[typ].get(lang, ROLES_CREDITS[typ]["en"])
+            else:
+                return
+            if (role, nom) not in vus:
+                vus.add((role, nom))
+                credits.append({"role": role, "name": nom})
+
+        for rel in j.get("relations") or []:
+            ajouter(rel)
         n = 0
         for media in j.get("media") or []:
             for t in media.get("tracks") or []:
@@ -621,18 +658,19 @@ def _mb_release_details(rgid, lang):
                 ms = t.get("length") or (t.get("recording") or {}).get("length")
                 duree = f"{ms // 60000}:{(ms // 1000) % 60:02d}" if ms else ""
                 tracks.append({"n": n, "title": t.get("title") or "", "dur": duree})
-        vus = set()
-        for rel in j.get("relations") or []:
-            typ = rel.get("type")
-            nom = (rel.get("artist") or {}).get("name")
-            if nom and typ in ROLES_CREDITS and (typ, nom) not in vus:
-                vus.add((typ, nom))
-                role = ROLES_CREDITS[typ].get(lang, ROLES_CREDITS[typ]["en"])
-                credits.append({"role": role, "name": nom})
-        credits = credits[:8]
+                for rel in (t.get("recording") or {}).get("relations") or []:
+                    ajouter(rel)
+
+        credits[:] = credits[:16]
+        for lab in labels[:1]:
+            prod_facts.append(lab)
+        if date:
+            prod_facts.append(date)
+        for st in studios[:2]:
+            prod_facts.append(st)
     except Exception:
         pass
-    return tracks, credits
+    return tracks, credits, prod_facts
 
 
 def fetch_album_info(artist, album, lang):
@@ -661,7 +699,7 @@ def fetch_album_info(artist, album, lang):
             rgid = groups[0].get("id")
     except Exception:
         pass
-    tracks, credits = _mb_release_details(rgid, lang) if rgid else ([], [])
+    tracks, credits, prod_facts = _mb_release_details(rgid, lang) if rgid else ([], [], [])
 
     data = None
     try:
@@ -717,6 +755,7 @@ def fetch_album_info(artist, album, lang):
     if data:
         data["tracks"] = tracks
         data["credits"] = credits
+        data["prod_facts"] = prod_facts
 
     if len(ALBUM_CACHE) > 50:
         ALBUM_CACHE.clear()

@@ -11,5 +11,19 @@ ExecStart=/home/%i/eversolo-screen/venv/bin/python server.py
 Restart=on-failure
 RestartSec=5
 
+# Durcissement systemd
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+
 [Install]
 WantedBy=multi-user.target

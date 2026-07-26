@@ -279,7 +279,7 @@
 
   <main class="stage" id="stage">
     <header class="faceplate">
-      <div class="brand"><b>Eversolo</b>&ensp;DMP-A6</div>
+      <a class="brand" href="/config" style="text-decoration:none;color:inherit"><b>Eversolo</b>&ensp;DMP-A6</a>
       <div class="clock" id="clock"></div>
     </header>
 
@@ -288,7 +288,7 @@
         <img class="cover" id="cover" alt="">
       </div>
       <div class="meta">
-        <div class="eyebrow"><span class="lamp"></span><span id="status">En lecture</span></div>
+        <div class="eyebrow"><span class="lamp"></span><span id="status"></span></div>
         <h1 class="title" id="title"></h1>
         <div class="artist" id="artist"></div>
         <div class="album" id="album"></div>
@@ -305,11 +305,19 @@
   <div id="idle" class="on">
     <span class="lamp"></span>
     <div class="mark">Eversolo</div>
-    <div class="sub" id="idleMsg">En attente de lecture</div>
+    <div class="sub" id="idleMsg"></div>
   </div>
 
 <script>
   const $ = id => document.getElementById(id);
+  const I18N = {
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le reseau" },
+    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproduccion", offline: "Streamer no encontrado en la red" },
+    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden" }
+  };
+  let L = I18N.fr;
+
   let state = null;
   let receivedAt = 0;
   let lastCover = null;
@@ -335,6 +343,8 @@
     try {
       const r = await fetch("/api/state", { cache: "no-store" });
       state = await r.json();
+      if (state.setup) { location = "/setup"; return; }
+      if (state.lang && I18N[state.lang]) L = I18N[state.lang];
       receivedAt = performance.now();
       render();
     } catch (e) {
@@ -349,15 +359,13 @@
 
     $("idle").classList.toggle("on", !hasTrack);
     if (!hasTrack) {
-      $("idleMsg").textContent = s && s.connected
-        ? "En attente de lecture"
-        : "Streamer introuvable sur le reseau";
+      $("idleMsg").textContent = s && s.connected ? L.waiting : L.offline;
       $("ambient").classList.remove("on");
       return;
     }
 
     $("stage").classList.toggle("paused", !s.playing);
-    $("status").textContent = s.playing ? "En lecture" : "Pause";
+    $("status").textContent = s.playing ? L.playing : L.paused;
     $("title").textContent = s.title;
     $("artist").textContent = s.artist || "";
     $("album").textContent = s.album || "";

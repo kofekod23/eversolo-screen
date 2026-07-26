@@ -71,6 +71,10 @@ Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargi
 
 Bouton sur `/config` quand une nouvelle version est publiée, ou en SSH : `./update.sh`. Configuration et mot de passe préservés.
 
+## Licence
+
+[CC BY-NC-SA 4.0](LICENSE.md) : usage et modification libres, vente et monétisation interdites.
+
 ## Dépannage
 
 Guide détaillé pas à pas : [INSTALL.md](INSTALL.md). Mot de passe oublié : `venv/bin/python tools/motdepasse.py`.

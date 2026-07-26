@@ -71,6 +71,10 @@ Everything works without any key. Optional keys on `/config` widen coverage: Las
 
 Button on `/config` when a new version is published, or over SSH: `./update.sh`. Configuration and password preserved.
 
+## License
+
+[CC BY-NC-SA 4.0](LICENSE.en.md): free to use and modify, selling and monetizing forbidden.
+
 ## Troubleshooting
 
 Full step-by-step guide (French): [INSTALL.md](INSTALL.md). Forgotten password: `venv/bin/python tools/motdepasse.py`.

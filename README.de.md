@@ -71,6 +71,10 @@ Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.f
 
 Button unter `/config` bei neuer Version, oder per SSH: `./update.sh`. Konfiguration und Passwort bleiben erhalten.
 
+## Lizenz
+
+[CC BY-NC-SA 4.0](LICENSE.en.md): freie Nutzung und Änderung, Verkauf und Monetarisierung untersagt ([offizielle deutsche Fassung](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de)).
+
 ## Fehlerbehebung
 
 Ausführliche Anleitung (Französisch): [INSTALL.md](INSTALL.md). Passwort vergessen: `venv/bin/python tools/motdepasse.py`.

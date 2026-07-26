@@ -71,6 +71,10 @@ Todo funciona sin ninguna clave. Claves opcionales en `/config`: Last.fm (gratui
 
 Botón en `/config` cuando hay nueva versión, o por SSH: `./update.sh`. Configuración y contraseña preservadas.
 
+## Licencia
+
+[CC BY-NC-SA 4.0](LICENSE.es.md): uso y modificación libres, venta y monetización prohibidas.
+
 ## Solución de problemas
 
 Guía completa paso a paso (francés): [INSTALL.md](INSTALL.md). Contraseña olvidada: `venv/bin/python tools/motdepasse.py`.

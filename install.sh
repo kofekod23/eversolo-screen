@@ -27,6 +27,11 @@ if [ "$KIOSK" = "--kiosk" ]; then
     sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
 fi
 
+# Configuration locale (non suivie par git) creee au premier passage
+if [ ! -f "$APP_DIR/config.json" ]; then
+    cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
+fi
+
 if [ ! -d "$APP_DIR/venv" ]; then
     python3 -m venv "$APP_DIR/venv"
 fi

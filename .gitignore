@@ -3,3 +3,4 @@ __pycache__/
 auth.json
 .secret_key
 ir_codes/
+config.json

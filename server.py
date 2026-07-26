@@ -1081,8 +1081,10 @@ def api_detect():
 def find_quality(state):
     found = {}
     wanted = {
-        "samplerate": "sample_rate", "samplingrate": "sample_rate",
-        "bitdepth": "bit_depth", "bitrate": "bitrate",
+        "sampleratenumber": "sample_rate", "samplerate": "sample_rate",
+        "samplingrate": "sample_rate",
+        "bitdepth": "bit_depth", "bits": "bit_depth",
+        "bitrate": "bitrate",
         "audioformat": "format", "format": "format", "codec": "format",
     }
 

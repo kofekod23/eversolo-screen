@@ -382,17 +382,20 @@ def _cache_valide(entree):
 
 
 _MB_DERNIER = {"t": 0.0}
+_MB_VERROU = threading.Lock()
 
 
 def _mb_get(url, **kwargs):
-    """Appel MusicBrainz espacé (1 requête/s, sa limite) et réessayé sur 503."""
+    """Appel MusicBrainz espacé (1 requête/s, sa limite), sérialisé entre les
+    fils paralleles, et réessayé sur 503."""
     r = None
     for tentative in range(2):
-        pause = _MB_DERNIER["t"] + 1.0 - time.time()
-        if pause > 0:
-            time.sleep(min(pause, 1.0))
-        _MB_DERNIER["t"] = time.time()
-        r = http.get(url, **kwargs)
+        with _MB_VERROU:
+            pause = _MB_DERNIER["t"] + 1.0 - time.time()
+            if pause > 0:
+                time.sleep(min(pause, 1.0))
+            _MB_DERNIER["t"] = time.time()
+            r = http.get(url, **kwargs)
         if getattr(r, "status_code", 200) == 503 and tentative == 0:
             time.sleep(1.2)
             continue
@@ -1037,29 +1040,63 @@ def toggle_artist_panel():
             threading.Thread(target=_enrichir_fond, daemon=True).start()
         return True
 
-    # cache froid: panneau "recherche" immediat, completion en arriere-plan.
-    # La touche ne doit JAMAIS attendre les sources externes.
+    # cache froid: panneau "recherche" immediat, trois fils paralleles derriere.
+    # La touche ne doit JAMAIS attendre les sources externes, et chaque page
+    # se remplit des que SA source repond, sans attendre les autres.
     jeton = ARTIST_PANEL.get("token", 0) + 1
+    attente = T.get(lang, T["fr"])["searching"]
+    album_provisoire = None
+    if album_titre:
+        album_provisoire = {"title": album_titre, "facts": [], "text": attente,
+                            "tracks": [], "credits": [], "prod_facts": [],
+                            "source": "", "loading": True}
     ARTIST_PANEL.update({
-        "until": time.time() + 25, "scroll": 0, "page": "artist", "token": jeton,
-        "data": {"artist": {"name": artist, "text": T.get(lang, T["fr"])["searching"],
+        "until": time.time() + 30, "scroll": 0, "page": "artist", "token": jeton,
+        "data": {"artist": {"name": artist, "text": attente,
                             "image": None, "facts": [], "source": ""},
-                 "album": None},
+                 "album": album_provisoire},
     })
 
-    def completer():
+    def publier(mutateur):
+        if ARTIST_PANEL.get("token") == jeton and ARTIST_PANEL["until"] > time.time():
+            d2 = dict(ARTIST_PANEL["data"])
+            mutateur(d2)
+            ARTIST_PANEL["data"] = d2
+            ARTIST_PANEL["until"] = time.time() + 60
+
+    def fil_artiste():
         try:
             bio = fetch_artist_info(artist, lang, album_titre)
-            album_info = enrichir_album(
-                fetch_album_info(artist, album_titre, lang),
-                artist, titre_courant, lang)
         except Exception:
-            bio, album_info = None, None
-        if ARTIST_PANEL.get("token") == jeton and ARTIST_PANEL["until"] > time.time():
-            data, duree = assembler(bio, album_info)
-            ARTIST_PANEL.update({"until": time.time() + duree, "data": data})
+            bio = None
+        art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
+                "facts": bio["facts"], "source": bio["source"]}
+               if bio else
+               {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
+                "image": None, "facts": [], "source": ""})
+        publier(lambda d: d.__setitem__("artist", art))
 
-    threading.Thread(target=completer, daemon=True).start()
+    def fil_album():
+        try:
+            alb = enrichir_album(fetch_album_info(artist, album_titre, lang),
+                                 artist, titre_courant, lang)
+        except Exception:
+            alb = None
+        publier(lambda d: d.__setitem__("album", alb))
+
+    def fil_plage():
+        try:
+            fetch_track_credits(artist, titre_courant, lang)
+        except Exception:
+            return
+        def fusion(d):
+            alb = d.get("album")
+            if alb and not alb.get("loading") and not alb.get("credits"):
+                d["album"] = enrichir_album(alb, artist, titre_courant, lang)
+        publier(fusion)
+
+    for fil in (fil_artiste, fil_album, fil_plage):
+        threading.Thread(target=fil, daemon=True).start()
     return True
 
 
@@ -1988,15 +2025,19 @@ def api_state():
         info = normalize(r.json())
         info["rev"] = LOCAL_REV
         artiste = info.get("artist")
-        cle_pf = (artiste, info.get("album"))
+        cle_pf = (artiste, info.get("album"), info.get("title"))
         if artiste and cle_pf != PREFETCH["artist"]:
             PREFETCH["artist"] = cle_pf
-            def _precharge(a=artiste, al=info.get("album"), ti=info.get("title")):
-                lg = CONFIG.get("language", "fr")
-                fetch_artist_info(a, lg, al)
-                fetch_album_info(a, al, lg)
-                fetch_track_credits(a, ti, lg)
-            threading.Thread(target=_precharge, daemon=True).start()
+            # trois recherches independantes, lancees de front: chacune arrive
+            # a son rythme, aucune n'attend les autres
+            lg = CONFIG.get("language", "fr")
+            al, ti = info.get("album"), info.get("title")
+            for cible in (
+                lambda a=artiste: fetch_artist_info(a, lg, al),
+                lambda a=artiste: fetch_album_info(a, al, lg),
+                lambda a=artiste: fetch_track_credits(a, ti, lg),
+            ):
+                threading.Thread(target=cible, daemon=True).start()
         if STATE_CACHE["down_since"]:
             durée = int(time.time() - STATE_CACHE["down_since"])
             print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)

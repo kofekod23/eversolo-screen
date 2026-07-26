@@ -464,10 +464,10 @@
 <script>
   const $ = id => document.getElementById(id);
   const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hintArtist: "SUIV → ALBUM · VOL DÉFILER · INFO FERMER", hintAlbum: "SUIV → PRODUCTION · PRÉC → ARTISTE · INFO FERMER", hintProd: "PRÉC → ALBUM · VOL DÉFILER · INFO FERMER", tracksSec: "PLAGES", prodSec: "PRODUCTION", noAlbum: "Aucune information trouvée pour ce disque.", noProd: "Aucun crédit de production trouvé pour cette édition." },
-    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hintArtist: "NEXT → ALBUM · VOL SCROLL · INFO CLOSE", hintAlbum: "NEXT → PRODUCTION · PREV → ARTIST · INFO CLOSE", hintProd: "PREV → ALBUM · VOL SCROLL · INFO CLOSE", tracksSec: "TRACKS", prodSec: "PRODUCTION", noAlbum: "No information found for this record.", noProd: "No production credits found for this edition." },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hintArtist: "SIG → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", hintAlbum: "SIG → PRODUCCIÓN · ANT → ARTISTA · INFO CERRAR", hintProd: "ANT → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", tracksSec: "PISTAS", prodSec: "PRODUCCIÓN", noAlbum: "No se encontró información de este disco.", noProd: "No se encontraron créditos de producción de esta edición." },
-    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hintArtist: "WEITER → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", hintAlbum: "WEITER → PRODUKTION · ZURÜCK → KÜNSTLER · INFO SCHLIESSEN", hintProd: "ZURÜCK → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", tracksSec: "TITEL", prodSec: "PRODUKTION", noAlbum: "Keine Informationen zu diesem Album gefunden.", noProd: "Keine Produktions-Credits zu dieser Ausgabe gefunden." }
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hintArtist: "SUIV → ALBUM · VOL DÉFILER · INFO FERMER", hintAlbum: "SUIV → PRODUCTION · PRÉC → ARTISTE · INFO FERMER", hintProd: "PRÉC → ALBUM · VOL DÉFILER · INFO FERMER", tracksSec: "PLAGES", prodSec: "PRODUCTION", noAlbum: "Aucune information trouvée pour ce disque.", noProd: "Aucun crédit de production trouvé pour cette édition.", loading: "Chargement…" },
+    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hintArtist: "NEXT → ALBUM · VOL SCROLL · INFO CLOSE", hintAlbum: "NEXT → PRODUCTION · PREV → ARTIST · INFO CLOSE", hintProd: "PREV → ALBUM · VOL SCROLL · INFO CLOSE", tracksSec: "TRACKS", prodSec: "PRODUCTION", noAlbum: "No information found for this record.", noProd: "No production credits found for this edition.", loading: "Loading…" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hintArtist: "SIG → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", hintAlbum: "SIG → PRODUCCIÓN · ANT → ARTISTA · INFO CERRAR", hintProd: "ANT → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", tracksSec: "PISTAS", prodSec: "PRODUCCIÓN", noAlbum: "No se encontró información de este disco.", noProd: "No se encontraron créditos de producción de esta edición.", loading: "Cargando…" },
+    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hintArtist: "WEITER → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", hintAlbum: "WEITER → PRODUKTION · ZURÜCK → KÜNSTLER · INFO SCHLIESSEN", hintProd: "ZURÜCK → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", tracksSec: "TITEL", prodSec: "PRODUKTION", noAlbum: "Keine Informationen zu diesem Album gefunden.", noProd: "Keine Produktions-Credits zu dieser Ausgabe gefunden.", loading: "Wird geladen…" }
   };
   let L = I18N.fr;
 
@@ -581,7 +581,7 @@
       $("p_name").textContent = (alb && alb.title) || "";
       remplirFaits($("p_facts"), (alb && alb.prod_facts) || []);
       const credits = (alb && alb.credits) || [];
-      $("b_text").textContent = credits.length ? "" : L.noProd;
+      $("b_text").textContent = credits.length ? "" : (alb && alb.loading ? L.loading : L.noProd);
       $("t_wrap").style.display = "none";
       $("c_wrap").style.display = credits.length ? "block" : "none";
       if (credits.length) {

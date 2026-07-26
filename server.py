@@ -1019,12 +1019,22 @@ def toggle_artist_panel():
     alb_pret = (not album_titre) or _cache_valide(ALBUM_CACHE.get(cle_alb))
 
     if art_pret and alb_pret:
-        # tout est en cache (cas normal grace au prechargement): reponse immediate
-        alb = enrichir_album(fetch_album_info(artist, album_titre, lang),
-                             artist, titre_courant, lang)
+        # tout est en cache (cas normal grace au prechargement): reponse immediate.
+        # Les credits de plage (Genius) arrivent en arriere-plan, jamais en bloquant.
+        alb = fetch_album_info(artist, album_titre, lang)
         data, duree = assembler(fetch_artist_info(artist, lang, album_titre), alb)
+        jeton = ARTIST_PANEL.get("token", 0) + 1
         ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
-                             "scroll": 0, "page": "artist"})
+                             "scroll": 0, "page": "artist", "token": jeton})
+        if alb is not None and not alb.get("credits"):
+            def _enrichir_fond():
+                enrichi = enrichir_album(alb, artist, titre_courant, lang)
+                if (enrichi is not alb and ARTIST_PANEL.get("token") == jeton
+                        and ARTIST_PANEL["until"] > time.time()):
+                    d2 = dict(ARTIST_PANEL["data"])
+                    d2["album"] = enrichi
+                    ARTIST_PANEL["data"] = d2
+            threading.Thread(target=_enrichir_fond, daemon=True).start()
         return True
 
     # cache froid: panneau "recherche" immediat, completion en arriere-plan.

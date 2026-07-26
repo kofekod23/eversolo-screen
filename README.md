@@ -14,6 +14,8 @@ Ces appareils exposent une API HTTP locale sur le port 9529. Tout reste sur votr
 
 ## Installation automatique
 
+Raspberry tout neuf ? Suivez le guide pas a pas : [INSTALL.md](INSTALL.md)
+
 ```bash
 git clone https://github.com/kofekod23/eversolo-screen.git
 cd eversolo-screen

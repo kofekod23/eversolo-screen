@@ -1,0 +1,122 @@
+# Installation sur un Raspberry Pi neuf, pas a pas
+
+Ce guide part de zero : un Raspberry encore dans sa boite, aucune connaissance requise. Comptez 30 minutes, dont 15 de telechargement.
+
+## 1. Le materiel necessaire
+
+- Un Raspberry Pi 3, 4, 5 ou Zero 2 W
+- Une carte microSD de 8 Go minimum (16 Go conseille)
+- L'alimentation officielle du Pi (important, les chargeurs de telephone causent des instabilites)
+- Un cable HDMI adapte : HDMI standard pour le Pi 3, micro-HDMI pour les Pi 4 et 5, mini-HDMI pour le Zero 2 W
+- Votre ecran ou TV en 16/9
+- Le reseau : cable Ethernet ou Wi-Fi (le meme reseau que votre Eversolo)
+- Un ordinateur avec un lecteur de carte SD pour la preparation
+
+## 2. Preparer la carte SD
+
+1. Sur votre ordinateur, telechargez Raspberry Pi Imager depuis https://www.raspberrypi.com/software/ et installez-le.
+2. Inserez la carte microSD dans l'ordinateur.
+3. Ouvrez Raspberry Pi Imager :
+   - Modele : choisissez votre Raspberry.
+   - Systeme d'exploitation : "Raspberry Pi OS (other)" puis "Raspberry Pi OS Lite (64-bit)". La version Lite suffit, notre kiosque n'a pas besoin de bureau.
+   - Stockage : votre carte SD.
+4. Cliquez sur "Suivant" puis "Modifier les reglages". C'est l'etape qui evite d'avoir besoin d'un clavier :
+   - Nom d'hote : `eversolo`
+   - Cochez "Activer SSH" avec authentification par mot de passe
+   - Nom d'utilisateur et mot de passe : choisissez-les et notez-les
+   - Wi-Fi : SSID et mot de passe de votre box, pays `FR` (inutile si vous utilisez un cable Ethernet)
+   - Reglages locaux : fuseau `Europe/Paris`, clavier `fr`
+5. Enregistrez puis lancez l'ecriture. Quelques minutes.
+
+## 3. Premier demarrage
+
+1. Inserez la carte dans le Pi, branchez le HDMI vers l'ecran, puis l'alimentation en dernier.
+2. Laissez-le tranquille 2 minutes : le premier demarrage redimensionne le systeme et redemarre tout seul. Un texte qui defile est normal.
+
+## 4. Se connecter au Pi depuis votre ordinateur
+
+Ouvrez un terminal (PowerShell sous Windows, Terminal sous macOS et Linux) :
+
+```bash
+ssh votre_utilisateur@eversolo.local
+```
+
+Repondez `yes` a la question de confiance, puis saisissez votre mot de passe.
+
+Si `eversolo.local` ne repond pas, trouvez l'adresse IP du Pi dans l'interface de votre box (liste des appareils connectes) ou avec l'application mobile Fing, puis :
+
+```bash
+ssh votre_utilisateur@192.168.1.XX
+```
+
+## 5. Installer eversolo-screen
+
+Toujours dans le terminal SSH, ces quatre lignes :
+
+```bash
+sudo apt update && sudo apt install -y git
+git clone https://github.com/kofekod23/eversolo-screen.git
+cd eversolo-screen
+./install.sh --kiosk
+```
+
+Important : lancez le `git clone` directement apres la connexion, sans changer de dossier, pour que le projet s'installe dans votre dossier personnel (le service de demarrage l'attend a cet endroit).
+
+L'installation prend 5 a 10 minutes selon le modele. A la fin, le script affiche l'adresse a ouvrir.
+
+## 6. Premiere configuration
+
+1. Depuis votre telephone ou votre ordinateur (sur le meme reseau), ouvrez `http://eversolo.local:8080`.
+2. L'assistant s'affiche : choisissez votre langue, definissez le mot de passe administrateur.
+3. Bouton "Detecter sur le reseau" : votre Eversolo est trouve automatiquement, son adresse se remplit toute seule. Verifiez qu'il est allume.
+4. Enregistrez. C'est termine.
+
+Lancez un morceau sur l'Eversolo : l'ecran HDMI du Pi affiche la pochette, le titre et la progression. Le modele exact de votre streamer (DMP-A6, A8, A10...) apparait dans le bandeau du haut.
+
+## 7. Verifications et depannage
+
+L'ecran reste noir apres l'installation :
+
+```bash
+sudo systemctl status eversolo-kiosk@$(whoami)
+sudo systemctl restart eversolo-kiosk@$(whoami)
+```
+
+L'interface dit "Streamer introuvable" : verifiez que l'Eversolo est allume et sur le meme reseau, puis retournez sur `/config` et relancez la detection.
+
+Consulter les journaux du serveur :
+
+```bash
+journalctl -u eversolo-screen@$(whoami) -f
+```
+
+Mot de passe administrateur oublie :
+
+```bash
+rm ~/eversolo-screen/auth.json
+sudo systemctl restart eversolo-screen@$(whoami)
+```
+
+Puis rechargez la page, l'assistant se relance.
+
+## 8. Vie courante
+
+- Le Pi demarre tout seul sur l'affichage a chaque mise sous tension, rien a faire.
+- Changer un reglage (IP, langue, mot de passe) : `http://eversolo.local:8080/config`.
+- Mettre a jour le projet :
+
+```bash
+cd ~/eversolo-screen && ./update.sh
+```
+
+- Eteindre proprement le Pi avant de le debrancher :
+
+```bash
+sudo poweroff
+```
+
+## 9. Reglages d'ecran utiles (optionnel)
+
+Ecran a l'envers ou pivote : ajoutez a la fin de `/boot/firmware/cmdline.txt` (sur la meme ligne) `video=HDMI-A-1:1920x1080@60,rotate=180` puis redemarrez.
+
+Empecher la TV de passer en veille : desactivez la mise en veille automatique dans les reglages de la TV, le Pi envoie une image en continu.

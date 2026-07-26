@@ -474,6 +474,7 @@
   let state = null;
   let receivedAt = 0;
   let lastCover = null;
+  let revInitiale = null;
   let coverTitle = null;
 
   function fmt(s) {
@@ -629,6 +630,10 @@
 
     $("stage").classList.toggle("paused", !s.playing);
     $("status").textContent = s.playing ? L.playing : L.paused;
+    if (s.rev) {
+      if (revInitiale === null) revInitiale = s.rev;
+      else if (s.rev !== revInitiale) location.reload();
+    }
     $("transport").classList.toggle("islive", !!s.live);
 
     renderPanel(s);

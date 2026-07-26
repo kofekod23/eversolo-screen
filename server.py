@@ -75,6 +75,7 @@ T = {
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
+        "update_avail": "Nouvelle version disponible", "update_btn": "Mettre à jour maintenant", "update_started": "Mise à jour lancée. Le serveur redémarre, l'écran se rechargera tout seul dans une minute.", "up_to_date": "Application à jour",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
     },
@@ -108,6 +109,7 @@ T = {
         "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
         "searching": "Looking up artist and record information...",
         "discogs_token": "Discogs token (detailed production credits, optional)",
+        "update_avail": "New version available", "update_btn": "Update now", "update_started": "Update started. The server restarts, the display will reload by itself within a minute.", "up_to_date": "Application up to date",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -141,6 +143,7 @@ T = {
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
         "searching": "Buscando información del artista y del disco...",
         "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
+        "update_avail": "Nueva versión disponible", "update_btn": "Actualizar ahora", "update_started": "Actualización iniciada. El servidor se reinicia, la pantalla se recargará sola en un minuto.", "up_to_date": "Aplicación al día",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
@@ -174,6 +177,7 @@ T = {
         "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
         "searching": "Informationen zu Künstler und Album werden gesucht...",
         "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
+        "update_avail": "Neue Version verfügbar", "update_btn": "Jetzt aktualisieren", "update_started": "Aktualisierung gestartet. Der Server startet neu, der Bildschirm lädt sich in einer Minute selbst neu.", "up_to_date": "Anwendung aktuell",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -936,6 +940,56 @@ def toggle_artist_panel():
     return True
 
 
+def _rev_locale():
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=BASE_DIR,
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip()
+    except Exception:
+        return ""
+
+
+LOCAL_REV = _rev_locale()
+VERSION_DISTANTE = {"ts": 0.0, "sha": "", "message": ""}
+
+
+def derniere_version():
+    """Dernier commit publié sur GitHub, vérifié au plus toutes les 10 minutes."""
+    if time.time() - VERSION_DISTANTE["ts"] < 600:
+        return VERSION_DISTANTE
+    VERSION_DISTANTE["ts"] = time.time()
+    try:
+        r = http.get(
+            "https://api.github.com/repos/kofekod23/eversolo-screen/commits/main",
+            headers=_entetes_api(), timeout=5,
+        )
+        j = r.json()
+        VERSION_DISTANTE["sha"] = (j.get("sha") or "")[:7]
+        VERSION_DISTANTE["message"] = (j.get("commit", {}).get("message") or "").split("\n")[0]
+    except Exception:
+        pass
+    return VERSION_DISTANTE
+
+
+def lancer_mise_a_jour():
+    """Met à jour depuis GitHub puis laisse systemd relancer le serveur."""
+    def travail():
+        time.sleep(1.0)
+        try:
+            subprocess.run(["git", "fetch", "origin"], cwd=BASE_DIR, timeout=60)
+            subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=BASE_DIR, timeout=30)
+            subprocess.run(
+                [os.path.join(BASE_DIR, "venv", "bin", "pip"), "install",
+                 "--quiet", "-r", os.path.join(BASE_DIR, "requirements.txt")],
+                cwd=BASE_DIR, timeout=300,
+            )
+        except Exception:
+            pass
+        os._exit(1)  # systemd (Restart=on-failure) relance avec le nouveau code
+    threading.Thread(target=travail, daemon=True).start()
+
+
 FAILED = {}
 MAX_ATTEMPTS = 5
 LOCK_WINDOW = 15 * 60
@@ -1229,6 +1283,9 @@ def config_page():
     if request.method == "POST":
         if not csrf_ok():
             error = t["session_expired"]
+        elif request.form.get("op") == "update":
+            lancer_mise_a_jour()
+            message = t["update_started"]
         else:
             ip = request.form.get("device_ip", "").strip()
             new_lang = request.form.get("language", lang)
@@ -1257,6 +1314,7 @@ def config_page():
 
     body = f"""
 <h1>{t['config_title']}</h1>
+__VERSION_HTML__
 {f'<div class="msg">{message}</div>' if message else ''}
 {f'<div class="msg err">{error}</div>' if error else ''}
 <form method="post" action="/config">
@@ -1299,6 +1357,23 @@ document.getElementById('scan').onclick = async function() {{
 }};
 </script>
 """
+    distante = derniere_version()
+    if distante["sha"] and LOCAL_REV and distante["sha"] != LOCAL_REV:
+        version_html = (
+            '<div class="msg" style="display:flex;justify-content:space-between;'
+            'align-items:center;gap:12px;flex-wrap:wrap"><span>'
+            + t["update_avail"] + " : <span style=\'font-family:monospace\'>"
+            + distante["sha"] + "</span> — " + distante["message"][:70]
+            + '</span><form method="post" style="margin:0">'
+            + '<input type="hidden" name="csrf" value="' + csrf_token() + '">'
+            + '<input type="hidden" name="op" value="update">'
+            + '<button style="margin:0;width:auto;padding:10px 16px">'
+            + t["update_btn"] + "</button></form></div>"
+        )
+    else:
+        version_html = ('<p class="intro" style="opacity:.6">' + t["up_to_date"]
+                        + ' · <span style="font-family:monospace">' + LOCAL_REV + "</span></p>")
+    body = body.replace("__VERSION_HTML__", version_html)
     return page(t["config_title"], body, lang)
 
 
@@ -1785,6 +1860,7 @@ def api_state():
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
         info = normalize(r.json())
+        info["rev"] = LOCAL_REV
         artiste = info.get("artist")
         cle_pf = (artiste, info.get("album"))
         if artiste and cle_pf != PREFETCH["artist"]:

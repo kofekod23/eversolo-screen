@@ -16,6 +16,7 @@ Guide d'installation complet, du Raspberry neuf à l'écran fonctionnel. Pour l'
 - [9. Réglages d'écran utiles (optionnel)](#9-réglages-décran-utiles-optionnel)
 - [10. Télécommande infrarouge (optionnel)](#10-télécommande-infrarouge-optionnel)
 - [11. Émetteur infrarouge (optionnel)](#11-émetteur-infrarouge-optionnel)
+- [Ménager la carte SD (option --ram)](#ménager-la-carte-sd-option---ram)
 
 ## 1. Le matériel nécessaire
 
@@ -214,3 +215,19 @@ sudo systemctl restart eversolo-screen@$(whoami)
 ```
 
 Si l'interface àffiche "Trop de tentatives", le verrouillage anti force brute est actif (5 echecs, 15 minutes). Un redémarrage du serveur le leve immédiatement.
+
+## Ménager la carte SD (option --ram)
+
+Un Pi qui tourne en continu use sa carte SD par les écritures répétées (journaux, cache du navigateur, swap). L'option `--ram` élimine l'essentiel :
+
+- journaux systemd en mémoire (volatils, perdus au redémarrage)
+- profil et cache Chromium en RAM
+- /tmp en RAM si ce n'est pas déjà le cas
+- swap désactivé
+
+```bash
+cd ~/eversolo-screen && ./install.sh --ram
+sudo reboot
+```
+
+La configuration, le mot de passe, les appairages de télécommande et les mises à jour restent persistants. Seul l'historique des journaux disparaît à chaque redémarrage : pour diagnostiquer un problème, faites-le avant de redébrancher.

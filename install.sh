@@ -10,11 +10,13 @@ CURRENT_USER="$(whoami)"
 KIOSK=""
 IR=""
 IRTX=""
+RAM=""
 for arg in "$@"; do
     case "$arg" in
         --kiosk) KIOSK="--kiosk" ;;
         --ir) IR="--ir" ;;
         --ir-tx) IRTX="--ir-tx" ;;
+        --ram) RAM="--ram" ;;
     esac
 done
 
@@ -78,6 +80,21 @@ if [ "$IRTX" = "--ir-tx" ]; then
     fi
     echo 'SUBSYSTEM=="lirc", MODE="0660", GROUP="video"' | sudo tee /etc/udev/rules.d/71-eversolo-lirc.rules > /dev/null
     sudo usermod -aG video "$CURRENT_USER" || true
+fi
+
+# 8. Menagement de la carte SD (optionnel): tout ce qui ecrit va en RAM
+if [ "$RAM" = "--ram" ]; then
+    sudo mkdir -p /etc/systemd/journald.conf.d
+    printf "[Journal]\nStorage=volatile\nRuntimeMaxUse=32M\n" | sudo tee /etc/systemd/journald.conf.d/eversolo-ram.conf > /dev/null
+    sudo systemctl restart systemd-journald || true
+    if ! findmnt -t tmpfs /tmp > /dev/null 2>&1; then
+        grep -q "# eversolo-ram" /etc/fstab || \
+            echo "tmpfs /tmp tmpfs defaults,noatime,size=128m 0 0 # eversolo-ram" | sudo tee -a /etc/fstab > /dev/null
+    fi
+    if systemctl list-unit-files 2>/dev/null | grep -q "^dphys-swapfile"; then
+        sudo systemctl disable --now dphys-swapfile || true
+    fi
+    echo "Option RAM active: journaux volatils, /tmp en RAM, swap desactive."
 fi
 
 PI_IP="$(hostname -I | awk '{print $1}')"

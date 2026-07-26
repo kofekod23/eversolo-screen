@@ -18,7 +18,7 @@ StandardError=journal
 UtmpIdentifier=tty1
 UtmpMode=user
 ExecStartPre=/bin/sh -c 'until curl -s -o /dev/null http://localhost:8080; do sleep 1; done'
-ExecStart=/bin/sh -c 'exec /usr/bin/cage -- "$(command -v chromium-browser || command -v chromium)" --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-features=Translate --ozone-platform=wayland --app=http://localhost:8080'
+ExecStart=/bin/sh -c 'exec /usr/bin/cage -- "$(command -v chromium-browser || command -v chromium)" --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-features=Translate --ozone-platform=wayland --user-data-dir=/tmp/eversolo-chromium --disk-cache-size=8388608 --app=http://localhost:8080'
 Restart=on-failure
 RestartSec=5
 

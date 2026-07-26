@@ -51,7 +51,7 @@ cd eversolo-screen && ./install.sh --kiosk --ir
 sudo reboot
 ```
 
-Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (blaster).
+Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (blaster), `--ram` (logs and caches in RAM, spares the SD card).
 
 ## Remote
 

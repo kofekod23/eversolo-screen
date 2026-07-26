@@ -51,7 +51,7 @@ cd eversolo-screen && ./install.sh --kiosk --ir
 sudo reboot
 ```
 
-Opciones acumulables: `--kiosk` (pantalla TV), `--ir` (receptor del mando), `--ir-tx` (emisor).
+Opciones acumulables: `--kiosk` (pantalla TV), `--ir` (receptor del mando), `--ir-tx` (emisor), `--ram` (registros y cachés en RAM, protege la tarjeta SD).
 
 ## Mando
 

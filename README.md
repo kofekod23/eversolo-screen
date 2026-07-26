@@ -51,7 +51,7 @@ cd eversolo-screen && ./install.sh --kiosk --ir
 sudo reboot
 ```
 
-Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande), `--ir-tx` (émetteur).
+Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande), `--ir-tx` (émetteur), `--ram` (journaux et caches en RAM, ménage la carte SD).
 
 ## Télécommande
 

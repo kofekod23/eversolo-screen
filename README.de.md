@@ -51,7 +51,7 @@ cd eversolo-screen && ./install.sh --kiosk --ir
 sudo reboot
 ```
 
-Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänger), `--ir-tx` (Sender).
+Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänger), `--ir-tx` (Sender), `--ram` (Protokolle und Caches im RAM, schont die SD-Karte).
 
 ## Fernbedienung
 

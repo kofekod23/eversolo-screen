@@ -1344,6 +1344,9 @@ PAGE = """
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <style>
 :root{--chassis:#0d0b08;--panel:#16130e;--line:#2a251c;--ivory:#ece6d8;--muted:#918a79;--tube:#e8a33d}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -2089,6 +2092,11 @@ def normalize(state):
 
 STATE_CACHE = {"info": None, "failures": 0, "down_since": None}
 PREFETCH = {"artist": None}
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return redirect("/static/favicon.png")
 
 
 @app.route("/api/state")

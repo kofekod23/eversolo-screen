@@ -578,20 +578,37 @@ ALBUM_CACHE = {}
 
 
 def fetch_album_info(artist, album, lang):
-    """Description et faits du disque en cours: TheAudioDB > Last.fm > MusicBrainz."""
+    """Description et faits du disque: identité MusicBrainz d'abord (nom
+    canonique + année), puis TheAudioDB et Last.fm pour la description."""
     if not album:
         return None
     key = (artist.lower(), album.lower(), lang)
     cached = ALBUM_CACHE.get(key)
     if cached and time.time() - cached[0] < 86400:
         return cached[1]
-    data = None
 
+    nom, annee = artist, None
+    try:
+        r = http.get(
+            "https://musicbrainz.org/ws/2/release-group/",
+            params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
+                    "fmt": "json", "limit": 1},
+            headers=_entetes_api(), timeout=4,
+        )
+        groups = r.json().get("release-groups") or []
+        if groups:
+            credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") or {}
+            nom = credit.get("name") or artist
+            annee = (groups[0].get("first-release-date") or "")[:4] or None
+    except Exception:
+        pass
+
+    data = None
     try:
         k = (CONFIG.get("theaudiodb_key") or "2").strip()
         r = http.get(
             f"https://www.theaudiodb.com/api/v1/json/{k}/searchalbum.php",
-            params={"s": artist, "a": album}, headers=_entetes_api(), timeout=5,
+            params={"s": nom, "a": album}, headers=_entetes_api(), timeout=5,
         )
         albums = (r.json() or {}).get("album") or []
         if albums:
@@ -616,7 +633,7 @@ def fetch_album_info(artist, album, lang):
             try:
                 r = http.get(
                     "https://ws.audioscrobbler.com/2.0/",
-                    params={"method": "album.getinfo", "artist": artist, "album": album,
+                    params={"method": "album.getinfo", "artist": nom, "album": album,
                             "api_key": cle, "format": "json", "lang": lang, "autocorrect": 1},
                     headers=_entetes_api(), timeout=5,
                 )
@@ -630,22 +647,12 @@ def fetch_album_info(artist, album, lang):
             except Exception:
                 pass
 
-    if not data:
-        try:
-            r = http.get(
-                "https://musicbrainz.org/ws/2/release-group/",
-                params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
-                        "fmt": "json", "limit": 1},
-                headers=_entetes_api(), timeout=4,
-            )
-            groups = r.json().get("release-groups") or []
-            if groups:
-                annee = (groups[0].get("first-release-date") or "")[:4]
-                if annee:
-                    data = {"title": album, "facts": [annee], "text": "",
-                            "source": "MusicBrainz"}
-        except Exception:
-            pass
+    if data and annee and annee not in data["facts"]:
+        data["facts"] = ([annee] + [f for f in data["facts"] if f != annee])[:3]
+        if data["source"] != "MusicBrainz":
+            data["source"] += " · MusicBrainz"
+    if not data and annee:
+        data = {"title": album, "facts": [annee], "text": "", "source": "MusicBrainz"}
 
     if len(ALBUM_CACHE) > 50:
         ALBUM_CACHE.clear()

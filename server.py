@@ -1210,7 +1210,7 @@ def normalize(state):
     return info
 
 
-STATE_CACHE = {"info": None, "failures": 0}
+STATE_CACHE = {"info": None, "failures": 0, "down_since": None}
 
 
 @app.route("/api/state")
@@ -1221,7 +1221,10 @@ def api_state():
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
         info = normalize(r.json())
-        STATE_CACHE.update({"info": info, "failures": 0})
+        if STATE_CACHE["down_since"]:
+            duree = int(time.time() - STATE_CACHE["down_since"])
+            print(f"[diagnostic] Eversolo de retour apres {duree} s d'indisponibilite", flush=True)
+        STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
         if ARTIST_PANEL["until"] > time.time():
             info["panel"] = ARTIST_PANEL["data"]
         return jsonify(info)
@@ -1229,6 +1232,9 @@ def api_state():
         # Un rate isole (Wi-Fi, streamer occupe) ne doit pas faire clignoter
         # "introuvable": on ressert le dernier etat connu quelques secondes.
         STATE_CACHE["failures"] += 1
+        if STATE_CACHE["failures"] == 3 and not STATE_CACHE["down_since"]:
+            STATE_CACHE["down_since"] = time.time()
+            print(f"[diagnostic] Eversolo injoignable ({CONFIG.get('eversolo_ip')})", flush=True)
         if STATE_CACHE["info"] and STATE_CACHE["failures"] < 3:
             stale = dict(STATE_CACHE["info"])
             stale["server_time"] = time.time()

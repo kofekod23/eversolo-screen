@@ -267,6 +267,12 @@ def do_action(action):
     """Envoie une commande de pilotage a l'Eversolo."""
     if not CONFIG.get("eversolo_ip"):
         return False
+    if action in ("next", "previous") and ARTIST_PANEL["until"] > time.time():
+        # volet ouvert: on tourne les pages au lieu de changer de plage
+        ARTIST_PANEL["page"] = "album" if action == "next" else "artist"
+        ARTIST_PANEL["scroll"] = 0
+        ARTIST_PANEL["until"] = time.time() + 60
+        return True
     if action in ("vol_up", "vol_down") and ARTIST_PANEL["until"] > time.time():
         # volet ouvert: les volumes defilent le texte au lieu d'agir sur le son
         delta = -1 if action == "vol_up" else 1
@@ -339,7 +345,7 @@ def send_raw(path):
 
 
 ARTIST_CACHE = {}
-ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0}
+ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0, "page": "artist"}
 
 
 def _entetes_api():
@@ -577,6 +583,54 @@ def lastfm_bio(artist, lang, facts):
 ALBUM_CACHE = {}
 
 
+ROLES_CREDITS = {
+    "producer": {"fr": "Production", "en": "Producer", "es": "Producción", "de": "Produktion"},
+    "engineer": {"fr": "Ingénieur du son", "en": "Engineer", "es": "Ingeniero de sonido", "de": "Toningenieur"},
+    "mix": {"fr": "Mixage", "en": "Mixing", "es": "Mezcla", "de": "Mischung"},
+    "mastering": {"fr": "Mastering", "en": "Mastering", "es": "Masterización", "de": "Mastering"},
+    "recording": {"fr": "Prise de son", "en": "Recording", "es": "Grabación", "de": "Aufnahme"},
+}
+
+
+def _mb_release_details(rgid, lang):
+    """Plages (titres, durées) et crédits (production, ingénieurs) d'un disque."""
+    tracks, credits = [], []
+    try:
+        r = http.get(
+            "https://musicbrainz.org/ws/2/release/",
+            params={"release-group": rgid, "fmt": "json", "limit": 1},
+            headers=_entetes_api(), timeout=4,
+        )
+        releases = r.json().get("releases") or []
+        if not releases:
+            return tracks, credits
+        r2 = http.get(
+            f"https://musicbrainz.org/ws/2/release/{releases[0]['id']}",
+            params={"inc": "recordings+artist-rels", "fmt": "json"},
+            headers=_entetes_api(), timeout=5,
+        )
+        j = r2.json()
+        n = 0
+        for media in j.get("media") or []:
+            for t in media.get("tracks") or []:
+                n += 1
+                ms = t.get("length") or (t.get("recording") or {}).get("length")
+                duree = f"{ms // 60000}:{(ms // 1000) % 60:02d}" if ms else ""
+                tracks.append({"n": n, "title": t.get("title") or "", "dur": duree})
+        vus = set()
+        for rel in j.get("relations") or []:
+            typ = rel.get("type")
+            nom = (rel.get("artist") or {}).get("name")
+            if nom and typ in ROLES_CREDITS and (typ, nom) not in vus:
+                vus.add((typ, nom))
+                role = ROLES_CREDITS[typ].get(lang, ROLES_CREDITS[typ]["en"])
+                credits.append({"role": role, "name": nom})
+        credits = credits[:8]
+    except Exception:
+        pass
+    return tracks, credits
+
+
 def fetch_album_info(artist, album, lang):
     """Description et faits du disque: identité MusicBrainz d'abord (nom
     canonique + année), puis TheAudioDB et Last.fm pour la description."""
@@ -587,7 +641,7 @@ def fetch_album_info(artist, album, lang):
     if cached and time.time() - cached[0] < 86400:
         return cached[1]
 
-    nom, annee = artist, None
+    nom, annee, rgid = artist, None, None
     try:
         r = http.get(
             "https://musicbrainz.org/ws/2/release-group/",
@@ -600,8 +654,10 @@ def fetch_album_info(artist, album, lang):
             credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") or {}
             nom = credit.get("name") or artist
             annee = (groups[0].get("first-release-date") or "")[:4] or None
+            rgid = groups[0].get("id")
     except Exception:
         pass
+    tracks, credits = _mb_release_details(rgid, lang) if rgid else ([], [])
 
     data = None
     try:
@@ -651,8 +707,12 @@ def fetch_album_info(artist, album, lang):
         data["facts"] = ([annee] + [f for f in data["facts"] if f != annee])[:3]
         if data["source"] != "MusicBrainz":
             data["source"] += " · MusicBrainz"
-    if not data and annee:
-        data = {"title": album, "facts": [annee], "text": "", "source": "MusicBrainz"}
+    if not data and (annee or tracks or credits):
+        data = {"title": album, "facts": [annee] if annee else [], "text": "",
+                "source": "MusicBrainz"}
+    if data:
+        data["tracks"] = tracks
+        data["credits"] = credits
 
     if len(ALBUM_CACHE) > 50:
         ALBUM_CACHE.clear()
@@ -695,7 +755,7 @@ def fetch_artist_info(artist, lang, album=None):
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
-        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0})
+        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0, "page": "artist"})
         return True
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
@@ -707,27 +767,17 @@ def toggle_artist_panel():
     if not artist:
         return False
     lang = CONFIG.get("language", "fr")
-    data = fetch_artist_info(artist, lang, album_titre)
+    bio = fetch_artist_info(artist, lang, album_titre)
     album_info = fetch_album_info(artist, album_titre, lang)
-    if data and album_info:
-        data = dict(data)
-        data["album"] = album_info
-        srcs = []
-        if album_info.get("source"):
-            srcs.append(f"Album : {album_info['source']}")
-        srcs.append(f"Artiste : {data['source']}")
-        data["source"] = " · ".join(srcs)
-    elif album_info and not data:
-        data = {"artist": artist, "text": T.get(lang, T["fr"])["no_bio"],
-                "image": None, "facts": [], "album": album_info,
-                "source": f"Album : {album_info['source']}"}
-    if not data:
-        # retour visuel bref: une touche pressee doit toujours repondre
-        data = {"artist": artist, "text": T.get(lang, T["fr"])["no_bio"],
-                "image": None, "facts": [], "source": ""}
-        ARTIST_PANEL.update({"until": time.time() + 8, "data": data, "scroll": 0})
-        return True
-    ARTIST_PANEL.update({"until": time.time() + 60, "data": data, "scroll": 0})
+    art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
+            "facts": bio["facts"], "source": bio["source"]}
+           if bio else
+           {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
+            "image": None, "facts": [], "source": ""})
+    data = {"artist": art, "album": album_info}
+    duree = 60 if (bio or album_info) else 8
+    ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
+                         "scroll": 0, "page": "artist"})
     return True
 
 
@@ -1593,6 +1643,7 @@ def api_state():
         if ARTIST_PANEL["until"] > time.time():
             info["panel"] = dict(ARTIST_PANEL["data"])
             info["panel"]["scroll"] = ARTIST_PANEL["scroll"]
+            info["panel"]["page"] = ARTIST_PANEL["page"]
         return jsonify(info)
     except Exception:
         # Un rate isole (Wi-Fi, streamer occupe) ne doit pas faire clignoter

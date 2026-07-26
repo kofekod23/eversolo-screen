@@ -85,15 +85,20 @@
 
   /* Scene centrale */
   .now {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
     align-items: center;
     gap: clamp(28px, 5vw, 80px);
     min-height: 0;
     padding: clamp(16px, 3.5vh, 40px) 0;
   }
 
-  .cover-mount { position: relative; height: min(62vh, 44vw); aspect-ratio: 1; }
+  .cover-mount {
+    position: relative;
+    flex: 0 0 auto;
+    height: 100%;
+    max-height: min(62vh, 44vw);
+    aspect-ratio: 1;
+  }
   .cover {
     width: 100%;
     height: 100%;
@@ -117,7 +122,7 @@
     pointer-events: none;
   }
 
-  .meta { min-width: 0; }
+  .meta { flex: 1; min-width: 0; }
   .eyebrow {
     display: flex;
     align-items: center;
@@ -263,13 +268,14 @@
 
 
   @media (min-aspect-ratio: 8/5) {
-    .cover-mount { height: min(66vh, 40vw); }
+    .cover-mount { max-height: min(66vh, 40vw); }
     .now { gap: clamp(36px, 4.5vw, 72px); }
   }
 
   @media (max-aspect-ratio: 1/1) {
-    .now { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 24px; }
-    .cover-mount { height: min(44vh, 78vw); }
+    .now { flex-direction: column; justify-content: center; text-align: center; gap: 24px; }
+    .cover-mount { height: min(42vh, 78vw); max-height: none; }
+    .meta { flex: 0 0 auto; width: 100%; }
     .artist, .album { white-space: normal; }
     .stream { justify-content: center; }
   }

@@ -4,6 +4,14 @@ Pantalla « now playing » para streamers Eversolo (DMP-A6, A8, A10) en Raspberr
 
 [Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md)
 
+![Pantalla de reproducción](docs/screen-now-playing.png)
+
+| Página del artista | Página del álbum | Página de producción |
+|---|---|---|
+| ![Biografía del artista](docs/screen-artist.png) | ![Pistas del disco](docs/screen-album.png) | ![Créditos de producción](docs/screen-production.png) |
+
+*Interfaz mostrada en inglés, disponible en francés, inglés, español y alemán.*
+
 ## Funciones
 
 - Carátula, título, artista, álbum, progreso, reloj, ambiente de color derivado de la carátula

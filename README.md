@@ -4,6 +4,14 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 
 [English](README.en.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
+![Écran de lecture](docs/screen-now-playing.png)
+
+| Page artiste | Page album | Page production |
+|---|---|---|
+| ![Biographie de l'artiste](docs/screen-artist.png) | ![Plages du disque](docs/screen-album.png) | ![Crédits de production](docs/screen-production.png) |
+
+*Interface montrée en anglais, disponible en français, anglais, espagnol et allemand.*
+
 ## Fonctionnalités
 
 - Pochette, titre, artiste, album, progression, horloge, ambiance colorée tirée de la pochette

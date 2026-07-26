@@ -4,6 +4,14 @@ Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + 
 
 [Français](README.md) · [English](README.en.md) · [Español](README.es.md)
 
+![Wiedergabebildschirm](docs/screen-now-playing.png)
+
+| Künstlerseite | Albumseite | Produktionsseite |
+|---|---|---|
+| ![Künstlerbiografie](docs/screen-artist.png) | ![Albumtitel](docs/screen-album.png) | ![Produktions-Credits](docs/screen-production.png) |
+
+*Oberfläche hier auf Englisch, verfügbar auf Französisch, Englisch, Spanisch und Deutsch.*
+
 ## Funktionen
 
 - Cover, Titel, Künstler, Album, Fortschritt, Uhr, Farbstimmung aus dem Cover

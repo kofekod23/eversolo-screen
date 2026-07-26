@@ -4,6 +4,14 @@ Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi +
 
 [Français](README.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
+![Now playing screen](docs/screen-now-playing.png)
+
+| Artist page | Album page | Production page |
+|---|---|---|
+| ![Artist biography](docs/screen-artist.png) | ![Album tracks](docs/screen-album.png) | ![Production credits](docs/screen-production.png) |
+
+*Interface shown in English, available in French, English, Spanish and German.*
+
 ## Features
 
 - Album art, title, artist, album, progress, clock, ambient glow derived from the artwork

@@ -1,0 +1,14 @@
+[Unit]
+Description=Recepteur infrarouge eversolo-screen
+After=eversolo-screen@%i.service
+Wants=eversolo-screen@%i.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/ir-keytable -p all
+ExecStart=/usr/bin/python3 /home/%i/eversolo-screen/ir_remote.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

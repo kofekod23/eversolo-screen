@@ -142,3 +142,26 @@ sudo poweroff
 Ecran a l'envers ou pivote : ajoutez a la fin de `/boot/firmware/cmdline.txt` (sur la meme ligne) `video=HDMI-A-1:1920x1080@60,rotate=180` puis redemarrez.
 
 Empecher la TV de passer en veille : desactivez la mise en veille automatique dans les reglages de la TV, le Pi envoie une image en continu.
+
+## 10. Telecommande infrarouge (optionnel)
+
+N'importe quelle telecommande de salon peut piloter l'Eversolo (lecture, pause, suivant, precedent, volume, muet) via un petit capteur infrarouge branche sur le Pi.
+
+Materiel : un recepteur TSOP38238 (ou equivalent 38 kHz) et trois cables Dupont femelle-femelle.
+
+Branchement, capteur face bombee vers vous, pattes vers le bas, de gauche a droite :
+
+| Patte du capteur | Broche du Raspberry |
+|---|---|
+| 1 - OUT (signal) | Broche 11 (GPIO17) |
+| 2 - GND | Broche 6 (masse) |
+| 3 - VS (alimentation) | Broche 1 (3,3 V) |
+
+Installation, Pi eteint pour le branchement, puis :
+
+```bash
+cd ~/eversolo-screen && git pull && ./install.sh --ir
+sudo reboot
+```
+
+Le redemarrage active le recepteur. Ensuite, appairage depuis le navigateur : `http://IP_DU_PI:8080/remote` (connexion avec le mot de passe administrateur). Pour chaque action, cliquez sur Associer puis pressez la touche voulue de votre telecommande : le code est memorise instantanement. Chaque action est reassociable ou retirable a tout moment.

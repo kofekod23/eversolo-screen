@@ -63,6 +63,7 @@ T = {
         "saved": "Enregistre.",
         "back_display": "Retour a l'affichage",
         "invalid_ip": "Adresse IP invalide.",
+        "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
         "session_expired": "Session expiree, reconnectez-vous.",
     },
     "en": {
@@ -89,6 +90,7 @@ T = {
         "saved": "Saved.",
         "back_display": "Back to display",
         "invalid_ip": "Invalid IP address.",
+        "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
     "es": {
@@ -115,6 +117,7 @@ T = {
         "saved": "Guardado.",
         "back_display": "Volver a la pantalla",
         "invalid_ip": "Direccion IP no valida.",
+        "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesion caducada, inicie sesion de nuevo.",
     },
     "de": {
@@ -141,6 +144,7 @@ T = {
         "saved": "Gespeichert.",
         "back_display": "Zurueck zur Anzeige",
         "invalid_ip": "Ungueltige IP-Adresse.",
+        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
 }
@@ -225,6 +229,35 @@ def device_model(ip=None, port=None):
     return name
 
 # ------------------------------------------------------------ anti force brute
+
+ACTIONS = {
+    "play_pause": "/ZidooMusicControl/v2/playOrPause",
+    "next": "/ZidooMusicControl/v2/playNext",
+    "previous": "/ZidooMusicControl/v2/playLast",
+    "vol_up": "/ZidooControlCenter/RemoteControl/sendkey?key=Key.VolumeUp",
+    "vol_down": "/ZidooControlCenter/RemoteControl/sendkey?key=Key.VolumeDown",
+}
+MUTE_STATE = {"muted": False}
+LAST_IR = {"code": None, "time": 0.0}
+
+
+def do_action(action):
+    """Envoie une commande de pilotage a l'Eversolo."""
+    if not CONFIG.get("eversolo_ip"):
+        return False
+    if action == "mute":
+        MUTE_STATE["muted"] = not MUTE_STATE["muted"]
+        url = f"{eversolo_base()}/ZidooMusicControl/v2/setMuteVolume?isMute={1 if MUTE_STATE['muted'] else 0}"
+    elif action in ACTIONS:
+        url = f"{eversolo_base()}{ACTIONS[action]}"
+    else:
+        return False
+    try:
+        http.get(url, timeout=3)
+        return True
+    except Exception:
+        return False
+
 
 FAILED = {}
 MAX_ATTEMPTS = 5
@@ -567,7 +600,7 @@ def config_page():
   <button type="submit">{t['save']}</button>
 </form>
 <form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}"><button class="ghost">{t['logout']}</button></form>
-<div class="foot"><a href="/">{t['back_display']}</a></div>
+<div class="foot"><a href="/remote">{t['remote_link']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
 <script>
 document.getElementById('scan').onclick = async function() {{
   this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
@@ -581,6 +614,142 @@ document.getElementById('scan').onclick = async function() {{
 </script>
 """
     return page(t["config_title"], body, lang)
+
+
+@app.route("/api/control/<action>", methods=["POST"])
+def api_control(action):
+    # Le pilotage sur le reseau local n'ajoute aucune exposition: l'Eversolo
+    # lui-meme accepte deja ces commandes sans mot de passe sur le port 9529.
+    # L'en-tete personnalise bloque les requetes forgees depuis un site web.
+    if request.headers.get("X-Requested-With") != "eversolo":
+        return jsonify({"error": "forbidden"}), 403
+    if action not in ACTIONS and action != "mute":
+        return jsonify({"error": "unknown action"}), 404
+    return jsonify({"ok": do_action(action)})
+
+
+@app.route("/internal/ir", methods=["POST"])
+def internal_ir():
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        return jsonify({"error": "forbidden"}), 403
+    if request.headers.get("X-Requested-With") != "eversolo":
+        return jsonify({"error": "forbidden"}), 403
+    try:
+        code = str(int(request.args.get("code", "")))
+    except ValueError:
+        return jsonify({"error": "bad code"}), 400
+    LAST_IR.update({"code": code, "time": time.time()})
+    action = (CONFIG.get("ir_map") or {}).get(code)
+    if action:
+        do_action(action)
+    return jsonify({"ok": True, "action": action})
+
+
+@app.route("/api/ir/last")
+def api_ir_last():
+    if not logged_in():
+        return jsonify({"error": "unauthorized"}), 401
+    if LAST_IR["code"] and time.time() - LAST_IR["time"] < 15:
+        return jsonify({"code": LAST_IR["code"]})
+    return jsonify({"code": None})
+
+
+@app.route("/remote", methods=["GET", "POST"])
+def remote_page():
+    if load_auth() is None:
+        return redirect("/setup")
+    if not logged_in():
+        return redirect("/login")
+    t = tr()
+    lang = CONFIG.get("language", "fr")
+    message = error = None
+
+    if request.method == "POST":
+        if not csrf_ok():
+            error = t["session_expired"]
+        else:
+            action = request.form.get("action", "")
+            code = request.form.get("code", "").strip()
+            ir_map = dict(CONFIG.get("ir_map") or {})
+            if action == "__clear__":
+                target = request.form.get("target", "")
+                ir_map = {c: a for c, a in ir_map.items() if a != target}
+                CONFIG["ir_map"] = ir_map
+                save_config(CONFIG)
+                message = t["saved"]
+            elif code.isdigit() and (action in ACTIONS or action == "mute"):
+                ir_map = {c: a for c, a in ir_map.items() if a != action}
+                ir_map[code] = action
+                CONFIG["ir_map"] = ir_map
+                save_config(CONFIG)
+                message = t["saved"]
+
+    ir_map = CONFIG.get("ir_map") or {}
+    by_action = {a: c for c, a in ir_map.items()}
+    rows = []
+    for act in ["play_pause", "next", "previous", "vol_up", "vol_down", "mute"]:
+        code = by_action.get(act)
+        code_txt = f"code {code}" if code else t["not_paired"]
+        rows.append(f"""
+<div class="rrow">
+  <div class="rname">{t['act_' + act]}<span class="rcode">{code_txt}</span></div>
+  <div class="rbtns">
+    <button type="button" class="pairbtn" data-action="{act}">{t['pair']}</button>
+    <form method="post" style="margin:0">
+      <input type="hidden" name="csrf" value="{csrf_token()}">
+      <input type="hidden" name="action" value="__clear__">
+      <input type="hidden" name="target" value="{act}">
+      <button class="ghost" style="margin:0;width:auto;padding:10px 14px" {'disabled' if not code else ''}>{t['clear']}</button>
+    </form>
+  </div>
+</div>""")
+
+    body = f"""
+<style>
+.rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
+.rname{{font-size:15px}}
+.rcode{{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
+.rbtns{{display:flex;gap:8px;align-items:center}}
+.pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
+</style>
+<h1>{t['remote_title']}</h1>
+<p class="intro">{t['remote_intro']}</p>
+{f'<div class="msg">{message}</div>' if message else ''}
+{f'<div class="msg err">{error}</div>' if error else ''}
+{''.join(rows)}
+<form method="post" id="pairform" style="display:none">
+  <input type="hidden" name="csrf" value="{csrf_token()}">
+  <input type="hidden" name="action" id="pf_action">
+  <input type="hidden" name="code" id="pf_code">
+</form>
+<div class="foot"><a href="/config">{t['config_title']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
+<script>
+document.querySelectorAll('.pairbtn').forEach(function(btn) {{
+  btn.onclick = async function() {{
+    const original = btn.textContent;
+    btn.textContent = {json.dumps(t['press_key'])}; btn.disabled = true;
+    const started = Date.now();
+    let seen = null;
+    try {{ const r0 = await fetch('/api/ir/last'); seen = (await r0.json()).code; }} catch (e) {{}}
+    while (Date.now() - started < 20000) {{
+      await new Promise(res => setTimeout(res, 500));
+      try {{
+        const r = await fetch('/api/ir/last');
+        const d = await r.json();
+        if (d.code && d.code !== seen) {{
+          document.getElementById('pf_action').value = btn.dataset.action;
+          document.getElementById('pf_code').value = d.code;
+          document.getElementById('pairform').submit();
+          return;
+        }}
+      }} catch (e) {{}}
+    }}
+    btn.textContent = original; btn.disabled = false;
+  }};
+}});
+</script>
+"""
+    return page(t["remote_title"], body, lang)
 
 
 @app.route("/api/detect")

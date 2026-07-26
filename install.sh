@@ -7,7 +7,14 @@ set -e
 
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURRENT_USER="$(whoami)"
-KIOSK="$1"
+KIOSK=""
+IR=""
+for arg in "$@"; do
+    case "$arg" in
+        --kiosk) KIOSK="--kiosk" ;;
+        --ir) IR="--ir" ;;
+    esac
+done
 
 echo "== Installation eversolo-screen =="
 
@@ -36,6 +43,21 @@ if [ "$KIOSK" = "--kiosk" ]; then
     sudo systemctl set-default graphical.target || true
     sudo systemctl enable "eversolo-kiosk@$CURRENT_USER"
     sudo systemctl restart "eversolo-kiosk@$CURRENT_USER"
+fi
+
+# 6. Recepteur infrarouge (optionnel)
+if [ "$IR" = "--ir" ]; then
+    sudo apt-get install -y ir-keytable
+    BOOTCFG="/boot/firmware/config.txt"
+    [ -f "$BOOTCFG" ] || BOOTCFG="/boot/config.txt"
+    if ! grep -q "^dtoverlay=gpio-ir" "$BOOTCFG"; then
+        echo "dtoverlay=gpio-ir,gpio_pin=17" | sudo tee -a "$BOOTCFG" > /dev/null
+        echo "Overlay infrarouge ajoute a $BOOTCFG (GPIO17): un redemarrage sera necessaire."
+    fi
+    sudo cp "$APP_DIR/eversolo-ir.service" /etc/systemd/system/eversolo-ir@.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable "eversolo-ir@$CURRENT_USER"
+    sudo systemctl restart "eversolo-ir@$CURRENT_USER" || true
 fi
 
 PI_IP="$(hostname -I | awk '{print $1}')"

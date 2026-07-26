@@ -350,12 +350,14 @@
   function qualityChips(q) {
     const chips = [];
     if (q.format) chips.push(String(q.format).toUpperCase());
-    if (q.sample_rate) {
-      const v = Number(q.sample_rate);
-      chips.push(v > 1000 ? (v / 1000).toFixed(1).replace(".0", "") + " kHz" : v + " kHz");
+    const sr = Number(q.sample_rate);
+    if (isFinite(sr) && sr > 0) {
+      chips.push(sr > 1000 ? (sr / 1000).toFixed(1).replace(".0", "") + " kHz" : sr + " kHz");
     }
-    if (q.bit_depth) chips.push(q.bit_depth + " bit");
-    if (q.bitrate) chips.push(q.bitrate + " kbps");
+    const bd = Number(q.bit_depth);
+    if (isFinite(bd) && bd > 0) chips.push(bd + " bit");
+    const br = Number(q.bitrate);
+    if (isFinite(br) && br > 0) chips.push(br + " kbps");
     return chips;
   }
 

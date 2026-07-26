@@ -8,6 +8,7 @@ jeton CSRF, proxy pochettes limite au streamer, en-tetes de securite.
 
 import ipaddress
 import json
+import re
 import os
 import secrets
 import socket
@@ -612,7 +613,34 @@ def find_quality(state):
                 walk(item)
 
     walk(state)
-    return found
+
+    # Les appareils renvoient parfois du texte ("44.1kHz", "24bit", "320 kbps"):
+    # on extrait des valeurs numeriques propres, sinon on ecarte le champ.
+    def num(value):
+        m = re.search(r"\d+(?:[.,]\d+)?", str(value))
+        return float(m.group(0).replace(",", ".")) if m else None
+
+    cleaned = {}
+    if "sample_rate" in found:
+        v = num(found["sample_rate"])
+        if v and v > 0:
+            # valeur en kHz si petite, en Hz sinon; l'interface attend des Hz
+            cleaned["sample_rate"] = v * 1000 if v < 1000 else v
+    if "bit_depth" in found:
+        v = num(found["bit_depth"])
+        if v and 8 <= v <= 64:
+            cleaned["bit_depth"] = int(v)
+    if "bitrate" in found:
+        v = num(found["bitrate"])
+        if v and v > 0:
+            cleaned["bitrate"] = int(v / 1000) if v > 10000 else int(v)
+    if "format" in found:
+        tokens = re.findall(r"[A-Za-z]{2,}", str(found["format"]))
+        word = next((t for t in tokens if t.lower() not in
+                     ("khz", "hz", "bit", "bits", "kbps", "bps")), None)
+        if word:
+            cleaned["format"] = word
+    return cleaned
 
 
 def absolute_url(path):

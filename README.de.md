@@ -1,60 +1,76 @@
 # eversolo-screen
 
-[Français](README.md) · [English](README.en.md) · [Español](README.es.md) · [Deutsch]
+Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + HDMI-Bildschirm. Cover, Titel, Audioqualität, Künstlerbiografien und Produktions-Credits, gesteuert per Infrarot-Fernbedienung.
 
-Eine "Wiedergabe"-Anzeige für Eversolo-Streamer (DMP-A6, A6 Master Edition, A8, A10), gestaltet wie die Front eines Verstaerkers: Cover, Titel, Künstler, Album, Streamqualitaet und Fortschritt, im Vollbild auf einem Raspberry Pi oder in jedem Browser im lokalen Netzwerk.
+[Français](README.md) · [English](README.en.md) · [Español](README.es.md)
 
-Diese Geräte stellen eine lokale HTTP-API auf Port 9529 bereit. Alles bleibt im eigenen Netzwerk, kein Konto, keine Cloud.
+## Funktionen
+
+- Cover, Titel, Künstler, Album, Fortschritt, Uhr, Farbstimmung aus dem Cover
+- Audioqualität: Abtastrate, Bittiefe, Bitrate (reale Eversolo-Formate)
+- Info-Panel mit 3 Seiten: Künstlerbiografie, Album (Beschreibung, Titel, Laufzeiten), Produktion (Credits, Label, Studios)
+- Lernende Infrarot-Fernbedienung: 7 Aktionen mit jeder beliebigen Fernbedienung koppelbar
+- Optionaler Infrarot-Sender: der Pi lernt Befehle und sendet sie an TV oder Verstärker
+- Kiosk-Modus beim Start, passwortgeschützte Verwaltung
+- 4 Sprachen: Französisch, Englisch, Spanisch, Deutsch
+- Aktualisierung mit einem Klick aus der Oberfläche
 
 ## Hardware
 
-- Raspberry Pi (3, 4, 5 oder Zero 2 W), Raspberry Pi OS Lite genügt
-- HDMI-Bildschirm (optional, die Oberfläche läuft auch auf dem Handy)
-- Pi und Streamer im selben Netzwerk
+| Element | Minimum | Empfohlen |
+|---|---|---|
+| Raspberry Pi | Pi 3 | Pi 4, 2 GB |
+| SD-Karte | 16 GB | Klasse A1 |
+| Netzteil | | Offizielles Raspberry |
+| Netzwerk | WLAN | Ethernet |
+| IR-Empfänger (optional) | VS1838B oder TSOP38238 | |
+| IR-LED (optional) | 940-nm-LED + 220-Ω-Widerstand | KY-005-Modul |
 
-## Automatische Installation
+Der Eversolo wird über das Netzwerk gesteuert (API Port 9529): kein Sensor am Streamer nötig.
+
+## Installation
+
+### Automatisch (empfohlen)
+
+1. Raspberry Pi Imager: Raspberry Pi OS Lite 64 Bit, SSH aktiviert, Passwort-Authentifizierung
+2. Karte noch eingehängt:
 
 ```bash
+curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/prepare-sd.sh
+bash prepare-sd.sh
+```
+
+3. Pi starten. Nach 10 bis 15 Minuten `http://PI_IP:8080` öffnen: der Assistent erkennt den Eversolo und legt das Admin-Passwort an.
+
+### Manuell (SSH)
+
+```bash
+sudo apt update && sudo apt install -y git
 git clone https://github.com/kofekod23/eversolo-screen.git
-cd eversolo-screen
-./install.sh --kiosk
+cd eversolo-screen && ./install.sh --kiosk --ir
+sudo reboot
 ```
 
-Danach `http://IP_DES_PI:8080` oeffnen: der Einrichtungsassistent startet. Er fragt nach Sprache und Administrator-Passwort und findet den Streamer selbststaendig im Netzwerk (Schaltflaeche "Suchen"). Nichts muss von Hand editiert werden.
+Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänger), `--ir-tx` (Sender).
 
-- Mit `--kiosk`: der HDMI-Bildschirm des Pi zeigt die Oberfläche beim Start im Vollbild (cage + Chromium, funktioniert ohne Desktop).
-- Ohne Option: nur der Server wird installiert, erreichbar von jedem Gerät im Netzwerk.
+## Fernbedienung
 
-Einstellungen lassen sich später unter `http://IP_DES_PI:8080/config` ändern (ein Klick auf das Eversolo-Logo der Anzeige fuehrt ebenfalls dorthin).
+`http://PI_IP:8080/remote`: Verkabelungsschema des Sensors, Erkennungsanzeige, Live-Test, Kopplung der 7 Aktionen. Bei offenem Info-Panel blättern die Lautstärketasten den Text, die Titeltasten wechseln die Seiten.
 
-## Sicherheit
+## Datenquellen
 
-Kein System ist unangreifbar, aber diese Anwendung setzt ernsthafte, für ein Heimnetz angemessene Schutzmassnahmen um:
+| Daten | Quellen |
+|---|---|
+| Identität von Künstler und Album | MusicBrainz (das laufende Album löst Namensgleichheiten auf) |
+| Biografien | TheAudioDB, Last.fm, Wikipedia über Wikidata |
+| Titel, Credits, Studios | MusicBrainz, Discogs |
 
-- Administrator-Passwort mit scrypt gehasht, nie im Klartext gespeichert
-- Sensible Dateien (`auth.json`, `.secret_key`) mit Berechtigung 600 angelegt
-- Signierte Sitzungen, HttpOnly- und SameSite-Strict-Cookies, Ablauf nach 12 h
-- Brute-Force-Sperre: 5 Fehlversuche, dann 15 Minuten blockiert
-- CSRF-Token in allen Formularen
-- Cover-Proxy strikt auf die Adresse des Streamers begrenzt (Anti-SSRF)
-- Sicherheits-Header: CSP, X-Frame-Options, nosniff, Referrer-Policy
-- Produktions-WSGI-Server (waitress), kein Debug-Modus
-- Gehärteter systemd-Dienst: NoNewPrivileges, ProtectSystem, PrivateTmp usw.
-- Nur die Anzeige ist oeffentlich lesbar; jede Aenderung erfordert das Passwort
+Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.fm (kostenlos), Discogs (kostenloses persönliches Token), TheAudioDB.
 
-Empfehlungen: Port 8080 nicht ins Internet freigeben; für Fernzugriff ein VPN nutzen (WireGuard, Tailscale). Passwort vergessen: `auth.json` auf dem Pi löschen und die Seite neu laden, der Assistent startet erneut.
+## Aktualisierung
 
-## Nuetzliche Befehle
+Button unter `/config` bei neuer Version, oder per SSH: `./update.sh`. Konfiguration und Passwort bleiben erhalten.
 
-```bash
-journalctl -u eversolo-screen@$(whoami) -f          # Server-Logs
-sudo systemctl restart eversolo-screen@$(whoami)    # Server neu starten
-sudo systemctl restart eversolo-kiosk@$(whoami)     # Kiosk neu starten
-cd ~/eversolo-screen && ./update.sh                 # Aktualisieren
-```
+## Fehlerbehebung
 
-## Architektur
-
-- `server.py`: Flask + waitress. Fragt `ZidooMusicControl/v2/getState` ab, normalisiert die Metadaten (interner Player, Bluetooth, Streaming-Apps), dient als Proxy für Cover und stellt den geschuetzten Einrichtungsassistenten bereit.
-- `static/index.html`: Oberfläche ohne Framework, Typografie Fraunces / Archivo / IBM Plex Mono, Farbstimmung aus dem Cover, clientseitig interpolierter Fortschritt, uebersetzte Oberfläche (fr, en, es, de).
-- `install.sh`: Python-venv, systemd-Dienste, optionaler Kiosk.
+Ausführliche Anleitung (Französisch): [INSTALL.md](INSTALL.md). Passwort vergessen: `venv/bin/python tools/motdepasse.py`.

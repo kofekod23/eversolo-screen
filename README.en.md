@@ -1,60 +1,76 @@
 # eversolo-screen
 
-[Français](README.md) · [English] · [Español](README.es.md) · [Deutsch](README.de.md)
+Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi + HDMI screen. Album art, title, audio quality, artist biographies and production credits, driven by an infrared remote.
 
-A "now playing" display for Eversolo streamers (DMP-A6, A6 Master Edition, A8, A10), designed like an amplifier faceplate: album art, title, artist, album, stream quality and progress, full screen on a Raspberry Pi or from any browser on your local network.
+[Français](README.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-These devices expose a local HTTP API on port 9529. Everything stays on your network, no account, no cloud.
+## Features
+
+- Album art, title, artist, album, progress, clock, ambient glow derived from the artwork
+- Audio quality chips: sample rate, bit depth, bitrate (real Eversolo formats handled)
+- 3-page info panel: artist biography, album (description, tracks, durations), production (credits, label, studios)
+- Learning infrared remote: 7 actions pairable with any remote you own
+- Optional infrared blaster: the Pi learns and replays commands to your TV or amp
+- Kiosk mode at boot, password-protected admin pages
+- 4 languages: French, English, Spanish, German
+- One-click update from the interface
 
 ## Hardware
 
-- Raspberry Pi (3, 4, 5 or Zero 2 W), Raspberry Pi OS Lite is enough
-- HDMI screen (optional, the interface also works from a phone)
-- Pi and streamer on the same network
+| Item | Minimum | Recommended |
+|---|---|---|
+| Raspberry Pi | Pi 3 | Pi 4, 2 GB |
+| SD card | 16 GB | Class A1 |
+| Power supply | | Official Raspberry |
+| Network | Wi-Fi | Ethernet |
+| IR receiver (optional) | VS1838B or TSOP38238 | |
+| IR LED (optional) | 940 nm LED + 220 Ω resistor | KY-005 module |
 
-## Automatic installation
+The Eversolo is controlled over the network (API port 9529): no sensor needed on the streamer.
+
+## Install
+
+### Automatic (recommended)
+
+1. Raspberry Pi Imager: Raspberry Pi OS Lite 64-bit, SSH enabled, password authentication
+2. With the card still mounted:
 
 ```bash
+curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/prepare-sd.sh
+bash prepare-sd.sh
+```
+
+3. Boot the Pi. After 10 to 15 minutes, open `http://PI_IP:8080`: the assistant detects the Eversolo and creates the admin password.
+
+### Manual (SSH)
+
+```bash
+sudo apt update && sudo apt install -y git
 git clone https://github.com/kofekod23/eversolo-screen.git
-cd eversolo-screen
-./install.sh --kiosk
+cd eversolo-screen && ./install.sh --kiosk --ir
+sudo reboot
 ```
 
-Then open `http://PI_IP:8080`: the first-time setup wizard starts. It asks for a language and an administrator password, and finds the streamer on the network by itself ("Detect" button). Nothing to edit by hand.
+Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (blaster).
 
-- With `--kiosk`: the Pi's HDMI screen shows the interface full screen at boot (cage + Chromium, works without a desktop).
-- Without it: only the server is installed, reachable from any device on the network.
+## Remote
 
-Settings can be changed later at `http://PI_IP:8080/config` (clicking the Eversolo logo on the display also gets you there).
+`http://PI_IP:8080/remote`: sensor wiring diagram, detection light, live test, pairing of the 7 actions (play/pause, tracks, volume, mute, info). With the info panel open, volume keys scroll the text and track keys turn the pages.
 
-## Security
+## Data sources
 
-No system is unbreakable, but this application applies serious, LAN-appropriate defenses:
+| Data | Sources |
+|---|---|
+| Artist and album identity | MusicBrainz (the playing album disambiguates homonyms) |
+| Biographies | TheAudioDB, Last.fm, Wikipedia via Wikidata |
+| Tracks, credits, studios | MusicBrainz, Discogs |
 
-- Administrator password hashed with scrypt, never stored in clear text
-- Sensitive files (`auth.json`, `.secret_key`) created with 600 permissions
-- Signed sessions, HttpOnly and SameSite Strict cookies, 12 h expiry
-- Brute-force lockout: 5 failures, then 15 minutes blocked
-- CSRF token on every form
-- Cover art proxy strictly limited to the streamer's address (anti SSRF)
-- Security headers: CSP, X-Frame-Options, nosniff, Referrer-Policy
-- Production WSGI server (waitress), no debug mode
-- Hardened systemd service: NoNewPrivileges, ProtectSystem, PrivateTmp, etc.
-- The display alone is publicly readable; any change requires the password
+Everything works without any key. Optional keys on `/config` widen coverage: Last.fm (free), Discogs (free personal token, credits of recent releases), TheAudioDB.
 
-Recommendations: do not expose port 8080 to the Internet; for remote access use a VPN (WireGuard, Tailscale). Forgot the password: delete `auth.json` on the Pi and reload the page, the wizard starts again.
+## Update
 
-## Useful commands
+Button on `/config` when a new version is published, or over SSH: `./update.sh`. Configuration and password preserved.
 
-```bash
-journalctl -u eversolo-screen@$(whoami) -f          # server logs
-sudo systemctl restart eversolo-screen@$(whoami)    # restart the server
-sudo systemctl restart eversolo-kiosk@$(whoami)     # restart the kiosk
-cd ~/eversolo-screen && ./update.sh                 # update
-```
+## Troubleshooting
 
-## Architecture
-
-- `server.py`: Flask + waitress server. Polls `ZidooMusicControl/v2/getState`, normalizes metadata (internal player, Bluetooth, streaming apps), proxies album art, and provides the protected setup wizard.
-- `static/index.html`: framework-free interface, Fraunces / Archivo / IBM Plex Mono typography, ambient color pulled from the album art, client-side interpolated progress, translated interface (fr, en, es, de).
-- `install.sh`: Python venv, systemd services, optional kiosk.
+Full step-by-step guide (French): [INSTALL.md](INSTALL.md). Forgotten password: `venv/bin/python tools/motdepasse.py`.

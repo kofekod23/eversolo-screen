@@ -1,6 +1,21 @@
 # Installation sur un Raspberry Pi neuf, pas à pas
 
-Ce guide part de zero : un Raspberry encore dans sa boîte, aucune connaissance requise. Comptez 30 minutes, dont 15 de téléchargement.
+Guide d'installation complet, du Raspberry neuf à l'écran fonctionnel. Pour l'essentiel en trois étapes, voir le [README](README.md).
+
+## Sommaire
+
+- [1. Le matériel nécessaire](#1-le-matériel-nécessaire)
+- [2. Preparer la carte SD](#2-preparer-la-carte-sd)
+- [3. Premier démarrage](#3-premier-démarrage)
+- [4. Se connecter au Pi depuis votre ordinateur](#4-se-connecter-au-pi-depuis-votre-ordinateur)
+- [5. Installer eversolo-screen](#5-installer-eversolo-screen)
+- [6. Première configuration](#6-première-configuration)
+- [Variante : tout preparer depuis le Mac, sans jamais ouvrir de terminal SSH](#variante--tout-preparer-depuis-le-mac-sans-jamais-ouvrir-de-terminal-ssh)
+- [7. Vérifications et dépannage](#7-vérifications-et-dépannage)
+- [8. Vie courante](#8-vie-courante)
+- [9. Réglages d'écran utiles (optionnel)](#9-réglages-décran-utiles-optionnel)
+- [10. Télécommande infrarouge (optionnel)](#10-télécommande-infrarouge-optionnel)
+- [11. Émetteur infrarouge (optionnel)](#11-émetteur-infrarouge-optionnel)
 
 ## 1. Le matériel nécessaire
 

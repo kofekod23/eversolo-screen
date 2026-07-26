@@ -355,18 +355,45 @@ def _couper(texte, maxi=2600):
     return coupe[:point + 1] if point > maxi // 2 else coupe
 
 
-def musicbrainz_artist(artist):
-    """Identité via MusicBrainz: faits (genre, période, pays) et lien Wikidata."""
+def musicbrainz_artist(artist, album=None):
+    """Identité via MusicBrainz: faits (genre, période, pays), lien Wikidata,
+    et nom canonique. Quand on connaît le disque, on identifie par le disque:
+    c'est ce qui distingue deux artistes homonymes (Leon Thomas / Leon Thomas III).
+    """
     try:
-        r = http.get(
-            "https://musicbrainz.org/ws/2/artist/",
-            params={"query": f'artist:"{artist}"', "fmt": "json", "limit": 1},
-            headers=_entetes_api(), timeout=4,
-        )
-        artists = r.json().get("artists") or []
-        if not artists:
-            return None
-        a = artists[0]
+        a = None
+        if album:
+            try:
+                r = http.get(
+                    "https://musicbrainz.org/ws/2/release-group/",
+                    params={"query": f'releasegroup:"{album}" AND artist:"{artist}"',
+                            "fmt": "json", "limit": 1},
+                    headers=_entetes_api(), timeout=4,
+                )
+                groups = r.json().get("release-groups") or []
+                credit = (groups[0].get("artist-credit") or [{}])[0].get("artist") if groups else None
+                if credit and credit.get("id"):
+                    r2 = http.get(
+                        f"https://musicbrainz.org/ws/2/artist/{credit['id']}",
+                        params={"inc": "url-rels+tags", "fmt": "json"},
+                        headers=_entetes_api(), timeout=4,
+                    )
+                    a = r2.json()
+                    a.setdefault("id", credit["id"])
+                    a["relations"] = a.get("relations") or []
+                    a["_rels_incluses"] = True
+            except Exception:
+                a = None
+        if a is None:
+            r = http.get(
+                "https://musicbrainz.org/ws/2/artist/",
+                params={"query": f'artist:"{artist}"', "fmt": "json", "limit": 1},
+                headers=_entetes_api(), timeout=4,
+            )
+            artists = r.json().get("artists") or []
+            if not artists:
+                return None
+            a = artists[0]
         facts = []
         tags = sorted(a.get("tags") or [], key=lambda t: -t.get("count", 0))
         if tags:
@@ -381,18 +408,21 @@ def musicbrainz_artist(artist):
             facts.append(area)
         qid = None
         try:
-            r2 = http.get(
-                f"https://musicbrainz.org/ws/2/artist/{a['id']}",
-                params={"inc": "url-rels", "fmt": "json"},
-                headers=_entetes_api(), timeout=4,
-            )
-            for rel in r2.json().get("relations") or []:
+            rels = a.get("relations") if a.get("_rels_incluses") else None
+            if rels is None:
+                r2 = http.get(
+                    f"https://musicbrainz.org/ws/2/artist/{a['id']}",
+                    params={"inc": "url-rels", "fmt": "json"},
+                    headers=_entetes_api(), timeout=4,
+                )
+                rels = r2.json().get("relations") or []
+            for rel in rels:
                 if rel.get("type") == "wikidata":
                     qid = rel.get("url", {}).get("resource", "").rstrip("/").rsplit("/", 1)[-1]
                     break
         except Exception:
             pass
-        return {"facts": facts[:3], "qid": qid}
+        return {"facts": facts[:3], "qid": qid, "name": a.get("name")}
     except Exception:
         return None
 
@@ -623,30 +653,31 @@ def fetch_album_info(artist, album, lang):
     return data
 
 
-def fetch_artist_info(artist, lang):
-    """Chaîne de sources: MusicBrainz+Wikidata > Wikipédia recherche > TheAudioDB > Last.fm."""
-    key = (artist.lower(), lang)
+def fetch_artist_info(artist, lang, album=None):
+    """Chaîne de sources, spécialisées musique d'abord, identité levée par le disque."""
+    key = (artist.lower(), (album or "").lower(), lang)
     cached = ARTIST_CACHE.get(key)
     if cached and time.time() - cached[0] < 86400:
         return cached[1]
 
-    mb = musicbrainz_artist(artist)
+    mb = musicbrainz_artist(artist, album)
     facts = mb["facts"] if mb else []
+    nom = (mb or {}).get("name") or artist
     data = None
 
     # Sources specialisees musique en premier, Wikipedia en repli
-    data = theaudiodb_bio(artist, lang, facts)
+    data = theaudiodb_bio(nom, lang, facts)
     if not data:
-        data = lastfm_bio(artist, lang, facts)
+        data = lastfm_bio(nom, lang, facts)
     if not data and mb and mb.get("qid"):
         title, wl = wikidata_titre(mb["qid"], lang)
         if title:
             try:
-                data = _wiki_data(artist, title, wl, facts, " · MusicBrainz")
+                data = _wiki_data(nom, title, wl, facts, " · MusicBrainz")
             except Exception:
                 data = None
     if not data:
-        data = _wiki_recherche(artist, lang, facts)
+        data = _wiki_recherche(nom, lang, facts)
 
     if len(ARTIST_CACHE) > 50:
         ARTIST_CACHE.clear()
@@ -669,7 +700,7 @@ def toggle_artist_panel():
     if not artist:
         return False
     lang = CONFIG.get("language", "fr")
-    data = fetch_artist_info(artist, lang)
+    data = fetch_artist_info(artist, lang, album_titre)
     album_info = fetch_album_info(artist, album_titre, lang)
     if data and album_info:
         data = dict(data)
@@ -1545,7 +1576,7 @@ def api_state():
             PREFETCH["artist"] = cle_pf
             def _precharge(a=artiste, al=info.get("album")):
                 lg = CONFIG.get("language", "fr")
-                fetch_artist_info(a, lg)
+                fetch_artist_info(a, lg, al)
                 fetch_album_info(a, al, lg)
             threading.Thread(target=_precharge, daemon=True).start()
         if STATE_CACHE["down_since"]:

@@ -35,6 +35,8 @@ DEFAULTS = {
     "eversolo_port": 9529,
     "listen_port": 8080,
     "language": "fr",
+    "theaudiodb_key": "2",
+    "lastfm_api_key": "",
 }
 
 LANGS = ("fr", "en", "es", "de")
@@ -69,6 +71,7 @@ T = {
         "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face àu capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien recu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installee et redémarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
         "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
         "no_bio": "Aucune biographie trouvée pour cet artiste dans les sources consultées.",
+        "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
     },
@@ -99,6 +102,7 @@ T = {
         "blaster_title": "Infrared blaster", "blaster_intro": "Record buttons from your remotes, the Pi can replay them (TV, amp...).", "new_name": "Command name (e.g. tv_power)", "learn": "Learn", "send_cmd": "Send", "delete_cmd": "Delete", "learn_hint": "Now press the button to learn, facing the sensor...", "learned": "Command recorded.", "learn_failed": "Nothing received. Check the sensor and retry.", "no_tx": "Emitter not found (--ir-tx installed and rebooted?).", "bad_name": "Invalid name: letters, digits, dash, 32 chars max.", "blaster_link": "Infrared blaster",
         "hw_title": "Infrared hardware", "hw_pin": "Raspberry pin", "hw_leg": "Sensor leg", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Ground (GND / -)", "hw_vcc": "Power (VCC / +)", "hw_note": "VS1838B or TSOP38238 sensor, dome facing you, legs down: OUT left, GND middle, VCC right. Trust the labels if your sensor is on a module.", "hw_rx_ok": "Receiver detected", "hw_rx_ko": "Receiver not detected: check wiring, then ./install.sh --ir and reboot.", "hw_tx_ok": "Emitter detected", "hw_tx_ko": "Emitter not installed (optional).", "hw_test": "Test the sensor", "hw_test_wait": "Press a button...", "hw_test_ok": "Signal received, sensor works.", "hw_test_ko": "No signal received within 15 s.",
         "no_bio": "No biography found for this artist in the available sources.",
+        "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -129,6 +133,7 @@ T = {
         "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibió nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opción --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caractères max.", "blaster_link": "Emisor infrarrojo",
         "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Señal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Señal recibida, sensor operativo.", "hw_test_ko": "Ninguna señal en 15 s.",
         "no_bio": "No se encontró ninguna biografía de este artista en las fuentes consultadas.",
+        "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
@@ -159,6 +164,7 @@ T = {
         "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstärker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Löschen", "learn_hint": "Jetzt die Taste drücken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor prüfen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungültiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
         "hw_title": "Infrarot-Hardware", "hw_pin": "Raspberry-Pin", "hw_leg": "Sensor-Bein", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Versorgung (VCC / +)", "hw_note": "Sensor VS1838B oder TSOP38238, Wölbung zu Ihnen, Beine nach unten: OUT links, GND Mitte, VCC rechts. Bei Modulen den Aufdrucken folgen.", "hw_rx_ok": "Empfänger erkannt", "hw_rx_ko": "Empfänger nicht erkannt: Verkabelung prüfen, dann ./install.sh --ir und Neustart.", "hw_tx_ok": "Sender erkannt", "hw_tx_ko": "Sender nicht installiert (optional).", "hw_test": "Sensor testen", "hw_test_wait": "Taste drücken...", "hw_test_ok": "Signal empfangen, Sensor funktioniert.", "hw_test_ko": "Kein Signal innerhalb von 15 s.",
         "no_bio": "Keine Biografie zu diesem Künstler in den verfügbaren Quellen gefunden.",
+        "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -336,18 +342,30 @@ ARTIST_CACHE = {}
 ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0}
 
 
-def fetch_artist_facts(artist):
-    """Pastilles genre / période / pays via MusicBrainz, sans clé d'API."""
+def _entetes_api():
+    return {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
+
+
+def _couper(texte, maxi=2600):
+    texte = texte.strip()
+    if len(texte) <= maxi:
+        return texte
+    coupe = texte[:maxi]
+    point = coupe.rfind(". ")
+    return coupe[:point + 1] if point > maxi // 2 else coupe
+
+
+def musicbrainz_artist(artist):
+    """Identité via MusicBrainz: faits (genre, période, pays) et lien Wikidata."""
     try:
         r = http.get(
             "https://musicbrainz.org/ws/2/artist/",
             params={"query": f'artist:"{artist}"', "fmt": "json", "limit": 1},
-            headers={"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"},
-            timeout=4,
+            headers=_entetes_api(), timeout=4,
         )
         artists = r.json().get("artists") or []
         if not artists:
-            return []
+            return None
         a = artists[0]
         facts = []
         tags = sorted(a.get("tags") or [], key=lambda t: -t.get("count", 0))
@@ -355,116 +373,202 @@ def fetch_artist_facts(artist):
             facts.append(tags[0]["name"].capitalize())
         span = a.get("life-span") or {}
         begin = (span.get("begin") or "")[:4]
-        end = (span.get("end") or "")[:4]
+        end_ = (span.get("end") or "")[:4]
         if begin:
-            facts.append(f"{begin}–{end}" if end else begin)
+            facts.append(f"{begin}–{end_}" if end_ else begin)
         area = (a.get("area") or {}).get("name") or a.get("country")
         if area:
             facts.append(area)
-        return facts[:3]
+        qid = None
+        try:
+            r2 = http.get(
+                f"https://musicbrainz.org/ws/2/artist/{a['id']}",
+                params={"inc": "url-rels", "fmt": "json"},
+                headers=_entetes_api(), timeout=4,
+            )
+            for rel in r2.json().get("relations") or []:
+                if rel.get("type") == "wikidata":
+                    qid = rel.get("url", {}).get("resource", "").rstrip("/").rsplit("/", 1)[-1]
+                    break
+        except Exception:
+            pass
+        return {"facts": facts[:3], "qid": qid}
     except Exception:
-        return []
+        return None
 
 
-def fetch_artist_info(artist, lang):
-    """Bio et photo de l'artiste via Wikipedia, avec cache 24 h."""
-    key = (artist.lower(), lang)
-    cached = ARTIST_CACHE.get(key)
-    if cached and time.time() - cached[0] < 86400:
-        return cached[1]
-    headers = {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
-    data = None
+def wikidata_titre(qid, lang):
+    """Titre exact de l'article Wikipédia via Wikidata, repli anglais."""
+    try:
+        r = http.get(
+            "https://www.wikidata.org/w/api.php",
+            params={"action": "wbgetentities", "ids": qid, "props": "sitelinks",
+                    "sitefilter": f"{lang}wiki|enwiki", "format": "json"},
+            headers=_entetes_api(), timeout=4,
+        )
+        links = (r.json().get("entities", {}).get(qid) or {}).get("sitelinks", {})
+        for site, wl in ((f"{lang}wiki", lang), ("enwiki", "en")):
+            if site in links:
+                return links[site]["title"], wl
+    except Exception:
+        pass
+    return None, lang
 
-    MOTS_MUSIQUE = (
-        "musi", "chant", "groupe", "band", "singer", "rapp", "composit", "composer",
-        "dj", "produc", "guitar", "pian", "trompett", "saxo", "batteur", "drummer",
-        "auteur-compositeur", "songwriter", "s\u00e4nger", "cantante", "grupo",
-        "banda", "orchestr", "soprano", "t\u00e9nor", "tenor", "violon", "violin",
+
+def _wiki_resume(title, wl):
+    r = http.get(
+        f"https://{wl}.wikipedia.org/api/rest_v1/page/summary/"
+        + requests.utils.quote(title, safe=""),
+        headers=_entetes_api(), timeout=4,
     )
+    return r.json()
 
-    def parle_de_musique(texte):
-        texte = (texte or "").lower()
-        return any(mot in texte for mot in MOTS_MUSIQUE)
 
+def _wiki_intro(title, wl):
+    r = http.get(
+        f"https://{wl}.wikipedia.org/w/api.php",
+        params={"action": "query", "prop": "extracts", "explaintext": 1,
+                "exintro": 1, "redirects": 1, "format": "json", "titles": title},
+        headers=_entetes_api(), timeout=5,
+    )
+    for p in (r.json().get("query", {}).get("pages", {}) or {}).values():
+        return (p.get("extract") or "").strip()
+    return ""
+
+
+def _wiki_data(artist, title, wl, facts, via):
+    j = _wiki_resume(title, wl)
+    extract = (j.get("extract") or "").strip()
+    try:
+        longue = _wiki_intro(title, wl)
+        if len(longue) > len(extract):
+            extract = longue
+    except Exception:
+        pass
+    extract = _couper(extract)
+    if not extract:
+        return None
+    thumb = (j.get("thumbnail") or {}).get("source")
+    return {
+        "artist": artist, "text": extract,
+        "image": "/api/cover?u=" + requests.utils.quote(thumb, safe="") if thumb else None,
+        "facts": facts, "source": f"Wikipedia ({wl}){via}",
+    }
+
+
+MOTS_MUSIQUE = (
+    "musi", "chant", "groupe", "band", "singer", "rapp", "composit", "composer",
+    "dj", "produc", "guitar", "pian", "trompett", "saxo", "batteur", "drummer",
+    "songwriter", "s\u00e4nger", "cantante", "grupo", "banda", "orchestr",
+    "soprano", "tenor", "violon", "violin",
+)
+
+
+def _parle_de_musique(texte):
+    texte = (texte or "").lower()
+    return any(mot in texte for mot in MOTS_MUSIQUE)
+
+
+def _wiki_recherche(artist, lang, facts):
+    """Ancien chemin: recherche filtrée musique, quand Wikidata n'a pas aidé."""
     def chercher(query):
         r = http.get(
             f"https://{lang}.wikipedia.org/w/rest.php/v1/search/page",
-            params={"q": query, "limit": 5}, headers=headers, timeout=4,
+            params={"q": query, "limit": 5}, headers=_entetes_api(), timeout=4,
         )
         return r.json().get("pages") or []
 
-    def resume(title):
-        r = http.get(
-            f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
-            + requests.utils.quote(title, safe=""),
-            headers=headers, timeout=4,
-        )
-        return r.json()
-
     try:
-        # 1er passage: recherche simple, on retient le premier resultat dont
-        # la description evoque la musique. 2e passage: recherche orientee.
         title = None
         for tentative in (artist, f"{artist} musique groupe"):
             for page in chercher(tentative):
-                if parle_de_musique(page.get("description", "")) or (
-                    tentative != artist and page.get("title", "").lower() == artist.lower()
-                ):
+                if _parle_de_musique(page.get("description", "")):
                     title = page["title"]
                     break
             if title:
                 break
-        # dernier recours: premier resultat brut, mais uniquement si son resume
-        # parle de musique, sinon on prefere ne rien afficher qu'afficher faux
-        pages = chercher(artist) if not title else []
-        if not title and pages:
-            j0 = resume(pages[0]["title"])
-            if parle_de_musique(j0.get("extract", "")):
-                title = pages[0]["title"]
-
-        def intro_complete(t):
-            """Introduction integrale de l'article (souvent bien plus riche)."""
-            r = http.get(
-                f"https://{lang}.wikipedia.org/w/api.php",
-                params={"action": "query", "prop": "extracts", "explaintext": 1,
-                        "exintro": 1, "redirects": 1, "format": "json", "titles": t},
-                headers=headers, timeout=5,
-            )
-            for p in (r.json().get("query", {}).get("pages", {}) or {}).values():
-                return (p.get("extract") or "").strip()
-            return ""
-
-        def couper(texte, maxi=2600):
-            if len(texte) <= maxi:
-                return texte
-            coupe = texte[:maxi]
-            point = coupe.rfind(". ")
-            return coupe[:point + 1] if point > maxi // 2 else coupe
-
-        if title:
-            j = resume(title)
-            extract = (j.get("extract") or "").strip()
-            if extract and not parle_de_musique(extract):
-                extract = ""
-            if extract:
-                try:
-                    longue = intro_complete(title)
-                    if len(longue) > len(extract):
-                        extract = longue
-                except Exception:
-                    pass
-                extract = couper(extract)
-            if extract:
-                thumb = (j.get("thumbnail") or {}).get("source")
-                data = {
-                    "artist": artist,
-                    "text": extract,
-                    "image": "/api/cover?u=" + requests.utils.quote(thumb, safe="") if thumb else None,
-                    "facts": fetch_artist_facts(artist),
-                    "source": f"Wikipedia ({lang}) · MusicBrainz",
-                }
+        if not title:
+            return None
+        data = _wiki_data(artist, title, lang, facts, "")
+        if data and not _parle_de_musique(data["text"]):
+            return None
+        return data
     except Exception:
-        data = None
+        return None
+
+
+def theaudiodb_bio(artist, lang, facts):
+    key = (CONFIG.get("theaudiodb_key") or "2").strip()
+    try:
+        r = http.get(
+            f"https://www.theaudiodb.com/api/v1/json/{key}/search.php",
+            params={"s": artist}, headers=_entetes_api(), timeout=5,
+        )
+        artists = (r.json() or {}).get("artists") or []
+        if not artists:
+            return None
+        a = artists[0]
+        bio = (a.get(f"strBiography{lang.upper()}") or a.get("strBiographyEN") or "").strip()
+        if len(bio) < 40:
+            return None
+        img = a.get("strArtistThumb") or a.get("strArtistFanart")
+        return {
+            "artist": artist, "text": _couper(bio),
+            "image": "/api/cover?u=" + requests.utils.quote(img, safe="") if img else None,
+            "facts": facts, "source": "TheAudioDB",
+        }
+    except Exception:
+        return None
+
+
+def lastfm_bio(artist, lang, facts):
+    key = (CONFIG.get("lastfm_api_key") or "").strip()
+    if not key:
+        return None
+    try:
+        r = http.get(
+            "https://ws.audioscrobbler.com/2.0/",
+            params={"method": "artist.getinfo", "artist": artist, "api_key": key,
+                    "format": "json", "lang": lang, "autocorrect": 1},
+            headers=_entetes_api(), timeout=5,
+        )
+        a = (r.json() or {}).get("artist") or {}
+        bio = ((a.get("bio") or {}).get("content") or "")
+        bio = re.sub(r"<a href=[^>]*>.*$", "", bio, flags=re.S)
+        bio = re.sub(r"<[^>]+>", "", bio).strip()
+        if len(bio) < 40:
+            return None
+        return {"artist": artist, "text": _couper(bio), "image": None,
+                "facts": facts, "source": "Last.fm"}
+    except Exception:
+        return None
+
+
+def fetch_artist_info(artist, lang):
+    """Chaîne de sources: MusicBrainz+Wikidata > Wikipédia recherche > TheAudioDB > Last.fm."""
+    key = (artist.lower(), lang)
+    cached = ARTIST_CACHE.get(key)
+    if cached and time.time() - cached[0] < 86400:
+        return cached[1]
+
+    mb = musicbrainz_artist(artist)
+    facts = mb["facts"] if mb else []
+    data = None
+
+    if mb and mb.get("qid"):
+        title, wl = wikidata_titre(mb["qid"], lang)
+        if title:
+            try:
+                data = _wiki_data(artist, title, wl, facts, " · MusicBrainz")
+            except Exception:
+                data = None
+    if not data:
+        data = _wiki_recherche(artist, lang, facts)
+    if not data:
+        data = theaudiodb_bio(artist, lang, facts)
+    if not data:
+        data = lastfm_bio(artist, lang, facts)
+
     if len(ARTIST_CACHE) > 50:
         ARTIST_CACHE.clear()
     ARTIST_CACHE[key] = (time.time(), data)
@@ -805,6 +909,8 @@ def config_page():
                 CONFIG.update({
                     "eversolo_ip": ip,
                     "language": new_lang if new_lang in LANGS else lang,
+                    "theaudiodb_key": request.form.get("tadb_key", "").strip() or "2",
+                    "lastfm_api_key": request.form.get("lastfm_key", "").strip(),
                 })
                 save_config(CONFIG)
                 t = tr()
@@ -829,6 +935,10 @@ def config_page():
     <option value="es" {'selected' if lang=='es' else ''}>Español</option>
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
+  <label>{t['tadb_key']}</label>
+  <input type="text" name="tadb_key" value="{CONFIG.get('theaudiodb_key', '2')}" autocomplete="off">
+  <label>{t['lastfm_key']}</label>
+  <input type="text" name="lastfm_key" value="{CONFIG.get('lastfm_api_key', '')}" autocomplete="off">
   <label>{t['new_password']}</label>
   <input type="password" name="new_password" autocomplete="new-password">
   <label>{t['current_password']}</label>

@@ -72,6 +72,7 @@ T = {
         "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
         "no_bio": "Aucune biographie trouvée pour cet artiste dans les sources consultées.",
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
+        "searching": "Recherche des informations sur l'artiste et le disque...",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
     },
@@ -103,6 +104,7 @@ T = {
         "hw_title": "Infrared hardware", "hw_pin": "Raspberry pin", "hw_leg": "Sensor leg", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Ground (GND / -)", "hw_vcc": "Power (VCC / +)", "hw_note": "VS1838B or TSOP38238 sensor, dome facing you, legs down: OUT left, GND middle, VCC right. Trust the labels if your sensor is on a module.", "hw_rx_ok": "Receiver detected", "hw_rx_ko": "Receiver not detected: check wiring, then ./install.sh --ir and reboot.", "hw_tx_ok": "Emitter detected", "hw_tx_ko": "Emitter not installed (optional).", "hw_test": "Test the sensor", "hw_test_wait": "Press a button...", "hw_test_ok": "Signal received, sensor works.", "hw_test_ko": "No signal received within 15 s.",
         "no_bio": "No biography found for this artist in the available sources.",
         "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
+        "searching": "Looking up artist and record information...",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -134,6 +136,7 @@ T = {
         "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Señal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Señal recibida, sensor operativo.", "hw_test_ko": "Ninguna señal en 15 s.",
         "no_bio": "No se encontró ninguna biografía de este artista en las fuentes consultadas.",
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
+        "searching": "Buscando información del artista y del disco...",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
@@ -165,6 +168,7 @@ T = {
         "hw_title": "Infrarot-Hardware", "hw_pin": "Raspberry-Pin", "hw_leg": "Sensor-Bein", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Versorgung (VCC / +)", "hw_note": "Sensor VS1838B oder TSOP38238, Wölbung zu Ihnen, Beine nach unten: OUT links, GND Mitte, VCC rechts. Bei Modulen den Aufdrucken folgen.", "hw_rx_ok": "Empfänger erkannt", "hw_rx_ko": "Empfänger nicht erkannt: Verkabelung prüfen, dann ./install.sh --ir und Neustart.", "hw_tx_ok": "Sender erkannt", "hw_tx_ko": "Sender nicht installiert (optional).", "hw_test": "Sensor testen", "hw_test_wait": "Taste drücken...", "hw_test_ok": "Signal empfangen, Sensor funktioniert.", "hw_test_ko": "Kein Signal innerhalb von 15 s.",
         "no_bio": "Keine Biografie zu diesem Künstler in den verfügbaren Quellen gefunden.",
         "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
+        "searching": "Informationen zu Künstler und Album werden gesucht...",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -767,17 +771,50 @@ def toggle_artist_panel():
     if not artist:
         return False
     lang = CONFIG.get("language", "fr")
-    bio = fetch_artist_info(artist, lang, album_titre)
-    album_info = fetch_album_info(artist, album_titre, lang)
-    art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
-            "facts": bio["facts"], "source": bio["source"]}
-           if bio else
-           {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
-            "image": None, "facts": [], "source": ""})
-    data = {"artist": art, "album": album_info}
-    duree = 60 if (bio or album_info) else 8
-    ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
-                         "scroll": 0, "page": "artist"})
+
+    def assembler(bio, album_info):
+        art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
+                "facts": bio["facts"], "source": bio["source"]}
+               if bio else
+               {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
+                "image": None, "facts": [], "source": ""})
+        return {"artist": art, "album": album_info}, (60 if (bio or album_info) else 8)
+
+    cle_art = (artist.lower(), (album_titre or "").lower(), lang)
+    art_pret = cle_art in ARTIST_CACHE and time.time() - ARTIST_CACHE[cle_art][0] < 86400
+    cle_alb = (artist.lower(), (album_titre or "").lower(), lang)
+    alb_pret = (not album_titre) or (
+        cle_alb in ALBUM_CACHE and time.time() - ALBUM_CACHE[cle_alb][0] < 86400)
+
+    if art_pret and alb_pret:
+        # tout est en cache (cas normal grace au prechargement): reponse immediate
+        data, duree = assembler(fetch_artist_info(artist, lang, album_titre),
+                                fetch_album_info(artist, album_titre, lang))
+        ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
+                             "scroll": 0, "page": "artist"})
+        return True
+
+    # cache froid: panneau "recherche" immediat, completion en arriere-plan.
+    # La touche ne doit JAMAIS attendre les sources externes.
+    jeton = ARTIST_PANEL.get("token", 0) + 1
+    ARTIST_PANEL.update({
+        "until": time.time() + 25, "scroll": 0, "page": "artist", "token": jeton,
+        "data": {"artist": {"name": artist, "text": T.get(lang, T["fr"])["searching"],
+                            "image": None, "facts": [], "source": ""},
+                 "album": None},
+    })
+
+    def completer():
+        try:
+            bio = fetch_artist_info(artist, lang, album_titre)
+            album_info = fetch_album_info(artist, album_titre, lang)
+        except Exception:
+            bio, album_info = None, None
+        if ARTIST_PANEL.get("token") == jeton and ARTIST_PANEL["until"] > time.time():
+            data, duree = assembler(bio, album_info)
+            ARTIST_PANEL.update({"until": time.time() + duree, "data": data})
+
+    threading.Thread(target=completer, daemon=True).start()
     return True
 
 

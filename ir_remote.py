@@ -10,6 +10,7 @@ import glob
 import json
 import os
 import struct
+import threading
 import time
 import urllib.request
 
@@ -60,14 +61,23 @@ def find_rc_device():
     return candidates[0] if candidates else None
 
 
-def forward(port, code, when_ok=None):
+def forward(*args, **kwargs):
+    """Chaque touche part immediatement, sans attendre la precedente.
+
+    Une action lente cote serveur (recherche de biographie) ne doit jamais
+    geler la telecommande entiere.
+    """
+    threading.Thread(target=_envoyer, args=args, kwargs=kwargs, daemon=True).start()
+
+
+def _envoyer(port, code, when_ok=None):
     req = urllib.request.Request(
         f"http://127.0.0.1:{port}/internal/ir?code={code}",
         method="POST",
         headers={"X-Requested-With": "eversolo"},
     )
     try:
-        urllib.request.urlopen(req, timeout=3).read()
+        urllib.request.urlopen(req, timeout=2).read()
         if when_ok:
             when_ok()
     except Exception as exc:

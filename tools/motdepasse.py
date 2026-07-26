@@ -28,12 +28,12 @@ def usage():
 
 def set_password(password):
     if len(password) < 8:
-        print("Refuse : 8 caracteres minimum.")
+        print("Refusé : 8 caractères minimum.")
         sys.exit(1)
     fd = os.open(AUTH_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump({"password_hash": generate_password_hash(password, method="scrypt")}, f)
-    print(f"Mot de passe enregistre dans {AUTH_PATH}")
+    print(f"Mot de passe enregistré dans {AUTH_PATH}")
     print("Relancez le serveur : sudo systemctl restart eversolo-screen@$(whoami)")
 
 
@@ -42,12 +42,12 @@ def verify(password):
         with open(AUTH_PATH, encoding="utf-8") as f:
             stored = json.load(f)["password_hash"]
     except (OSError, KeyError, ValueError):
-        print("Aucun mot de passe enregistre : ouvrez /setup dans le navigateur.")
+        print("Aucun mot de passe enregistré : ouvrez /setup dans le navigateur.")
         sys.exit(1)
     ok = check_password_hash(stored, password)
     print("Ce mot de passe est CORRECT." if ok else "Ce mot de passe est INCORRECT.")
     if not ok:
-        print("Pour en definir un nouveau : tools/motdepasse.py nouveau VotreMotDePasse")
+        print("Pour en définir un nouveau : tools/motdepasse.py nouveau VotreMotDePasse")
 
 
 def status():

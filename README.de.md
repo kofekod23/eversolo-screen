@@ -2,14 +2,14 @@
 
 [Français](README.md) · [English](README.en.md) · [Español](README.es.md) · [Deutsch]
 
-Eine "Wiedergabe"-Anzeige fuer Eversolo-Streamer (DMP-A6, A6 Master Edition, A8, A10), gestaltet wie die Front eines Verstaerkers: Cover, Titel, Kuenstler, Album, Streamqualitaet und Fortschritt, im Vollbild auf einem Raspberry Pi oder in jedem Browser im lokalen Netzwerk.
+Eine "Wiedergabe"-Anzeige für Eversolo-Streamer (DMP-A6, A6 Master Edition, A8, A10), gestaltet wie die Front eines Verstaerkers: Cover, Titel, Künstler, Album, Streamqualitaet und Fortschritt, im Vollbild auf einem Raspberry Pi oder in jedem Browser im lokalen Netzwerk.
 
-Diese Geraete stellen eine lokale HTTP-API auf Port 9529 bereit. Alles bleibt im eigenen Netzwerk, kein Konto, keine Cloud.
+Diese Geräte stellen eine lokale HTTP-API auf Port 9529 bereit. Alles bleibt im eigenen Netzwerk, kein Konto, keine Cloud.
 
 ## Hardware
 
-- Raspberry Pi (3, 4, 5 oder Zero 2 W), Raspberry Pi OS Lite genuegt
-- HDMI-Bildschirm (optional, die Oberflaeche laeuft auch auf dem Handy)
+- Raspberry Pi (3, 4, 5 oder Zero 2 W), Raspberry Pi OS Lite genügt
+- HDMI-Bildschirm (optional, die Oberfläche läuft auch auf dem Handy)
 - Pi und Streamer im selben Netzwerk
 
 ## Automatische Installation
@@ -22,14 +22,14 @@ cd eversolo-screen
 
 Danach `http://IP_DES_PI:8080` oeffnen: der Einrichtungsassistent startet. Er fragt nach Sprache und Administrator-Passwort und findet den Streamer selbststaendig im Netzwerk (Schaltflaeche "Suchen"). Nichts muss von Hand editiert werden.
 
-- Mit `--kiosk`: der HDMI-Bildschirm des Pi zeigt die Oberflaeche beim Start im Vollbild (cage + Chromium, funktioniert ohne Desktop).
-- Ohne Option: nur der Server wird installiert, erreichbar von jedem Geraet im Netzwerk.
+- Mit `--kiosk`: der HDMI-Bildschirm des Pi zeigt die Oberfläche beim Start im Vollbild (cage + Chromium, funktioniert ohne Desktop).
+- Ohne Option: nur der Server wird installiert, erreichbar von jedem Gerät im Netzwerk.
 
-Einstellungen lassen sich spaeter unter `http://IP_DES_PI:8080/config` aendern (ein Klick auf das Eversolo-Logo der Anzeige fuehrt ebenfalls dorthin).
+Einstellungen lassen sich später unter `http://IP_DES_PI:8080/config` ändern (ein Klick auf das Eversolo-Logo der Anzeige fuehrt ebenfalls dorthin).
 
 ## Sicherheit
 
-Kein System ist unangreifbar, aber diese Anwendung setzt ernsthafte, fuer ein Heimnetz angemessene Schutzmassnahmen um:
+Kein System ist unangreifbar, aber diese Anwendung setzt ernsthafte, für ein Heimnetz angemessene Schutzmassnahmen um:
 
 - Administrator-Passwort mit scrypt gehasht, nie im Klartext gespeichert
 - Sensible Dateien (`auth.json`, `.secret_key`) mit Berechtigung 600 angelegt
@@ -39,10 +39,10 @@ Kein System ist unangreifbar, aber diese Anwendung setzt ernsthafte, fuer ein He
 - Cover-Proxy strikt auf die Adresse des Streamers begrenzt (Anti-SSRF)
 - Sicherheits-Header: CSP, X-Frame-Options, nosniff, Referrer-Policy
 - Produktions-WSGI-Server (waitress), kein Debug-Modus
-- Gehaerteter systemd-Dienst: NoNewPrivileges, ProtectSystem, PrivateTmp usw.
+- Gehärteter systemd-Dienst: NoNewPrivileges, ProtectSystem, PrivateTmp usw.
 - Nur die Anzeige ist oeffentlich lesbar; jede Aenderung erfordert das Passwort
 
-Empfehlungen: Port 8080 nicht ins Internet freigeben; fuer Fernzugriff ein VPN nutzen (WireGuard, Tailscale). Passwort vergessen: `auth.json` auf dem Pi loeschen und die Seite neu laden, der Assistent startet erneut.
+Empfehlungen: Port 8080 nicht ins Internet freigeben; für Fernzugriff ein VPN nutzen (WireGuard, Tailscale). Passwort vergessen: `auth.json` auf dem Pi löschen und die Seite neu laden, der Assistent startet erneut.
 
 ## Nuetzliche Befehle
 
@@ -55,6 +55,6 @@ cd ~/eversolo-screen && ./update.sh                 # Aktualisieren
 
 ## Architektur
 
-- `server.py`: Flask + waitress. Fragt `ZidooMusicControl/v2/getState` ab, normalisiert die Metadaten (interner Player, Bluetooth, Streaming-Apps), dient als Proxy fuer Cover und stellt den geschuetzten Einrichtungsassistenten bereit.
-- `static/index.html`: Oberflaeche ohne Framework, Typografie Fraunces / Archivo / IBM Plex Mono, Farbstimmung aus dem Cover, clientseitig interpolierter Fortschritt, uebersetzte Oberflaeche (fr, en, es, de).
+- `server.py`: Flask + waitress. Fragt `ZidooMusicControl/v2/getState` ab, normalisiert die Metadaten (interner Player, Bluetooth, Streaming-Apps), dient als Proxy für Cover und stellt den geschuetzten Einrichtungsassistenten bereit.
+- `static/index.html`: Oberfläche ohne Framework, Typografie Fraunces / Archivo / IBM Plex Mono, Farbstimmung aus dem Cover, clientseitig interpolierter Fortschritt, uebersetzte Oberfläche (fr, en, es, de).
 - `install.sh`: Python-venv, systemd-Dienste, optionaler Kiosk.

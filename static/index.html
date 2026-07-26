@@ -281,7 +281,7 @@
     font-size: 10px; letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase;
   }
 
-  /* Ecran d'attente */
+  /* Écran d'attente */
   #idle {
     position: fixed;
     inset: 0;
@@ -374,9 +374,9 @@
 <script>
   const $ = id => document.getElementById(id);
   const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le reseau", live: "En direct" },
+    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct" },
     en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live" },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproduccion", offline: "Streamer no encontrado en la red", live: "En directo" },
+    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo" },
     de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live" }
   };
   let L = I18N.fr;
@@ -472,7 +472,7 @@
         coverTitle = s.title;
       };
       probe.onerror = () => {
-        // echec passager (CDN, reseau): on garde l'ancienne image et on
+        // echec passager (CDN, réseau): on garde l'ancienne image et on
         // retentera dans quelques secondes
         setTimeout(() => { if (lastCover === wanted) lastCover = null; }, 5000);
       };

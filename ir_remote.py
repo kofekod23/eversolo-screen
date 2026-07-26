@@ -30,7 +30,7 @@ def listen_port():
 
 
 def find_rc_device():
-    """Trouve le peripherique du recepteur infrarouge GPIO.
+    """Trouve le peripherique du récepteur infrarouge GPIO.
 
     Plusieurs peripheriques rc coexistent souvent (le CEC du HDMI en expose
     un aussi): on identifie explicitement le capteur gpio_ir_recv, sinon on
@@ -76,13 +76,13 @@ def forward(port, code, when_ok=None):
 
 def main():
     port = listen_port()
-    print(f"demon IR demarre, serveur local sur le port {port}", flush=True)
+    print(f"demon IR démarre, serveur local sur le port {port}", flush=True)
     last_code, last_time = None, 0.0
 
     while True:
         device = find_rc_device()
         if not device:
-            print("recepteur IR introuvable (overlay gpio-ir actif ?), nouvel essai dans 15 s", flush=True)
+            print("récepteur IR introuvable (overlay gpio-ir actif ?), nouvel essai dans 15 s", flush=True)
             time.sleep(15)
             continue
         print(f"lecture de {device}", flush=True)
@@ -103,7 +103,7 @@ def main():
                     last_code, last_time = value, now
                     forward(port, value)
         except PermissionError:
-            print("acces refuse au peripherique, verifier que le service tourne en root", flush=True)
+            print("accès refuse au peripherique, verifier que le service tourne en root", flush=True)
             time.sleep(30)
         except Exception as exc:
             print(f"lecture interrompue ({exc}), reprise dans 5 s", flush=True)

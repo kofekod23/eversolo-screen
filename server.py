@@ -2,8 +2,8 @@
 """Serveur eversolo-screen.
 
 Interface "en lecture" pour streamers Eversolo (gamme DMP) avec page de configuration
-protegee : mot de passe hache (scrypt), sessions signees, anti force brute,
-jeton CSRF, proxy pochettes limite au streamer, en-tetes de securite.
+protégée : mot de passe hache (scrypt), sessions signees, anti force brute,
+jeton CSRF, proxy pochettes limite au streamer, en-tetes de sécurité.
 """
 
 import glob
@@ -42,33 +42,33 @@ LANGS = ("fr", "en", "es", "de")
 
 T = {
     "fr": {
-        "setup_title": "Premiere configuration",
+        "setup_title": "Première configuration",
         "setup_intro": "Choisissez un mot de passe administrateur et indiquez votre streamer.",
         "password": "Mot de passe administrateur",
         "password_confirm": "Confirmer le mot de passe",
-        "password_short": "8 caracteres minimum.",
+        "password_short": "8 caractères minimum.",
         "password_mismatch": "Les deux mots de passe ne correspondent pas.",
         "device_ip": "Adresse IP du streamer",
-        "detect": "Detecter sur le reseau",
+        "detect": "Détecter sur le réseau",
         "detecting": "Recherche en cours...",
-        "detect_none": "Aucun streamer trouve. Saisissez l'IP manuellement.",
+        "detect_none": "Aucun streamer trouvé. Saisissez l'IP manuellement.",
         "language": "Langue",
         "save": "Enregistrer",
         "login_title": "Connexion",
         "login": "Se connecter",
-        "logout": "Se deconnecter",
+        "logout": "Se déconnecter",
         "bad_password": "Mot de passe incorrect.",
-        "locked": "Trop de tentatives. Reessayez dans quelques minutes.",
+        "locked": "Trop de tentatives. Réessayez dans quelques minutes.",
         "config_title": "Configuration",
         "current_password": "Mot de passe actuel",
         "new_password": "Nouveau mot de passe (laisser vide pour conserver)",
-        "saved": "Enregistre.",
+        "saved": "Enregistré.",
         "back_display": "Retour a l'affichage",
         "invalid_ip": "Adresse IP invalide.",
-        "blaster_title": "Emetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos telecommandes, le Pi pourra les reemettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face au capteur...", "learned": "Commande enregistree.", "learn_failed": "Rien recu. Verifiez le capteur et reessayez.", "no_tx": "Emetteur introuvable (option --ir-tx installee et redemarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caracteres max.", "blaster_link": "Emetteur infrarouge",
-        "hw_title": "Materiel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombee vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux etiquettes si votre capteur est sur un module.", "hw_rx_ok": "Recepteur detecte", "hw_rx_ko": "Recepteur non detecte: verifiez le cablage, puis ./install.sh --ir et un redemarrage.", "hw_tx_ok": "Emetteur detecte", "hw_tx_ko": "Emetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
-        "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
-        "session_expired": "Session expiree, reconnectez-vous.",
+        "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face àu capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien recu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installee et redémarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
+        "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
+        "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
+        "session_expired": "Session expirée, reconnectez-vous.",
     },
     "en": {
         "setup_title": "First-time setup",
@@ -100,44 +100,44 @@ T = {
         "session_expired": "Session expired, sign in again.",
     },
     "es": {
-        "setup_title": "Configuracion inicial",
-        "setup_intro": "Elija una contrasena de administrador e indique su streamer.",
-        "password": "Contrasena de administrador",
-        "password_confirm": "Confirmar contrasena",
-        "password_short": "Minimo 8 caracteres.",
-        "password_mismatch": "Las contrasenas no coinciden.",
-        "device_ip": "Direccion IP del streamer",
+        "setup_title": "Configuración inicial",
+        "setup_intro": "Elija una contraseña de administrador e indique su streamer.",
+        "password": "Contraseña de administrador",
+        "password_confirm": "Confirmar contraseña",
+        "password_short": "Minimo 8 caractères.",
+        "password_mismatch": "Las contraseñas no coinciden.",
+        "device_ip": "Dirección IP del streamer",
         "detect": "Detectar en la red",
         "detecting": "Buscando...",
-        "detect_none": "No se encontro ningun streamer. Introduzca la IP manualmente.",
+        "detect_none": "No se encontro ningún streamer. Introduzca la IP manualmente.",
         "language": "Idioma",
         "save": "Guardar",
-        "login_title": "Iniciar sesion",
-        "login": "Iniciar sesion",
-        "logout": "Cerrar sesion",
-        "bad_password": "Contrasena incorrecta.",
+        "login_title": "Iniciar sesión",
+        "login": "Iniciar sesión",
+        "logout": "Cerrar sesión",
+        "bad_password": "Contraseña incorrecta.",
         "locked": "Demasiados intentos. Vuelva a intentarlo en unos minutos.",
         "config_title": "Ajustes",
-        "current_password": "Contrasena actual",
-        "new_password": "Nueva contrasena (dejar vacio para conservar)",
+        "current_password": "Contraseña actual",
+        "new_password": "Nueva contraseña (dejar vacio para conservar)",
         "saved": "Guardado.",
         "back_display": "Volver a la pantalla",
-        "invalid_ip": "Direccion IP no valida.",
-        "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibio nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opcion --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caracteres max.", "blaster_link": "Emisor infrarrojo",
-        "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Senal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Senal recibida, sensor operativo.", "hw_test_ko": "Ninguna senal en 15 s.",
+        "invalid_ip": "Dirección IP no valida.",
+        "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibió nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opción --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caractères max.", "blaster_link": "Emisor infrarrojo",
+        "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Señal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Señal recibida, sensor operativo.", "hw_test_ko": "Ninguna señal en 15 s.",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
-        "session_expired": "Sesion caducada, inicie sesion de nuevo.",
+        "session_expired": "Sesión caducada, inicie sesión de nuevo.",
     },
     "de": {
         "setup_title": "Ersteinrichtung",
         "setup_intro": "Administrator-Passwort festlegen und Streamer angeben.",
         "password": "Administrator-Passwort",
-        "password_confirm": "Passwort bestaetigen",
+        "password_confirm": "Passwort bestätigen",
         "password_short": "Mindestens 8 Zeichen.",
-        "password_mismatch": "Die Passwoerter stimmen nicht ueberein.",
+        "password_mismatch": "Die Passwörter stimmen nicht überein.",
         "device_ip": "IP-Adresse des Streamers",
         "detect": "Im Netzwerk suchen",
-        "detecting": "Suche laeuft...",
+        "detecting": "Suche läuft...",
         "detect_none": "Kein Streamer gefunden. IP manuell eingeben.",
         "language": "Sprache",
         "save": "Speichern",
@@ -150,11 +150,11 @@ T = {
         "current_password": "Aktuelles Passwort",
         "new_password": "Neues Passwort (leer lassen zum Beibehalten)",
         "saved": "Gespeichert.",
-        "back_display": "Zurueck zur Anzeige",
-        "invalid_ip": "Ungueltige IP-Adresse.",
-        "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstaerker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Loeschen", "learn_hint": "Jetzt die Taste druecken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor pruefen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungueltiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
-        "hw_title": "Infrarot-Hardware", "hw_pin": "Raspberry-Pin", "hw_leg": "Sensor-Bein", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Versorgung (VCC / +)", "hw_note": "Sensor VS1838B oder TSOP38238, Woelbung zu Ihnen, Beine nach unten: OUT links, GND Mitte, VCC rechts. Bei Modulen den Aufdrucken folgen.", "hw_rx_ok": "Empfaenger erkannt", "hw_rx_ko": "Empfaenger nicht erkannt: Verkabelung pruefen, dann ./install.sh --ir und Neustart.", "hw_tx_ok": "Sender erkannt", "hw_tx_ko": "Sender nicht installiert (optional).", "hw_test": "Sensor testen", "hw_test_wait": "Taste druecken...", "hw_test_ok": "Signal empfangen, Sensor funktioniert.", "hw_test_ko": "Kein Signal innerhalb von 15 s.",
-        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Kuenstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
+        "back_display": "Zurück zur Anzeige",
+        "invalid_ip": "Ungültige IP-Adresse.",
+        "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstärker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Löschen", "learn_hint": "Jetzt die Taste drücken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor prüfen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungültiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
+        "hw_title": "Infrarot-Hardware", "hw_pin": "Raspberry-Pin", "hw_leg": "Sensor-Bein", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Versorgung (VCC / +)", "hw_note": "Sensor VS1838B oder TSOP38238, Wölbung zu Ihnen, Beine nach unten: OUT links, GND Mitte, VCC rechts. Bei Modulen den Aufdrucken folgen.", "hw_rx_ok": "Empfänger erkannt", "hw_rx_ko": "Empfänger nicht erkannt: Verkabelung prüfen, dann ./install.sh --ir und Neustart.", "hw_tx_ok": "Sender erkannt", "hw_tx_ko": "Sender nicht installiert (optional).", "hw_test": "Sensor testen", "hw_test_wait": "Taste drücken...", "hw_test_ok": "Signal empfangen, Sensor funktioniert.", "hw_test_ko": "Kein Signal innerhalb von 15 s.",
+        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
 }
@@ -223,7 +223,7 @@ MODEL_CACHE = {"ip": None, "name": ""}
 
 
 def device_model(ip=None, port=None):
-    """Nom du modele (DMP-A6, A8, A10...), mis en cache par adresse."""
+    """Nom du modèle (DMP-A6, A8, A10...), mis en cache par adresse."""
     ip = ip or CONFIG.get("eversolo_ip")
     port = port or CONFIG.get("eversolo_port", 9529)
     if not ip:
@@ -276,7 +276,7 @@ NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
 
 def lirc_devices():
-    """Detecte les peripheriques infrarouges: (recepteur, emetteur)."""
+    """Detecte les peripheriques infrarouges: (récepteur, émetteur)."""
     rx = tx = None
     for dev in sorted(glob.glob("/dev/lirc*")):
         try:
@@ -309,7 +309,7 @@ def record_raw(path, timeout_s=15):
 
 
 def send_raw(path):
-    """Rejoue un signal enregistre via la LED emettrice."""
+    """Rejoue un signal enregistre via la LED émettrice."""
     _, tx = lirc_devices()
     if not tx or not os.path.exists(path):
         return False
@@ -364,7 +364,7 @@ def fetch_artist_info(artist, lang):
 
 
 def toggle_artist_panel():
-    """Affiche la bio de l'artiste en cours, ou la masque si deja visible."""
+    """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
         ARTIST_PANEL.update({"until": 0.0, "data": None})
         return True
@@ -452,7 +452,7 @@ def security_headers(resp):
     return resp
 
 
-# ------------------------------------------------------- detection du streamer
+# ------------------------------------------------------- détection du streamer
 
 
 def probe(ip, port, timeout=0.4):
@@ -586,9 +586,9 @@ def setup():
   <input type="hidden" name="csrf" value="{csrf_token()}">
   <label>{t['language']}</label>
   <select onchange="location='/setup?lang='+this.value">
-    <option value="fr" {'selected' if lang=='fr' else ''}>Francais</option>
+    <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
     <option value="en" {'selected' if lang=='en' else ''}>English</option>
-    <option value="es" {'selected' if lang=='es' else ''}>Espanol</option>
+    <option value="es" {'selected' if lang=='es' else ''}>Español</option>
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
   <label>{t['password']}</label>
@@ -711,9 +711,9 @@ def config_page():
   </div>
   <label>{t['language']}</label>
   <select name="language">
-    <option value="fr" {'selected' if lang=='fr' else ''}>Francais</option>
+    <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
     <option value="en" {'selected' if lang=='en' else ''}>English</option>
-    <option value="es" {'selected' if lang=='es' else ''}>Espanol</option>
+    <option value="es" {'selected' if lang=='es' else ''}>Español</option>
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
   <label>{t['new_password']}</label>
@@ -741,8 +741,8 @@ document.getElementById('scan').onclick = async function() {{
 
 @app.route("/api/control/<action>", methods=["POST"])
 def api_control(action):
-    # Le pilotage sur le reseau local n'ajoute aucune exposition: l'Eversolo
-    # lui-meme accepte deja ces commandes sans mot de passe sur le port 9529.
+    # Le pilotage sur le réseau local n'ajoute aucune exposition: l'Eversolo
+    # lui-même accepte déjà ces commandes sans mot de passe sur le port 9529.
     # L'en-tete personnalise bloque les requetes forgees depuis un site web.
     if request.headers.get("X-Requested-With") != "eversolo":
         return jsonify({"error": "forbidden"}), 403
@@ -1049,7 +1049,7 @@ def api_ir_status():
         return jsonify({"error": "unauthorized"}), 401
     rx, tx = lirc_devices()
     # Un peripherique /dev/lirc* n'existe que si l'overlay gpio-ir est actif:
-    # c'est la seule preuve fiable que le recepteur est en place.
+    # c'est la seule preuve fiable que le récepteur est en place.
     lirc_present = bool(glob.glob("/dev/lirc*"))
     overlay = False
     for cfg in ("/boot/firmware/config.txt", "/boot/config.txt"):
@@ -1069,13 +1069,13 @@ def api_ir_status():
 
 @app.route("/api/detect")
 def api_detect():
-    # Autorise pendant la premiere configuration, puis reserve a l'admin.
+    # Autorise pendant la première configuration, puis reserve a l'admin.
     if load_auth() is not None and not logged_in():
         return jsonify({"error": "unauthorized"}), 401
     return jsonify({"found": scan_network()})
 
 
-# ----------------------------------------------------------- donnees lecture
+# ----------------------------------------------------------- données lecture
 
 
 def find_quality(state):
@@ -1102,7 +1102,7 @@ def find_quality(state):
     walk(state)
 
     # Les appareils renvoient parfois du texte ("44.1kHz", "24bit", "320 kbps"):
-    # on extrait des valeurs numeriques propres, sinon on ecarte le champ.
+    # on extrait des valeurs numériques propres, sinon on ecarte le champ.
     def num(value):
         m = re.search(r"\d+(?:[.,]\d+)*", str(value))
         if not m:
@@ -1122,7 +1122,7 @@ def find_quality(state):
     if "sample_rate" in found:
         v = num(found["sample_rate"])
         if v and v > 0:
-            # valeur en kHz si petite, en Hz sinon; l'interface attend des Hz
+            # valeur en kHz si petite, en Hz sinon; l'interface àttend des Hz
             cleaned["sample_rate"] = v * 1000 if v < 1000 else v
     if "bit_depth" in found:
         v = num(found["bit_depth"])
@@ -1174,7 +1174,7 @@ def normalize(state):
     # Deux emplacements possibles selon la source:
     # - apps de streaming (Spotify Connect, AirPlay) et Bluetooth -> everSoloPlayInfo
     # - lecteur interne (Tidal, Qobuz, fichiers, web radios) -> playingMusic
-    # Fusion avec repli croise pour rester robuste face aux playType inconnus.
+    # Fusion avec repli croise pour rester robuste face àux playType inconnus.
     audio = state.get("everSoloPlayInfo", {}).get("everSoloPlayAudioInfo", {}) or {}
     music = state.get("playingMusic") or {}
 
@@ -1202,7 +1202,7 @@ def normalize(state):
         by_id = f"{eversolo_base()}/ZidooMusicControl/v2/getImage?id={music['id']}&target=16"
     info["cover"] = (icon or art or by_id) if app_first else (art or by_id or icon)
 
-    # Flux en direct (web radio): pas de duree exploitable
+    # Flux en direct (web radio): pas de durée exploitable
     info["live"] = bool(info["title"]) and info["duration"] <= 0
 
     if info["cover"]:
@@ -1222,8 +1222,8 @@ def api_state():
         r.raise_for_status()
         info = normalize(r.json())
         if STATE_CACHE["down_since"]:
-            duree = int(time.time() - STATE_CACHE["down_since"])
-            print(f"[diagnostic] Eversolo de retour apres {duree} s d'indisponibilite", flush=True)
+            durée = int(time.time() - STATE_CACHE["down_since"])
+            print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)
         STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
         if ARTIST_PANEL["until"] > time.time():
             info["panel"] = ARTIST_PANEL["data"]
@@ -1274,8 +1274,8 @@ def api_cover():
         CONFIG["eversolo_ip"],
     }
     # Anti SSRF: le streamer configure est toujours autorise; tout autre hote
-    # doit etre public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
-    # CDN externes) et repondre avec une image. Le reseau prive reste interdit.
+    # doit être public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
+    # CDN externes) et repondre avec une image. Le réseau prive reste interdit.
     if parsed.netloc not in streamer and host_is_private(parsed.hostname):
         return Response(status=403)
     try:

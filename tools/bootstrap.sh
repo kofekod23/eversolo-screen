@@ -1,6 +1,6 @@
 #!/bin/bash
-# Lance par cloud-init au premier demarrage (root): installe le service de
-# provision qui reessaie a chaque demarrage jusqu'a reussite.
+# Lance par cloud-init au premier démarrage (root): installe le service de
+# provision qui réessaie a chaque démarrage jusqu'à réussite.
 set -e
 curl -fsSL https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/provision.sh \
     -o /usr/local/sbin/eversolo-provision.sh

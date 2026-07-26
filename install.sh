@@ -2,7 +2,7 @@
 # Installation sur Raspberry Pi OS (Lite ou Desktop).
 # Usage :
 #   ./install.sh            serveur seul (configuration via le navigateur)
-#   ./install.sh --kiosk    serveur + plein ecran automatique sur le HDMI du Pi
+#   ./install.sh --kiosk    serveur + plein écran automatique sur le HDMI du Pi
 set -e
 
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -27,7 +27,7 @@ if [ "$KIOSK" = "--kiosk" ]; then
     sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
 fi
 
-# Configuration locale (non suivie par git) creee au premier passage
+# Configuration locale (non suivie par git) créée au premier passage
 if [ ! -f "$APP_DIR/config.json" ]; then
     cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
 fi
@@ -52,14 +52,14 @@ if [ "$KIOSK" = "--kiosk" ]; then
     sudo systemctl restart "eversolo-kiosk@$CURRENT_USER"
 fi
 
-# 6. Recepteur infrarouge (optionnel)
+# 6. Récepteur infrarouge (optionnel)
 if [ "$IR" = "--ir" ]; then
     sudo apt-get install -y ir-keytable
     BOOTCFG="/boot/firmware/config.txt"
     [ -f "$BOOTCFG" ] || BOOTCFG="/boot/config.txt"
     if ! grep -q "^dtoverlay=gpio-ir" "$BOOTCFG"; then
         echo "dtoverlay=gpio-ir,gpio_pin=17" | sudo tee -a "$BOOTCFG" > /dev/null
-        echo "Overlay infrarouge ajoute a $BOOTCFG (GPIO17): un redemarrage sera necessaire."
+        echo "Overlay infrarouge ajoute a $BOOTCFG (GPIO17): un redémarrage sera nécessaire."
     fi
     sudo cp "$APP_DIR/eversolo-ir.service" /etc/systemd/system/eversolo-ir@.service
     sudo systemctl daemon-reload
@@ -67,14 +67,14 @@ if [ "$IR" = "--ir" ]; then
     sudo systemctl restart "eversolo-ir@$CURRENT_USER" || true
 fi
 
-# 7. Emetteur infrarouge (optionnel)
+# 7. Émetteur infrarouge (optionnel)
 if [ "$IRTX" = "--ir-tx" ]; then
     sudo apt-get install -y ir-keytable
     BOOTCFG="/boot/firmware/config.txt"
     [ -f "$BOOTCFG" ] || BOOTCFG="/boot/config.txt"
     if ! grep -q "^dtoverlay=gpio-ir-tx" "$BOOTCFG"; then
         echo "dtoverlay=gpio-ir-tx,gpio_pin=18" | sudo tee -a "$BOOTCFG" > /dev/null
-        echo "Overlay emetteur ajoute a $BOOTCFG (GPIO18): un redemarrage sera necessaire."
+        echo "Overlay émetteur ajoute a $BOOTCFG (GPIO18): un redémarrage sera nécessaire."
     fi
     echo 'SUBSYSTEM=="lirc", MODE="0660", GROUP="video"' | sudo tee /etc/udev/rules.d/71-eversolo-lirc.rules > /dev/null
     sudo usermod -aG video "$CURRENT_USER" || true
@@ -83,6 +83,6 @@ fi
 PI_IP="$(hostname -I | awk '{print $1}')"
 echo ""
 echo "== Termine =="
-echo "Ouvrez http://$PI_IP:8080 : l'assistant de premiere configuration se lance"
-echo "(mot de passe administrateur, detection automatique du DMP-A6, langue)."
+echo "Ouvrez http://$PI_IP:8080 : l'assistant de première configuration se lance"
+echo "(mot de passe administrateur, détection automatique du DMP-A6, langue)."
 echo "Logs : journalctl -u eversolo-screen@$CURRENT_USER -f"

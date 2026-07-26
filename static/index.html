@@ -484,8 +484,17 @@
       facts.appendChild(el);
     });
     const im = $("p_img");
-    if (p.image) { im.src = p.image; im.style.display = "block"; }
-    else { im.style.display = "none"; }
+    if (p.image) {
+      if (im.dataset.src !== p.image) {
+        im.dataset.src = p.image;
+        im.onload = () => { im.style.display = "block"; };
+        im.onerror = () => { im.style.display = "none"; };
+        im.src = p.image;
+      }
+    } else {
+      im.style.display = "none";
+      im.dataset.src = "";
+    }
 
     requestAnimationFrame(() => {
       const wrapEl = $("p_wrap"), txt = $("p_text");

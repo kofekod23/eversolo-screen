@@ -11,6 +11,7 @@ import ipaddress
 import json
 import re
 import subprocess
+import threading
 import os
 import secrets
 import socket
@@ -222,6 +223,7 @@ app.config.update(
 )
 
 http = requests.Session()
+http.headers.update({"User-Agent": "eversolo-screen/1.0 (Raspberry Pi; affichage hifi local)"})
 
 MODEL_CACHE = {"ip": None, "name": ""}
 
@@ -420,11 +422,38 @@ def fetch_artist_info(artist, lang):
             if parle_de_musique(j0.get("extract", "")):
                 title = pages[0]["title"]
 
+        def intro_complete(t):
+            """Introduction integrale de l'article (souvent bien plus riche)."""
+            r = http.get(
+                f"https://{lang}.wikipedia.org/w/api.php",
+                params={"action": "query", "prop": "extracts", "explaintext": 1,
+                        "exintro": 1, "redirects": 1, "format": "json", "titles": t},
+                headers=headers, timeout=5,
+            )
+            for p in (r.json().get("query", {}).get("pages", {}) or {}).values():
+                return (p.get("extract") or "").strip()
+            return ""
+
+        def couper(texte, maxi=2600):
+            if len(texte) <= maxi:
+                return texte
+            coupe = texte[:maxi]
+            point = coupe.rfind(". ")
+            return coupe[:point + 1] if point > maxi // 2 else coupe
+
         if title:
             j = resume(title)
             extract = (j.get("extract") or "").strip()
             if extract and not parle_de_musique(extract):
                 extract = ""
+            if extract:
+                try:
+                    longue = intro_complete(title)
+                    if len(longue) > len(extract):
+                        extract = longue
+                except Exception:
+                    pass
+                extract = couper(extract)
             if extract:
                 thumb = (j.get("thumbnail") or {}).get("source")
                 data = {
@@ -1295,6 +1324,7 @@ def normalize(state):
 
 
 STATE_CACHE = {"info": None, "failures": 0, "down_since": None}
+PREFETCH = {"artist": None}
 
 
 @app.route("/api/state")
@@ -1305,6 +1335,13 @@ def api_state():
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
         info = normalize(r.json())
+        artiste = info.get("artist")
+        if artiste and artiste != PREFETCH["artist"]:
+            PREFETCH["artist"] = artiste
+            threading.Thread(
+                target=lambda a=artiste: fetch_artist_info(a, CONFIG.get("language", "fr")),
+                daemon=True,
+            ).start()
         if STATE_CACHE["down_since"]:
             durée = int(time.time() - STATE_CACHE["down_since"])
             print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)

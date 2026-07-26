@@ -165,6 +165,7 @@ sudo reboot
 ```
 
 Le redemarrage active le recepteur. Ensuite, appairage depuis le navigateur : `http://IP_DU_PI:8080/remote` (connexion avec le mot de passe administrateur). Pour chaque action, cliquez sur Associer puis pressez la touche voulue de votre telecommande : le code est memorise instantanement. Chaque action est reassociable ou retirable a tout moment.
+Une septieme action est disponible a l'appairage : Infos artiste. Une pression sur la touche associee affiche sur l'ecran un panneau avec la biographie et la photo de l'artiste en cours (source Wikipedia, dans la langue configuree, aucune cle d'API requise). Le panneau disparait tout seul apres 45 secondes, ou immediatement en pressant a nouveau la touche.
 
 ## 11. Emetteur infrarouge (optionnel)
 

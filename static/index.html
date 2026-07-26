@@ -245,6 +245,41 @@
   @keyframes liveglow { 50% { opacity: 0.55; } }
   .paused .tip { background: var(--muted); box-shadow: none; }
 
+
+  /* Panneau infos artiste */
+  #panel {
+    position: fixed;
+    right: clamp(24px, 5vw, 72px);
+    bottom: clamp(60px, 12vh, 120px);
+    width: min(420px, 80vw);
+    background: rgba(22, 19, 14, 0.96);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--tube);
+    border-radius: 8px;
+    padding: 20px 22px;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+    z-index: 3;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+  #panel.on { opacity: 1; transform: none; }
+  #panel .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  #panel img {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    background: var(--chassis); display: none;
+  }
+  #panel .pname { font-family: "Fraunces", Georgia, serif; font-weight: 560; font-size: 20px; }
+  #panel .ptext {
+    font-size: 13.5px; line-height: 1.55; color: var(--ivory); opacity: 0.9;
+    display: -webkit-box; -webkit-line-clamp: 9; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  #panel .psrc {
+    margin-top: 12px; font-family: "IBM Plex Mono", monospace;
+    font-size: 10px; letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase;
+  }
+
   /* Ecran d'attente */
   #idle {
     position: fixed;
@@ -323,6 +358,12 @@
     </footer>
   </main>
 
+  <div id="panel">
+    <div class="phead"><img id="p_img" alt=""><div class="pname" id="p_name"></div></div>
+    <div class="ptext" id="p_text"></div>
+    <div class="psrc" id="p_src"></div>
+  </div>
+
   <div id="idle" class="on">
     <span class="lamp"></span>
     <div class="mark">Eversolo</div>
@@ -390,6 +431,21 @@
     $("stage").classList.toggle("paused", !s.playing);
     $("status").textContent = s.playing ? L.playing : L.paused;
     $("transport").classList.toggle("islive", !!s.live);
+
+    const p = s.panel;
+    const panelEl = $("panel");
+    if (p && p.text) {
+      $("p_name").textContent = p.artist || "";
+      $("p_text").textContent = p.text;
+      $("p_src").textContent = p.source || "";
+      const im = $("p_img");
+      if (p.image) { im.src = p.image; im.style.display = "block"; }
+      else { im.style.display = "none"; }
+      panelEl.classList.add("on");
+    } else {
+      panelEl.classList.remove("on");
+    }
+
     if (s.model) $("model").textContent = s.model;
     $("title").textContent = s.title;
     $("artist").textContent = s.artist || "";

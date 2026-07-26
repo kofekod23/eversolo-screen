@@ -66,7 +66,7 @@ T = {
         "back_display": "Retour a l'affichage",
         "invalid_ip": "Adresse IP invalide.",
         "blaster_title": "Emetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos telecommandes, le Pi pourra les reemettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face au capteur...", "learned": "Commande enregistree.", "learn_failed": "Rien recu. Verifiez le capteur et reessayez.", "no_tx": "Emetteur introuvable (option --ir-tx installee et redemarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caracteres max.", "blaster_link": "Emetteur infrarouge",
-        "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
+        "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
         "session_expired": "Session expiree, reconnectez-vous.",
     },
     "en": {
@@ -94,7 +94,7 @@ T = {
         "back_display": "Back to display",
         "invalid_ip": "Invalid IP address.",
         "blaster_title": "Infrared blaster", "blaster_intro": "Record buttons from your remotes, the Pi can replay them (TV, amp...).", "new_name": "Command name (e.g. tv_power)", "learn": "Learn", "send_cmd": "Send", "delete_cmd": "Delete", "learn_hint": "Now press the button to learn, facing the sensor...", "learned": "Command recorded.", "learn_failed": "Nothing received. Check the sensor and retry.", "no_tx": "Emitter not found (--ir-tx installed and rebooted?).", "bad_name": "Invalid name: letters, digits, dash, 32 chars max.", "blaster_link": "Infrared blaster",
-        "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_mute": "Mute", "remote_link": "Infrared remote",
+        "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
     "es": {
@@ -122,7 +122,7 @@ T = {
         "back_display": "Volver a la pantalla",
         "invalid_ip": "Direccion IP no valida.",
         "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibio nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opcion --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caracteres max.", "blaster_link": "Emisor infrarrojo",
-        "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
+        "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesion caducada, inicie sesion de nuevo.",
     },
     "de": {
@@ -150,7 +150,7 @@ T = {
         "back_display": "Zurueck zur Anzeige",
         "invalid_ip": "Ungueltige IP-Adresse.",
         "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstaerker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Loeschen", "learn_hint": "Jetzt die Taste druecken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor pruefen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungueltiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
-        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
+        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Kuenstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
 }
@@ -251,6 +251,8 @@ def do_action(action):
     """Envoie une commande de pilotage a l'Eversolo."""
     if not CONFIG.get("eversolo_ip"):
         return False
+    if action == "info":
+        return toggle_artist_panel()
     if action == "mute":
         MUTE_STATE["muted"] = not MUTE_STATE["muted"]
         url = f"{eversolo_base()}/ZidooMusicControl/v2/setMuteVolume?isMute={1 if MUTE_STATE['muted'] else 0}"
@@ -312,6 +314,68 @@ def send_raw(path):
         return True
     except Exception:
         return False
+
+
+ARTIST_CACHE = {}
+ARTIST_PANEL = {"until": 0.0, "data": None}
+
+
+def fetch_artist_info(artist, lang):
+    """Bio et photo de l'artiste via Wikipedia, avec cache 24 h."""
+    key = (artist.lower(), lang)
+    cached = ARTIST_CACHE.get(key)
+    if cached and time.time() - cached[0] < 86400:
+        return cached[1]
+    headers = {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
+    data = None
+    try:
+        r = http.get(
+            f"https://{lang}.wikipedia.org/w/rest.php/v1/search/page",
+            params={"q": artist, "limit": 1}, headers=headers, timeout=4,
+        )
+        pages = r.json().get("pages") or []
+        if pages:
+            title = pages[0]["title"]
+            r = http.get(
+                f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/"
+                + requests.utils.quote(title, safe=""),
+                headers=headers, timeout=4,
+            )
+            j = r.json()
+            extract = (j.get("extract") or "").strip()
+            if extract:
+                thumb = (j.get("thumbnail") or {}).get("source")
+                data = {
+                    "artist": artist,
+                    "text": extract,
+                    "image": "/api/cover?u=" + requests.utils.quote(thumb, safe="") if thumb else None,
+                    "source": f"Wikipedia ({lang})",
+                }
+    except Exception:
+        data = None
+    if len(ARTIST_CACHE) > 50:
+        ARTIST_CACHE.clear()
+    ARTIST_CACHE[key] = (time.time(), data)
+    return data
+
+
+def toggle_artist_panel():
+    """Affiche la bio de l'artiste en cours, ou la masque si deja visible."""
+    if ARTIST_PANEL["until"] > time.time():
+        ARTIST_PANEL.update({"until": 0.0, "data": None})
+        return True
+    try:
+        r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
+        artist = normalize(r.json()).get("artist")
+    except Exception:
+        return False
+    if not artist:
+        return False
+    data = fetch_artist_info(artist, CONFIG.get("language", "fr"))
+    if not data:
+        return False
+    ARTIST_PANEL.update({"until": time.time() + 45, "data": data})
+    return True
 
 
 FAILED = {}
@@ -678,7 +742,7 @@ def api_control(action):
     # L'en-tete personnalise bloque les requetes forgees depuis un site web.
     if request.headers.get("X-Requested-With") != "eversolo":
         return jsonify({"error": "forbidden"}), 403
-    if action not in ACTIONS and action != "mute":
+    if action not in ACTIONS and action not in ("mute", "info"):
         return jsonify({"error": "unknown action"}), 404
     return jsonify({"ok": do_action(action)})
 
@@ -732,7 +796,7 @@ def remote_page():
                 CONFIG["ir_map"] = ir_map
                 save_config(CONFIG)
                 message = t["saved"]
-            elif code.isdigit() and (action in ACTIONS or action == "mute"):
+            elif code.isdigit() and (action in ACTIONS or action in ("mute", "info")):
                 ir_map = {c: a for c, a in ir_map.items() if a != action}
                 ir_map[code] = action
                 CONFIG["ir_map"] = ir_map
@@ -742,7 +806,7 @@ def remote_page():
     ir_map = CONFIG.get("ir_map") or {}
     by_action = {a: c for c, a in ir_map.items()}
     rows = []
-    for act in ["play_pause", "next", "previous", "vol_up", "vol_down", "mute"]:
+    for act in ["play_pause", "next", "previous", "vol_up", "vol_down", "mute", "info"]:
         code = by_action.get(act)
         code_txt = f"code {code}" if code else t["not_paired"]
         rows.append(f"""
@@ -1043,7 +1107,10 @@ def api_state():
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
-        return jsonify(normalize(r.json()))
+        info = normalize(r.json())
+        if ARTIST_PANEL["until"] > time.time():
+            info["panel"] = ARTIST_PANEL["data"]
+        return jsonify(info)
     except Exception:
         return jsonify({
             "connected": False,

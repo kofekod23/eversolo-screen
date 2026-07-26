@@ -66,6 +66,7 @@ T = {
         "back_display": "Retour a l'affichage",
         "invalid_ip": "Adresse IP invalide.",
         "blaster_title": "Emetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos telecommandes, le Pi pourra les reemettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face au capteur...", "learned": "Commande enregistree.", "learn_failed": "Rien recu. Verifiez le capteur et reessayez.", "no_tx": "Emetteur introuvable (option --ir-tx installee et redemarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caracteres max.", "blaster_link": "Emetteur infrarouge",
+        "hw_title": "Materiel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombee vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux etiquettes si votre capteur est sur un module.", "hw_rx_ok": "Recepteur detecte", "hw_rx_ko": "Recepteur non detecte: verifiez le cablage, puis ./install.sh --ir et un redemarrage.", "hw_tx_ok": "Emetteur detecte", "hw_tx_ko": "Emetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
         "remote_title": "Telecommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre telecommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associee", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Precedent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Telecommande infrarouge",
         "session_expired": "Session expiree, reconnectez-vous.",
     },
@@ -94,6 +95,7 @@ T = {
         "back_display": "Back to display",
         "invalid_ip": "Invalid IP address.",
         "blaster_title": "Infrared blaster", "blaster_intro": "Record buttons from your remotes, the Pi can replay them (TV, amp...).", "new_name": "Command name (e.g. tv_power)", "learn": "Learn", "send_cmd": "Send", "delete_cmd": "Delete", "learn_hint": "Now press the button to learn, facing the sensor...", "learned": "Command recorded.", "learn_failed": "Nothing received. Check the sensor and retry.", "no_tx": "Emitter not found (--ir-tx installed and rebooted?).", "bad_name": "Invalid name: letters, digits, dash, 32 chars max.", "blaster_link": "Infrared blaster",
+        "hw_title": "Infrared hardware", "hw_pin": "Raspberry pin", "hw_leg": "Sensor leg", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Ground (GND / -)", "hw_vcc": "Power (VCC / +)", "hw_note": "VS1838B or TSOP38238 sensor, dome facing you, legs down: OUT left, GND middle, VCC right. Trust the labels if your sensor is on a module.", "hw_rx_ok": "Receiver detected", "hw_rx_ko": "Receiver not detected: check wiring, then ./install.sh --ir and reboot.", "hw_tx_ok": "Emitter detected", "hw_tx_ko": "Emitter not installed (optional).", "hw_test": "Test the sensor", "hw_test_wait": "Press a button...", "hw_test_ok": "Signal received, sensor works.", "hw_test_ko": "No signal received within 15 s.",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
     },
@@ -122,6 +124,7 @@ T = {
         "back_display": "Volver a la pantalla",
         "invalid_ip": "Direccion IP no valida.",
         "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibio nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opcion --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caracteres max.", "blaster_link": "Emisor infrarrojo",
+        "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Senal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Senal recibida, sensor operativo.", "hw_test_ko": "Ninguna senal en 15 s.",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesion caducada, inicie sesion de nuevo.",
     },
@@ -150,6 +153,7 @@ T = {
         "back_display": "Zurueck zur Anzeige",
         "invalid_ip": "Ungueltige IP-Adresse.",
         "blaster_title": "Infrarot-Sender", "blaster_intro": "Tasten Ihrer Fernbedienungen aufnehmen, der Pi kann sie wieder senden (TV, Verstaerker...).", "new_name": "Name des Befehls (z.B. tv_power)", "learn": "Anlernen", "send_cmd": "Senden", "delete_cmd": "Loeschen", "learn_hint": "Jetzt die Taste druecken, zum Sensor gerichtet...", "learned": "Befehl gespeichert.", "learn_failed": "Nichts empfangen. Sensor pruefen und erneut versuchen.", "no_tx": "Sender nicht gefunden (--ir-tx installiert und neu gestartet?).", "bad_name": "Ungueltiger Name: Buchstaben, Ziffern, Bindestrich, max. 32 Zeichen.", "blaster_link": "Infrarot-Sender",
+        "hw_title": "Infrarot-Hardware", "hw_pin": "Raspberry-Pin", "hw_leg": "Sensor-Bein", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Versorgung (VCC / +)", "hw_note": "Sensor VS1838B oder TSOP38238, Woelbung zu Ihnen, Beine nach unten: OUT links, GND Mitte, VCC rechts. Bei Modulen den Aufdrucken folgen.", "hw_rx_ok": "Empfaenger erkannt", "hw_rx_ko": "Empfaenger nicht erkannt: Verkabelung pruefen, dann ./install.sh --ir und Neustart.", "hw_tx_ok": "Sender erkannt", "hw_tx_ko": "Sender nicht installiert (optional).", "hw_test": "Sensor testen", "hw_test_wait": "Taste druecken...", "hw_test_ok": "Signal empfangen, Sensor funktioniert.", "hw_test_ko": "Kein Signal innerhalb von 15 s.",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewuenschte Taste druecken.", "pair": "Anlernen", "press_key": "Taste druecken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurueck", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Kuenstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
     },
@@ -830,6 +834,22 @@ def remote_page():
 .rcode{{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
 .rbtns{{display:flex;gap:8px;align-items:center}}
 .pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
+.hw{{margin-top:28px;padding-top:22px;border-top:1px solid var(--line)}}
+.hwhead{{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}}
+.hwtitle{{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}}
+.dot{{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}}
+.dot.ok{{background:var(--tube);box-shadow:0 0 8px 2px rgba(232,163,61,.5)}}
+.dot.ko{{background:#c65a4a}}
+.hwstat{{font-size:12px;color:var(--muted)}}
+.hwtab{{width:100%;border-collapse:collapse;font-size:13px}}
+.hwtab th{{text-align:left;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;padding-bottom:8px}}
+.hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;color:var(--ivory)}}
+.hwtab td:last-child{{text-align:right;color:var(--tube)}}
+.gp{{color:var(--muted);font-size:11px}}
+.hwnote{{font-size:12px;line-height:1.5;color:var(--muted);margin-top:14px}}
+.hwres{{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}}
+.hwres.ok{{color:var(--tube)}}
+.hwres.ko{{color:#c65a4a}}
 </style>
 <h1>{t['remote_title']}</h1>
 <p class="intro">{t['remote_intro']}</p>
@@ -841,8 +861,53 @@ def remote_page():
   <input type="hidden" name="action" id="pf_action">
   <input type="hidden" name="code" id="pf_code">
 </form>
+<div class="hw">
+  <div class="hwhead">
+    <span class="hwtitle">{t['hw_title']}</span>
+    <span class="dot" id="rxdot"></span><span class="hwstat" id="rxstat">...</span>
+  </div>
+  <table class="hwtab">
+    <tr><th>{t['hw_leg']}</th><th>{t['hw_pin']}</th></tr>
+    <tr><td>{t['hw_signal']}</td><td>11 &nbsp;<span class="gp">GPIO17</span></td></tr>
+    <tr><td>{t['hw_gnd']}</td><td>6</td></tr>
+    <tr><td>{t['hw_vcc']}</td><td>1 &nbsp;<span class="gp">3,3 V</span></td></tr>
+  </table>
+  <p class="hwnote">{t['hw_note']}</p>
+  <button type="button" class="ghost" id="testbtn" style="margin-top:14px">{t['hw_test']}</button>
+  <div class="hwres" id="testres"></div>
+</div>
 <div class="foot"><a href="/blaster">{t['blaster_link']}</a> &nbsp;·&nbsp; <a href="/config">{t['config_title']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
 <script>
+(async function() {{
+  try {{
+    const d = await (await fetch('/api/ir/status')).json();
+    document.getElementById('rxdot').className = 'dot ' + (d.rx ? 'ok' : 'ko');
+    document.getElementById('rxstat').textContent = d.rx
+      ? {json.dumps(t['hw_rx_ok'])} : {json.dumps(t['hw_rx_ko'])};
+  }} catch (e) {{}}
+}})();
+document.getElementById('testbtn').onclick = async function() {{
+  const btn = this, res = document.getElementById('testres');
+  const original = btn.textContent;
+  btn.textContent = {json.dumps(t['hw_test_wait'])}; btn.disabled = true; res.textContent = '';
+  let seen = null;
+  try {{ seen = (await (await fetch('/api/ir/last')).json()).code; }} catch (e) {{}}
+  const started = Date.now();
+  while (Date.now() - started < 15000) {{
+    await new Promise(r => setTimeout(r, 500));
+    try {{
+      const d = await (await fetch('/api/ir/last')).json();
+      if (d.code && d.code !== seen) {{
+        res.textContent = {json.dumps(t['hw_test_ok'])} + ' (code ' + d.code + ')';
+        res.className = 'hwres ok';
+        btn.textContent = original; btn.disabled = false;
+        return;
+      }}
+    }} catch (e) {{}}
+  }}
+  res.textContent = {json.dumps(t['hw_test_ko'])}; res.className = 'hwres ko';
+  btn.textContent = original; btn.disabled = false;
+}};
 document.querySelectorAll('.pairbtn').forEach(function(btn) {{
   btn.onclick = async function() {{
     const original = btn.textContent;
@@ -976,6 +1041,15 @@ document.querySelectorAll('.sendbtn').forEach(function(btn) {{
 </script>
 '''
     return page(t["blaster_title"], body, lang)
+
+
+@app.route("/api/ir/status")
+def api_ir_status():
+    if not logged_in():
+        return jsonify({"error": "unauthorized"}), 401
+    rx, tx = lirc_devices()
+    kernel_rx = bool(glob.glob("/sys/class/rc/rc*"))
+    return jsonify({"rx": bool(rx) or kernel_rx, "tx": bool(tx)})
 
 
 @app.route("/api/detect")

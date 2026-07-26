@@ -34,6 +34,15 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 | Capteur IR (optionnel) | VS1838B ou TSOP38238 | |
 | LED IR (optionnel) | LED 940 nm + résistance 220 Ω | Module KY-005 |
 
+
+<div align="center">
+
+| ![Pi avec module IR](/docs/pi3-IR.jpg) |
+| :---: |
+
+</div>
+
+
 L'Eversolo est piloté par le réseau (API port 9529) : aucun capteur requis sur le streamer.
 
 ## Installation
@@ -73,7 +82,7 @@ Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande
 | Biographies | TheAudioDB, Last.fm, Wikipédia via Wikidata |
 | Plages, crédits, studios | MusicBrainz, Discogs, Genius (plage en cours) |
 
-Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargir la couverture : Last.fm (gratuite), Discogs (jeton personnel gratuit, crédits des sorties récentes), TheAudioDB.
+Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargir la couverture : Last.fm (gratuite), Discogs (jeton personnel gratuit, Genius crédits des sorties récentes), TheAudioDB.
 
 ## Mise à jour
 

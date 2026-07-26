@@ -261,6 +261,12 @@
   }
   #idle .lamp { margin: 0 auto 26px; }
 
+
+  @media (min-aspect-ratio: 8/5) {
+    .cover-mount { height: min(66vh, 40vw); }
+    .now { gap: clamp(36px, 4.5vw, 72px); }
+  }
+
   @media (max-aspect-ratio: 1/1) {
     .now { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 24px; }
     .cover-mount { height: min(44vh, 78vw); }

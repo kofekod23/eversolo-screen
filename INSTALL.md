@@ -91,6 +91,8 @@ bash prepare-sd.sh
 5. Patientez 10 a 15 minutes : le Pi telecharge et installe tout, y compris le kiosque plein ecran, puis l'affichage apparait sur la TV.
 6. Derniere etape, depuis votre telephone : `http://eversolo.local:8080` pour l'assistant (langue, mot de passe, detection du streamer).
 
+Note importante selon la version du systeme : depuis fin 2025, Raspberry Pi OS (base Debian Trixie) et Raspberry Pi Imager 2.0 utilisent cloud-init pour la premiere configuration, a la place de l'ancien firstrun.sh. Le script prepare-sd.sh detecte automatiquement le mecanisme present sur la carte et s'adapte aux deux. Au demarrage d'une image recente, des messages mentionnant cloud-init sont normaux.
+
 Le Pi a besoin d'Internet a ce premier demarrage (le Wi-Fi configure dans Imager suffit). En cas de souci, le journal d'installation est dans `/var/log/eversolo-provision.log` sur le Pi.
 
 ## 7. Verifications et depannage

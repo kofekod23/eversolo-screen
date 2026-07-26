@@ -8,7 +8,7 @@ Type=simple
 User=%i
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 ExecStartPre=/bin/sh -c 'until curl -s -o /dev/null http://localhost:8080; do sleep 1; done'
-ExecStart=/usr/bin/cage -- /usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --app=http://localhost:8080
+ExecStart=/bin/sh -c 'exec /usr/bin/cage -- "$(command -v chromium-browser || command -v chromium)" --kiosk --noerrdialogs --disable-infobars --app=http://localhost:8080'
 Restart=on-failure
 RestartSec=5
 

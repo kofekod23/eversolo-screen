@@ -21,10 +21,37 @@ if [ -z "$BOOT" ] || [ ! -d "$BOOT" ]; then
 fi
 
 FR="$BOOT/firstrun.sh"
+UD="$BOOT/user-data"
+
+# Images recentes (Raspberry Pi OS Trixie + Imager 2.0): mecanisme cloud-init
+if [ ! -f "$FR" ] && [ -f "$UD" ]; then
+    if grep -q "eversolo-screen/main/tools/bootstrap.sh" "$UD"; then
+        echo "La carte est deja preparee, rien a faire."
+        exit 0
+    fi
+    if grep -q "^runcmd:" "$UD"; then
+        # une section runcmd existe deja: on y ajoute notre commande
+        TMPUD="$(mktemp)"
+        awk '{print} /^runcmd:/ && !done {print "  - [ sh, -c, \"apt-get update && apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/bootstrap.sh | bash\" ]"; done=1}' "$UD" > "$TMPUD"
+        cp "$TMPUD" "$UD"; rm -f "$TMPUD"
+    else
+        cat >> "$UD" << 'FIN_CLOUD'
+
+runcmd:
+  - [ sh, -c, "apt-get update && apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/bootstrap.sh | bash" ]
+FIN_CLOUD
+    fi
+    echo "Carte preparee (mecanisme cloud-init)."
+    echo "1. Ejectez la carte proprement, inserez-la dans le Raspberry, branchez."
+    echo "2. Attendez 10 a 15 minutes: le Pi installe tout seul."
+    echo "3. Ouvrez http://eversolo.local:8080 pour la premiere configuration."
+    exit 0
+fi
+
 if [ ! -f "$FR" ]; then
-    echo "firstrun.sh absent sur la carte."
+    echo "Ni firstrun.sh ni user-data sur la carte."
     echo "Refaites le flash avec Raspberry Pi Imager en passant par 'Modifier les reglages'"
-    echo "(nom d'utilisateur, mot de passe, Wi-Fi, SSH). C'est ce qui cree ce fichier."
+    echo "(nom d'utilisateur, mot de passe, Wi-Fi, SSH)."
     exit 1
 fi
 

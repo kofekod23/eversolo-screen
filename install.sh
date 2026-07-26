@@ -14,7 +14,8 @@ echo "== Installation eversolo-screen =="
 sudo apt-get update
 sudo apt-get install -y python3-venv curl
 if [ "$KIOSK" = "--kiosk" ]; then
-    sudo apt-get install -y cage chromium-browser
+    sudo apt-get install -y cage
+    sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
 fi
 
 if [ ! -d "$APP_DIR/venv" ]; then

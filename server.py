@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serveur eversolo-screen.
 
-Interface "en lecture" pour Eversolo DMP-A6 avec page de configuration
+Interface "en lecture" pour streamers Eversolo (gamme DMP) avec page de configuration
 protegee : mot de passe hache (scrypt), sessions signees, anti force brute,
 jeton CSRF, proxy pochettes limite au streamer, en-tetes de securite.
 """

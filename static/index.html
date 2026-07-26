@@ -266,14 +266,20 @@
     padding: clamp(20px, 4vh, 40px) clamp(20px, 2.5vw, 40px);
   }
   #panel.on { transform: none; }
+  #panel .phead { display: flex; gap: clamp(12px, 1.5vw, 20px); align-items: flex-start; }
   #p_img {
-    width: 100%; height: clamp(120px, 24vh, 220px);
-    object-fit: cover; border-radius: 6px; display: none;
+    flex: 0 0 auto;
+    width: clamp(84px, 9vw, 136px);
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 6px; display: none;
     background: var(--chassis);
+    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
   }
   #panel .pname {
     font-family: "Fraunces", Georgia, serif; font-weight: 560;
-    font-size: clamp(24px, 4.6vh, 44px); margin-top: clamp(10px, 2vh, 18px);
+    font-size: clamp(24px, 4.6vh, 44px); line-height: 1.1;
   }
   #panel .pfacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   #panel .pfacts span {
@@ -398,9 +404,13 @@
 
   <div id="dimmer"></div>
   <div id="panel">
-    <img id="p_img" alt="">
-    <div class="pname" id="p_name"></div>
-    <div class="pfacts" id="p_facts"></div>
+    <div class="phead">
+      <img id="p_img" alt="">
+      <div>
+        <div class="pname" id="p_name"></div>
+        <div class="pfacts" id="p_facts"></div>
+      </div>
+    </div>
     <div class="pwrap" id="p_wrap">
       <div class="ptext" id="p_text"></div>
       <div class="pfade" id="p_fade"></div>

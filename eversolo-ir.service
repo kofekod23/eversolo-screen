@@ -5,10 +5,26 @@ Wants=eversolo-screen@%i.service
 
 [Service]
 Type=simple
-ExecStartPre=-/usr/bin/ir-keytable -p all
+# Le démon ne fait que lire /dev/input et parler au serveur local: il tourne
+# sous l'utilisateur, seul ir-keytable (préfixe +) garde les droits root.
+User=%i
+SupplementaryGroups=input
+ExecStartPre=-+/usr/bin/ir-keytable -p all
 ExecStart=/usr/bin/python3 /home/%i/eversolo-screen/ir_remote.py
 Restart=always
 RestartSec=10
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
 
 [Install]
 WantedBy=multi-user.target

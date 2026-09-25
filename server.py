@@ -22,7 +22,7 @@ from urllib.parse import unquote, urlparse
 import requests
 from flask import (Flask, Response, jsonify, redirect, render_template_string,
                    request, send_from_directory, session)
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -191,33 +191,68 @@ T = {
 # ------------------------------------------------------------- configuration
 
 
+def ecrire_json(path, data, mode=0o600):
+    """Écriture atomique: fichier temporaire, fsync puis renommage. Une coupure
+    de courant laisse l'ancien fichier intact au lieu d'un fichier vide."""
+    temporaire = path + ".tmp"
+    fd = os.open(temporaire, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.chmod(temporaire, mode)
+    os.replace(temporaire, path)
+
+
 def load_config():
     config = dict(DEFAULTS)
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            config.update(json.load(f))
+            lu = json.load(f)
+        if isinstance(lu, dict):
+            config.update(lu)
     except FileNotFoundError:
         pass
+    except (OSError, ValueError):
+        # Fichier illisible (coupure de courant): on démarre sur les valeurs
+        # par défaut plutôt que de planter en boucle; /config permet de refaire
+        # le réglage.
+        print("[config] config.json illisible, valeurs par défaut utilisées", flush=True)
     return config
 
 
 def save_config(config):
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
+    ecrire_json(CONFIG_PATH, config)
 
 
 def load_auth():
+    """None seulement si aucun mot de passe n'a jamais été créé. Un fichier
+    illisible renvoie {}: /setup reste fermé (sinon le premier venu sur le
+    réseau reprendrait la main) et le mot de passe se redéfinit avec
+    tools/motdepasse.py."""
     try:
         with open(AUTH_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            lu = json.load(f)
+        return lu if isinstance(lu, dict) else {}
     except FileNotFoundError:
         return None
+    except (OSError, ValueError):
+        print("[auth] auth.json illisible: tools/motdepasse.py nouveau ...", flush=True)
+        return {}
 
 
 def save_auth(password_hash):
-    fd = os.open(AUTH_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        json.dump({"password_hash": password_hash}, f)
+    ecrire_json(AUTH_PATH, {"password_hash": password_hash})
+
+
+def password_ok(password):
+    stored = (load_auth() or {}).get("password_hash", "")
+    if not stored:
+        return False
+    try:
+        return check_password_hash(stored, password)
+    except ValueError:
+        return False
 
 
 def get_secret_key():
@@ -1287,12 +1322,13 @@ def security_headers(resp):
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["Referrer-Policy"] = "no-referrer"
-    resp.headers["Content-Security-Policy"] = (
+    # Une route peut imposer sa propre politique (proxy de pochettes: sandbox).
+    resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; img-src 'self' data:; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; "
         "connect-src 'self'; frame-ancestors 'none'"
-    )
+    ))
     return resp
 
 
@@ -1479,8 +1515,7 @@ def login():
         elif not csrf_ok():
             error = t["session_expired"]
         else:
-            auth = load_auth()
-            if check_password_hash(auth["password_hash"], request.form.get("password", "")):
+            if password_ok(request.form.get("password", "")):
                 FAILED.pop(ip, None)
                 session.clear()
                 session["auth"] = True
@@ -1534,7 +1569,7 @@ def config_page():
                 error = t["invalid_ip"]
             elif new_pw and len(new_pw) < 8:
                 error = t["password_short"]
-            elif new_pw and not check_password_hash(load_auth()["password_hash"], cur_pw):
+            elif new_pw and not password_ok(cur_pw):
                 error = t["bad_password"]
             else:
                 if new_pw:
@@ -1572,13 +1607,13 @@ __VERSION_HTML__
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
   <label>{t['tadb_key']}</label>
-  <input type="text" name="tadb_key" value="{CONFIG.get('theaudiodb_key', '2')}" autocomplete="off">
+  <input type="text" name="tadb_key" value="{escape(CONFIG.get('theaudiodb_key', '2'))}" autocomplete="off">
   <label>{t['lastfm_key']}</label>
-  <input type="text" name="lastfm_key" value="{CONFIG.get('lastfm_api_key', '')}" autocomplete="off">
+  <input type="text" name="lastfm_key" value="{escape(CONFIG.get('lastfm_api_key', ''))}" autocomplete="off">
   <label>{t['discogs_token']}</label>
-  <input type="text" name="discogs_token" value="{CONFIG.get('discogs_token', '')}" autocomplete="off">
+  <input type="text" name="discogs_token" value="{escape(CONFIG.get('discogs_token', ''))}" autocomplete="off">
   <label>{t['genius_token_lbl']}</label>
-  <input type="text" name="genius_token" value="{CONFIG.get('genius_token', '')}" autocomplete="off">
+  <input type="text" name="genius_token" value="{escape(CONFIG.get('genius_token', ''))}" autocomplete="off">
   <label>{t['new_password']}</label>
   <input type="password" name="new_password" autocomplete="new-password">
   <label>{t['current_password']}</label>
@@ -1605,7 +1640,7 @@ document.getElementById('scan').onclick = async function() {{
             '<div class="msg" style="display:flex;justify-content:space-between;'
             'align-items:center;gap:12px;flex-wrap:wrap"><span>'
             + t["update_avail"] + " : <span style=\'font-family:monospace\'>"
-            + distante["sha"] + "</span> — " + distante["message"][:70]
+            + str(escape(distante["sha"])) + "</span> — " + str(escape(distante["message"][:70]))
             + '</span><form method="post" style="margin:0">'
             + '<input type="hidden" name="csrf" value="' + csrf_token() + '">'
             + '<input type="hidden" name="op" value="update">'
@@ -2166,32 +2201,68 @@ def host_is_private(hostname):
     return False
 
 
+COVER_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"}
+COVER_MAX_OCTETS = 5 * 1024 * 1024
+COVER_MAX_REDIRECTIONS = 3
+
+
+def _cover_refus():
+    # Même réponse pour tous les refus et échecs: le proxy ne doit pas servir
+    # à sonder quels ports ou machines répondent sur le réseau local.
+    return Response(status=502)
+
+
 @app.route("/api/cover")
 def api_cover():
     url = unquote(request.args.get("u", ""))
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        return Response(status=403)
     streamer = {
         f"{CONFIG['eversolo_ip']}:{CONFIG['eversolo_port']}",
         CONFIG["eversolo_ip"],
     }
     # Anti SSRF: le streamer configure est toujours autorise; tout autre hote
     # doit être public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
-    # CDN externes) et repondre avec une image. Le réseau prive reste interdit.
-    if parsed.netloc not in streamer and host_is_private(parsed.hostname):
-        return Response(status=403)
+    # CDN externes). Les redirections sont suivies à la main pour revalider
+    # chaque destination: un hôte public ne peut pas renvoyer vers le LAN.
     try:
-        r = http.get(url, timeout=5)
-        r.raise_for_status()
-        ctype = r.headers.get("Content-Type", "image/jpeg")
-        if parsed.netloc not in streamer and not ctype.lower().startswith("image/"):
-            return Response(status=403)
-        resp = Response(r.content, content_type=ctype)
+        for _ in range(COVER_MAX_REDIRECTIONS + 1):
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.hostname:
+                return _cover_refus()
+            du_streamer = parsed.netloc in streamer
+            if not du_streamer and host_is_private(parsed.hostname):
+                return _cover_refus()
+            r = http.get(url, timeout=5, stream=True, allow_redirects=False)
+            if r.is_redirect:
+                url = requests.compat.urljoin(url, r.headers.get("Location", ""))
+                r.close()
+                continue
+            break
+        else:
+            return _cover_refus()
+        with r:
+            r.raise_for_status()
+            ctype = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if ctype not in COVER_TYPES:
+                # SVG, HTML ou XML refusés: ils peuvent contenir du script
+                # exécuté sous l'origine du Pi. Le streamer, qui ne type pas
+                # toujours ses images, est servi en JPEG neutre.
+                if not du_streamer:
+                    return _cover_refus()
+                ctype = "image/jpeg"
+            longueur = r.headers.get("Content-Length")
+            if longueur and longueur.isdigit() and int(longueur) > COVER_MAX_OCTETS:
+                return _cover_refus()
+            contenu = bytearray()
+            for morceau in r.iter_content(64 * 1024):
+                contenu.extend(morceau)
+                if len(contenu) > COVER_MAX_OCTETS:
+                    return _cover_refus()
+        resp = Response(bytes(contenu), content_type=ctype)
         resp.headers["Cache-Control"] = "max-age=86400"
+        resp.headers["Content-Security-Policy"] = "default-src 'none'; sandbox"
         return resp
     except Exception:
-        return Response(status=502)
+        return _cover_refus()
 
 
 if __name__ == "__main__":

@@ -6,7 +6,10 @@ cd "$APP_DIR"
 
 # La configuration locale et les secrets ne sont pas suivis par git, mais on
 # les protege quand même avant toute opération.
-cp -f config.json /tmp/eversolo-config.bak 2>/dev/null || true
+# Copie privée (config.json contient les clés API), pas un chemin /tmp prévisible.
+BACKUP="$(umask 077 && mktemp)"
+trap 'rm -f "$BACKUP"' EXIT
+cp -f config.json "$BACKUP" 2>/dev/null || true
 
 git fetch origin
 if ! git pull --ff-only 2>/dev/null; then
@@ -14,8 +17,9 @@ if ! git pull --ff-only 2>/dev/null; then
     git reset --hard origin/main
 fi
 
-if [ ! -f config.json ] && [ -f /tmp/eversolo-config.bak ]; then
-    cp -f /tmp/eversolo-config.bak config.json
+if [ ! -f config.json ] && [ -s "$BACKUP" ]; then
+    cp -f "$BACKUP" config.json
+    chmod 600 config.json
     echo "Configuration locale restauree."
 fi
 if [ ! -f config.json ] && [ -f config.example.json ]; then

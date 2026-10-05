@@ -5,7 +5,7 @@ from conftest import jeton_csrf
 
 
 def formulaire(client, **champs):
-    csrf = jeton_csrf(client.get("/setup").get_data(as_text=True))
+    csrf = jeton_csrf(client.get("/setup?ici=1").get_data(as_text=True))
     donnees = {"csrf": csrf, "password": "motdepasse-solide", "password2": "motdepasse-solide",
                "device_ip": "192.168.1.42"}
     donnees.update(champs)

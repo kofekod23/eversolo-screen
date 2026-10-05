@@ -39,3 +39,16 @@ def test_refus_explique_comment_s_en_sortir(srv):
     client = nouveau_client(srv, "192.168.1.50", "192.168.1.10:8080")
     r = client.get("/", headers={"Host": "piege.example.com"})
     assert "hotes_autorises" in r.get_data(as_text=True)
+
+
+def test_nom_court_et_nom_complet_du_pi(srv, monkeypatch):
+    monkeypatch.setattr(srv.socket, "gethostname", lambda: "eversolo.maison.lan")
+    client = nouveau_client(srv, "192.168.1.50", "192.168.1.10:8080")
+    for hote in ("eversolo.maison.lan", "eversolo", "eversolo.local", "monpi"):
+        assert client.get("/api/state", headers={"Host": hote}).status_code == 200, hote
+
+
+def test_nom_ajoute_avec_son_port(srv):
+    srv.CONFIG["hotes_autorises"] = ["eversolo.lan:8080"]
+    client = nouveau_client(srv, "192.168.1.50", "192.168.1.10:8080")
+    assert client.get("/api/state", headers={"Host": "eversolo.lan:8080"}).status_code == 200

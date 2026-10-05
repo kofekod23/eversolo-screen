@@ -6,3 +6,5 @@ ir_codes/
 config.json
 cache_fiches.json
 captures/
+.coverage
+.pytest_cache/

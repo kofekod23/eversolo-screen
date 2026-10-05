@@ -78,3 +78,32 @@ def test_telechargement_reserve_et_nom_controle(configure, distant):
     connecter(distant)
     assert distant.get("/captures/..%2Fauth.json").status_code == 404
     assert distant.get("/captures/inexistant.json").status_code == 404
+
+
+def test_masque_toutes_les_adresses_et_identifiants(srv):
+    srv.CONFIG["eversolo_ip"] = "192.168.1.42"
+    brut = {
+        "source": "smb://julien:MOTDEPASSE@nas/musique/album/plage.flac",
+        "radio": "rtsp://flux.example/live?key=SECRET",
+        "local": "http://admin:SECRET@192.168.1.42:9529/x?id=3",
+        "serialNumber": "SN123456", "macAddress": "aa:bb:cc", "deviceId": "D1", "ssid": "maison",
+        "author": "Compositeur", "auteur": "Compositeur",
+        "casse": "http://h:99999/a", "titre": "Titre",
+    }
+    propre = srv.masquer(brut)
+    texte = str(propre)
+    for secret in ("MOTDEPASSE", "SECRET", "SN123456", "aa:bb:cc", "D1", "maison", "julien"):
+        assert secret not in texte, secret
+    assert propre["source"].startswith("smb://nas/")
+    assert propre["local"] == "http://192.168.1.42:9529/x?id=3"
+    assert propre["author"] == "Compositeur" and propre["titre"] == "Titre"
+
+
+def test_nom_de_capture_strict(srv):
+    assert srv.CAPTURE_NOM_RE.fullmatch("20261005-120000-qobuz.json")
+    assert not srv.CAPTURE_NOM_RE.fullmatch("20261005-120000-qobuz.json\n")
+
+
+def test_champs_utiles_au_diagnostic_conserves(srv):
+    brut = {"signalLevel": 3, "userCover": "x", "sessionCount": 2, "designer": "d"}
+    assert srv.masquer(brut) == brut

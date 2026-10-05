@@ -30,7 +30,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Fichiers modifiables (réglages, mot de passe, caches, captures) : à côté du
 # code par défaut, ailleurs si EVERSOLO_SCREEN_DATA le demande (tests).
-DATA_DIR = os.environ.get("EVERSOLO_SCREEN_DATA") or BASE_DIR
+DATA_DIR = os.path.abspath(os.environ.get("EVERSOLO_SCREEN_DATA") or BASE_DIR)
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 AUTH_PATH = os.path.join(DATA_DIR, "auth.json")
 SECRET_PATH = os.path.join(DATA_DIR, ".secret_key")
@@ -85,7 +85,7 @@ T = {
         "genius_token_lbl": "Jeton Genius (crédits de la plage en cours, optionnel)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
-        "code_label": "Code affiché sur la TV", "code_bad": "Code incorrect. Regardez la TV : après cinq erreurs, un nouveau code s'affiche.", "code_first": "Saisissez d'abord le code affiché sur la TV.",
+        "code_label": "Code affiché sur la TV", "code_bad": "Code incorrect. Recopiez le code affiché sur la TV.", "code_first": "Saisissez d'abord le code affiché sur la TV.",
         "tv_setup_intro": "Sur votre téléphone ou votre ordinateur, ouvrez", "tv_setup_code": "puis saisissez ce code", "tv_setup_here": "Configurer depuis cet écran",
         "host_refused": "Adresse non reconnue. Ouvrez la page par l'adresse IP du Pi (par exemple http://{ip}:{port}), ou ajoutez ce nom à la liste hotes_autorises de config.json.",
         "capture_title": "Capture de l'état", "capture_intro": "Lancez une lecture sur l'Eversolo, choisissez la situation puis capturez. Ce que l'Eversolo renvoie est enregistré sur le Pi, sans adresse de flux ni identifiant.", "capture_situation": "Situation", "capture_btn": "Capturer l'état", "capture_done": "Capture enregistrée", "capture_failed": "Eversolo injoignable : capture impossible.", "capture_busy": "Une capture est déjà en cours.", "captures_list": "Captures enregistrées",
@@ -125,7 +125,7 @@ T = {
         "genius_token_lbl": "Genius token (credits of the current track, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
-        "code_label": "Code shown on the TV", "code_bad": "Wrong code. Look at the TV: after five errors a new code is shown.", "code_first": "Enter the code shown on the TV first.",
+        "code_label": "Code shown on the TV", "code_bad": "Wrong code. Copy the code shown on the TV.", "code_first": "Enter the code shown on the TV first.",
         "tv_setup_intro": "On your phone or computer, open", "tv_setup_code": "then enter this code", "tv_setup_here": "Set up from this screen",
         "host_refused": "Unrecognised address. Open the page through the Pi's IP address (for example http://{ip}:{port}), or add this name to the hotes_autorises list in config.json.",
         "capture_title": "State capture", "capture_intro": "Start playback on the Eversolo, pick the situation, then capture. What the Eversolo reports is saved on the Pi, without stream addresses or identifiers.", "capture_situation": "Situation", "capture_btn": "Capture state", "capture_done": "Capture saved", "capture_failed": "Eversolo unreachable: capture impossible.", "capture_busy": "A capture is already running.", "captures_list": "Saved captures",
@@ -165,7 +165,7 @@ T = {
         "genius_token_lbl": "Token Genius (créditos de la pista en curso, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
-        "code_label": "Código mostrado en la TV", "code_bad": "Código incorrecto. Mire la TV: tras cinco errores aparece un código nuevo.", "code_first": "Introduzca primero el código mostrado en la TV.",
+        "code_label": "Código mostrado en la TV", "code_bad": "Código incorrecto. Copie el código mostrado en la TV.", "code_first": "Introduzca primero el código mostrado en la TV.",
         "tv_setup_intro": "En su teléfono u ordenador, abra", "tv_setup_code": "e introduzca este código", "tv_setup_here": "Configurar desde esta pantalla",
         "host_refused": "Dirección no reconocida. Abra la página con la dirección IP de la Pi (por ejemplo http://{ip}:{port}) o añada este nombre a la lista hotes_autorises de config.json.",
         "capture_title": "Captura del estado", "capture_intro": "Inicie una reproducción en el Eversolo, elija la situación y capture. Lo que devuelve el Eversolo se guarda en la Pi, sin direcciones de flujo ni identificadores.", "capture_situation": "Situación", "capture_btn": "Capturar el estado", "capture_done": "Captura guardada", "capture_failed": "Eversolo inaccesible: captura imposible.", "capture_busy": "Ya hay una captura en curso.", "captures_list": "Capturas guardadas",
@@ -205,7 +205,7 @@ T = {
         "genius_token_lbl": "Genius-Token (Credits des laufenden Titels, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
-        "code_label": "Am Fernseher angezeigter Code", "code_bad": "Falscher Code. Schauen Sie auf den Fernseher: nach fünf Fehlern erscheint ein neuer Code.", "code_first": "Geben Sie zuerst den am Fernseher angezeigten Code ein.",
+        "code_label": "Am Fernseher angezeigter Code", "code_bad": "Falscher Code. Übernehmen Sie den am Fernseher angezeigten Code.", "code_first": "Geben Sie zuerst den am Fernseher angezeigten Code ein.",
         "tv_setup_intro": "Öffnen Sie auf Ihrem Telefon oder Computer", "tv_setup_code": "und geben Sie diesen Code ein", "tv_setup_here": "Auf diesem Bildschirm einrichten",
         "host_refused": "Unbekannte Adresse. Öffnen Sie die Seite über die IP-Adresse des Pi (zum Beispiel http://{ip}:{port}) oder tragen Sie diesen Namen in die Liste hotes_autorises von config.json ein.",
         "capture_title": "Zustandserfassung", "capture_intro": "Starten Sie die Wiedergabe am Eversolo, wählen Sie die Situation und erfassen Sie. Die Antwort des Eversolo wird auf dem Pi gespeichert, ohne Stream-Adressen oder Kennungen.", "capture_situation": "Situation", "capture_btn": "Zustand erfassen", "capture_done": "Erfassung gespeichert", "capture_failed": "Eversolo nicht erreichbar: Erfassung unmöglich.", "capture_busy": "Eine Erfassung läuft bereits.", "captures_list": "Gespeicherte Erfassungen",
@@ -1343,9 +1343,18 @@ def valid_ip(value):
         return False
 
 
+ENTETES_RELAIS = ("X-Forwarded-For", "Forwarded", "X-Real-IP")
+
+
 def requete_locale():
-    """Vrai pour le kiosque et le démon IR, qui tournent sur le Pi lui-même."""
-    return request.remote_addr in ("127.0.0.1", "::1")
+    """Vrai pour le kiosque et le démon IR, qui tournent sur le Pi lui-même.
+    Un relais installé un jour sur le Pi (proxy, tunnel) se présenterait lui
+    aussi en 127.0.0.1 : on exige en plus un nom local et aucun en-tête de relais."""
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        return False
+    if any(request.headers.get(h) for h in ENTETES_RELAIS):
+        return False
+    return nom_hote(request.host) in ("localhost", "127.0.0.1", "::1")
 
 
 def ip_locale():
@@ -1360,16 +1369,21 @@ def ip_locale():
         s.close()
 
 
-def hote_autorise(hote):
-    """Vrai si l'en-tête Host désigne bien le Pi : adresse IP, localhost, nom
-    du Pi avec ou sans .local, ou nom ajouté dans config.json. Une page piégée
-    qui rebondit par DNS vers le Pi arrive toujours avec son propre nom."""
+def nom_hote(hote):
+    """Nom ou adresse d'un en-tête Host, sans port, en minuscules."""
     nom = (hote or "").strip().lower()
     if nom.startswith("["):
         nom = nom[1:nom.find("]")] if "]" in nom else nom[1:]
     elif nom.count(":") == 1:
         nom = nom.split(":", 1)[0]
-    nom = nom.rstrip(".")
+    return nom.rstrip(".")
+
+
+def hote_autorise(hote):
+    """Vrai si l'en-tête Host désigne bien le Pi : adresse IP, localhost, nom
+    du Pi avec ou sans .local, ou nom ajouté dans config.json. Une page piégée
+    qui rebondit par DNS vers le Pi arrive toujours avec son propre nom."""
+    nom = nom_hote(hote)
     if not nom:
         return False
     try:
@@ -1377,48 +1391,80 @@ def hote_autorise(hote):
         return True
     except ValueError:
         pass
+    if "." not in nom:
+        # Nom court (eversolo, localhost) : jamais un domaine d'attaquant, qui
+        # a toujours au moins un point.
+        return True
     pi = socket.gethostname().lower()
+    court = pi.split(".")[0]
     ajoutes = CONFIG.get("hotes_autorises") or []
     if isinstance(ajoutes, str):
         ajoutes = [ajoutes]
-    noms = {"localhost", pi, pi + ".local"}
-    noms.update(str(n).strip().lower().rstrip(".") for n in ajoutes)
+    noms = {pi, court + ".local"}
+    noms.update(nom_hote(str(n)) for n in ajoutes)
     return nom in noms
 
 
 # Code de première configuration : affiché sur la TV, exigé de tout appareil
-# du réseau tant qu'aucun mot de passe n'existe.
-INSTALLATION = {"code": None, "erreurs": 0}
+# du réseau tant qu'aucun mot de passe n'existe. Le code reste stable (un
+# invité ne peut pas le faire changer sous les yeux du propriétaire) ; ce sont
+# les essais qui sont limités : 5 erreurs bloquent une adresse 15 minutes,
+# 30 erreurs en tout suspendent l'installation réseau 10 minutes. Au mieux
+# 180 essais par heure contre un million de codes possibles.
+INSTALLATION = {"code": None, "echecs": {}, "recents": [], "pause_jusqu": 0.0}
 INSTALLATION_VERROU = threading.Lock()
-MAX_ERREURS_CODE = 5
+ECHECS_PAR_ADRESSE = 5
+BLOCAGE_ADRESSE = 15 * 60
+ECHECS_GLOBAUX = 30
+PAUSE_GLOBALE = 10 * 60
 
 
 def code_installation():
     with INSTALLATION_VERROU:
         if INSTALLATION["code"] is None:
             INSTALLATION["code"] = f"{secrets.randbelow(10 ** 6):06d}"
-            INSTALLATION["erreurs"] = 0
             # Le journal sert de repli quand aucune TV n'est branchée.
             print(f"[installation] code affiché sur la TV : {INSTALLATION['code']}", flush=True)
         return INSTALLATION["code"]
 
 
-def verifier_code(saisi):
-    """Compare le code saisi ; cinq erreurs en font tirer un nouveau."""
+def _echecs_recents(adresse, maintenant):
+    return [t for t in INSTALLATION["echecs"].get(adresse, []) if maintenant - t < BLOCAGE_ADRESSE]
+
+
+def code_bloque(adresse):
+    maintenant = time.time()
+    with INSTALLATION_VERROU:
+        return (maintenant < INSTALLATION["pause_jusqu"]
+                or len(_echecs_recents(adresse, maintenant)) >= ECHECS_PAR_ADRESSE)
+
+
+def verifier_code(saisi, adresse=None):
+    """Compare le code saisi, sauf si l'adresse ou l'installation est bloquée."""
     attendu = code_installation()
+    if code_bloque(adresse):
+        return False
     if secrets.compare_digest(attendu.encode(), (saisi or "").strip().encode()):
         return True
+    maintenant = time.time()
     with INSTALLATION_VERROU:
-        INSTALLATION["erreurs"] += 1
-        if INSTALLATION["erreurs"] >= MAX_ERREURS_CODE:
-            INSTALLATION["code"] = None
+        echecs = INSTALLATION["echecs"]
+        echecs[adresse] = _echecs_recents(adresse, maintenant) + [maintenant]
+        if len(echecs) > 256:
+            for ancienne in [a for a in echecs if not _echecs_recents(a, maintenant)]:
+                echecs.pop(ancienne, None)
+        recents = [t for t in INSTALLATION["recents"] if maintenant - t < PAUSE_GLOBALE]
+        recents.append(maintenant)
+        if len(recents) >= ECHECS_GLOBAUX:
+            INSTALLATION["pause_jusqu"] = maintenant + PAUSE_GLOBALE
+            recents = []
+        INSTALLATION["recents"] = recents
     return False
 
 
 def oublier_code():
     with INSTALLATION_VERROU:
-        INSTALLATION["code"] = None
-        INSTALLATION["erreurs"] = 0
+        INSTALLATION.update({"code": None, "echecs": {}, "recents": [], "pause_jusqu": 0.0})
 
 
 def csrf_entete_ok():
@@ -1500,7 +1546,11 @@ CAPTURE_ROUTES = (
     ("getPlayQueue", "/ZidooMusicControl/v2/getPlayQueue?start=0&count=20"),
     ("getModel", "/ControlCenter/getModel"),
 )
-CLES_SENSIBLES = re.compile(r"token|passw|secret|session|cookie|mail|account|user|login|hmac|sign", re.I)
+CLES_SENSIBLES = re.compile(
+    r"token|passw|secret|cookie|e?mail|account|login|hmac|signature|serial|uuid|ssid|psk|imei"
+    r"|api_?key|device_?id|mac_?addr|session_?(id|key)|^mac$|^sn$|^uid$|^user(_?name|_?id)?$"
+    r"|auth(?!or)", re.I)
+SCHEMA_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 MASQUE = "(masqué)"
 
 
@@ -1514,14 +1564,21 @@ def masquer(valeur, cle=""):
         return {k: masquer(v, str(k)) for k, v in valeur.items()}
     if isinstance(valeur, list):
         return [masquer(v, cle) for v in valeur]
-    if isinstance(valeur, str) and valeur.startswith(("http://", "https://")):
-        p = urlparse(valeur)
-        if p.hostname and p.hostname == CONFIG.get("eversolo_ip"):
-            return valeur
-        hote = p.hostname or ""
-        if p.port:
-            hote += f":{p.port}"
-        return f"{p.scheme}://{hote}/{MASQUE}"
+    if isinstance(valeur, str) and SCHEMA_RE.match(valeur):
+        # Toute adresse (http, smb, nfs, rtsp…) : identifiants retirés ; pour
+        # un hôte tiers, chemin et paramètres aussi (adresses de flux signées).
+        try:
+            p = urlparse(valeur)
+            hote = p.hostname or ""
+            port = p.port
+        except ValueError:
+            return MASQUE
+        netloc = f"[{hote}]" if ":" in hote else hote
+        if port:
+            netloc += f":{port}"
+        if hote and hote == CONFIG.get("eversolo_ip"):
+            return p._replace(netloc=netloc, fragment="").geturl()
+        return f"{p.scheme}://{netloc}/{MASQUE}"
     return valeur
 
 
@@ -1541,9 +1598,14 @@ def capturer_etat(situation):
             contenu[nom] = {"erreur": type(exc).__name__}
     if not repondu:
         return None
+    try:
+        propre = masquer(contenu)
+    except Exception:
+        # Jamais de capture non masquée sur le disque.
+        return None
     os.makedirs(CAPTURES_DIR, mode=0o700, exist_ok=True)
     fichier = time.strftime("%Y%m%d-%H%M%S") + "-" + situation + ".json"
-    ecrire_json(os.path.join(CAPTURES_DIR, fichier), masquer(contenu))
+    ecrire_json(os.path.join(CAPTURES_DIR, fichier), propre)
     for ancien in liste_captures()[CAPTURES_MAX:]:
         try:
             os.remove(os.path.join(CAPTURES_DIR, ancien))
@@ -1554,7 +1616,7 @@ def capturer_etat(situation):
 
 def liste_captures():
     try:
-        noms = [n for n in os.listdir(CAPTURES_DIR) if CAPTURE_NOM_RE.match(n)]
+        noms = [n for n in os.listdir(CAPTURES_DIR) if CAPTURE_NOM_RE.fullmatch(n)]
     except FileNotFoundError:
         return []
     return sorted(noms, reverse=True)
@@ -1669,9 +1731,9 @@ def setup():
     if request.method == "POST":
         if not csrf_ok():
             error = "CSRF"
-        elif not locale and not verifier_code(request.form.get("code")):
+        elif not locale and not verifier_code(request.form.get("code"), request.remote_addr):
             # Le code passe avant tout le reste : sans lui, aucun champ n'est examiné.
-            error = t["code_bad"]
+            error = t["locked"] if code_bloque(request.remote_addr) else t["code_bad"]
         else:
             code_saisi = "" if locale else request.form.get("code", "").strip()
             pw = request.form.get("password", "")
@@ -1732,6 +1794,7 @@ document.getElementById('scan').onclick = async function() {{
   try {{
     const r = await fetch('/api/detect', {{headers: entetes}});
     if (r.status === 403) alert({json.dumps(t['code_bad'])});
+    else if (r.status === 429) alert({json.dumps(t['detecting'])});
     else {{
       const d = await r.json();
       if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
@@ -1949,7 +2012,7 @@ def bloc_capture(t):
 def telecharger_capture(nom):
     if not logged_in():
         return redirect("/login")
-    if not CAPTURE_NOM_RE.match(nom) or not os.path.isfile(os.path.join(CAPTURES_DIR, nom)):
+    if not CAPTURE_NOM_RE.fullmatch(nom) or not os.path.isfile(os.path.join(CAPTURES_DIR, nom)):
         return Response(status=404)
     return send_from_directory(CAPTURES_DIR, nom, as_attachment=True, mimetype="application/json")
 
@@ -2296,7 +2359,8 @@ def api_detect():
     if load_auth() is not None:
         if not logged_in():
             return jsonify({"error": "unauthorized"}), 401
-    elif not requete_locale() and not verifier_code(request.headers.get("X-Code-Installation")):
+    elif not requete_locale() and not verifier_code(request.headers.get("X-Code-Installation"),
+                                                    request.remote_addr):
         return jsonify({"error": "code"}), 403
     # Un balayage du réseau à la fois : 254 adresses, c'est lourd pour un Pi 3.
     if not SCAN_VERROU.acquire(blocking=False):
@@ -2509,21 +2573,30 @@ def api_state():
         })
 
 
+def adresse_privee(texte):
+    try:
+        addr = ipaddress.ip_address(texte)
+    except ValueError:
+        return True
+    return (addr.is_private or addr.is_loopback or addr.is_link_local
+            or addr.is_reserved or addr.is_multicast or addr.is_unspecified)
+
+
 def host_is_private(hostname):
     """Vrai si l'hote resout vers une adresse privee, locale ou reservee."""
     try:
         infos = socket.getaddrinfo(hostname, None)
     except Exception:
         return True
-    for info in infos:
-        try:
-            addr = ipaddress.ip_address(info[4][0])
-        except ValueError:
-            return True
-        if (addr.is_private or addr.is_loopback or addr.is_link_local
-                or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
-            return True
-    return False
+    return any(adresse_privee(info[4][0]) for info in infos)
+
+
+def ip_du_pair(reponse):
+    """Adresse réellement jointe par la connexion, quand urllib3 la donne."""
+    try:
+        return reponse.raw._connection.sock.getpeername()[0]
+    except Exception:
+        return None
 
 
 # Le proxy ne sert que les images que le serveur a lui-même désignées (état de
@@ -2585,6 +2658,12 @@ def api_cover():
             if not du_streamer and host_is_private(parsed.hostname):
                 return _cover_refus()
             r = http.get(url, timeout=5, stream=True, allow_redirects=False)
+            pair = ip_du_pair(r)
+            if not du_streamer and pair and adresse_privee(pair):
+                # Le nom a changé d'adresse entre la vérification et la
+                # connexion (rebinding DNS) : on ne lit rien.
+                r.close()
+                return _cover_refus()
             if r.is_redirect:
                 url = requests.compat.urljoin(url, r.headers.get("Location", ""))
                 r.close()
@@ -2616,6 +2695,11 @@ def api_cover():
         return resp
     except Exception:
         return _cover_refus()
+
+
+if load_auth() is None:
+    # Tiré dès le démarrage : le journal le donne sans attendre un premier essai.
+    code_installation()
 
 
 if __name__ == "__main__":

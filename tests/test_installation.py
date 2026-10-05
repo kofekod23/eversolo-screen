@@ -46,12 +46,37 @@ def test_installation_avec_le_bon_code(srv, distant):
     assert srv.CONFIG["eversolo_ip"] == "192.168.1.42"
 
 
-def test_le_code_change_apres_cinq_erreurs(srv, distant):
+def faux_code(srv):
+    return "000000" if srv.code_installation() != "000000" else "111111"
+
+
+def test_le_code_reste_stable_apres_des_erreurs(srv, distant):
     initial = srv.code_installation()
-    faux = "000000" if initial != "000000" else "111111"
     for _ in range(5):
-        formulaire(distant, code=faux)
-    assert srv.code_installation() != initial
+        formulaire(distant, code=faux_code(srv))
+    assert srv.code_installation() == initial
+
+
+def test_adresse_bloquee_apres_cinq_erreurs(srv, distant):
+    for _ in range(5):
+        formulaire(distant, code=faux_code(srv))
+    formulaire(distant, code=srv.code_installation())
+    assert srv.load_auth() is None
+
+
+def test_autre_appareil_non_bloque_par_un_invite(srv, distant):
+    for _ in range(5):
+        formulaire(distant, code=faux_code(srv))
+    from conftest import client
+    proprietaire = client(srv, "192.168.1.77", "192.168.1.10:8080")
+    formulaire(proprietaire, code=srv.code_installation())
+    assert srv.load_auth() is not None
+
+
+def test_pause_generale_apres_trente_erreurs(srv):
+    for i in range(30):
+        srv.verifier_code("ab", f"10.0.0.{i}")
+    assert not srv.verifier_code(srv.code_installation(), "10.0.1.1")
 
 
 def test_le_kiosque_peut_configurer_sans_code(srv, local):
@@ -80,8 +105,20 @@ def test_detection_ouverte_au_kiosque(srv, local, monkeypatch):
 
 def test_mauvais_code_de_detection_compte_comme_erreur(srv, distant, monkeypatch):
     monkeypatch.setattr(srv, "scan_network", lambda: [])
-    initial = srv.code_installation()
-    faux = "000000" if initial != "000000" else "111111"
     for _ in range(5):
-        distant.get("/api/detect", headers={"X-Code-Installation": faux})
-    assert srv.code_installation() != initial
+        distant.get("/api/detect", headers={"X-Code-Installation": faux_code(srv)})
+    r = distant.get("/api/detect", headers={"X-Code-Installation": srv.code_installation()})
+    assert r.status_code == 403
+
+
+def test_relais_local_ne_vaut_pas_kiosque(srv):
+    from conftest import client
+    relais = client(srv, "127.0.0.1", "192.168.1.10:8080")
+    assert relais.get("/api/setup/etat", headers={"Host": "192.168.1.10:8080"}).status_code == 403
+    tunnel = client(srv, "127.0.0.1", "localhost:8080")
+    r = tunnel.get("/api/setup/etat", headers={"X-Forwarded-For": "203.0.113.9"})
+    assert r.status_code == 403
+
+
+def test_code_tire_au_demarrage_pour_le_journal(srv):
+    assert srv.INSTALLATION["code"] is not None

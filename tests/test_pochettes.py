@@ -77,3 +77,13 @@ def test_photo_d_artiste_designee(srv):
            "facts": [], "source": "TheAudioDB"}
     fiche = srv.fiche_artiste(bio, "A", "fr")
     assert fiche["image"].startswith("/api/cover?id=")
+
+
+def test_refus_si_la_connexion_aboutit_sur_le_reseau_local(srv, distant, monkeypatch):
+    """Rebinding DNS : le nom semblait public, la connexion arrive sur le LAN."""
+    reponse = FausseReponse()
+    monkeypatch.setattr(srv, "host_is_private", lambda h: False)
+    monkeypatch.setattr(srv.http, "get", lambda *a, **k: reponse)
+    monkeypatch.setattr(srv, "ip_du_pair", lambda r: "192.168.1.1")
+    chemin = srv.cover_ref("https://img.example/rebond.jpg")
+    assert distant.get(chemin).status_code == 502

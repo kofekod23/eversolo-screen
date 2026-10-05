@@ -48,7 +48,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Boot the Pi. After 10 to 15 minutes, open `http://PI_IP:8080`: the assistant detects the Eversolo and creates the admin password.
+3. Boot the Pi. After 10 to 15 minutes, open `http://PI_IP:8080` and enter the code shown on the TV: the assistant detects the Eversolo and creates the admin password.
 
 ### Manual (SSH)
 

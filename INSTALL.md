@@ -83,7 +83,7 @@ L'installation prend 5 a 10 minutes selon le modèle. A la fin, le script affich
 ## 6. Première configuration
 
 1. Depuis votre téléphone ou votre ordinateur (sur le même réseau), ouvrez `http://eversolo.local:8080`.
-2. L'assistant s'affiche : choisissez votre langue, definissez le mot de passe administrateur.
+2. L'assistant s'affiche : saisissez le code à six chiffres affiché sur la TV, choisissez votre langue, definissez le mot de passe administrateur. Ce code empêche un autre appareil du réseau de prendre la main avant vous ; sans écran branché, il figure dans le journal : `journalctl -u eversolo-screen@$(whoami) | grep code`.
 3. Bouton "Détecter sur le réseau" : votre Eversolo est trouve automatiquement, son adresse se remplit toute seule. Vérifiez qu'il est allume.
 4. Enregistrez. C'est termine.
 
@@ -105,7 +105,7 @@ bash prepare-sd.sh
 
 4. Éjectez la carte, insérez-la dans le Raspberry, branchez l'écran puis l'alimentation.
 5. Patientez 10 a 15 minutes : le Pi télécharge et installe tout, y compris le kiosque plein écran, puis l'affichage apparait sur la TV.
-6. Dernière étape, depuis votre téléphone : `http://eversolo.local:8080` pour l'assistant (langue, mot de passe, détection du streamer).
+6. Dernière étape, depuis votre téléphone : `http://eversolo.local:8080` pour l'assistant (code affiché sur la TV, langue, mot de passe, détection du streamer).
 
 Note importante selon la version du système : depuis fin 2025, Raspberry Pi OS (base Debian Trixie) et Raspberry Pi Imager 2.0 utilisent cloud-init pour la première configuration, a la place de l'ancien firstrun.sh. Le script prepare-sd.sh détecte automatiquement le mecanisme present sur la carte et s'adapte aux deux. Au démarrage d'une image recente, des messages mentionnant cloud-init sont normaux.
 
@@ -135,7 +135,11 @@ rm ~/eversolo-screen/auth.json
 sudo systemctl restart eversolo-screen@$(whoami)
 ```
 
-Puis rechargez la page, l'assistant se relance.
+Puis rechargez la page, l'assistant se relance, avec un nouveau code affiché sur la TV.
+
+La page affiche "Adresse non reconnue" : le Pi n'accepte que son adresse IP, `localhost` et son nom (`eversolo`, `eversolo.local`), pour se protéger des pages web piégées. Si votre box lui donne un autre nom (par exemple `eversolo.lan`), ajoutez-le dans `config.json` : `"hotes_autorises": ["eversolo.lan"]`, puis redémarrez le service.
+
+Un comportement à signaler : sur `/config`, la section "Capture de l'état" enregistre ce que l'Eversolo renvoie pendant une lecture (sans adresse de flux ni identifiant). Joignez le fichier téléchargé à votre signalement.
 
 ## 8. Vie courante
 

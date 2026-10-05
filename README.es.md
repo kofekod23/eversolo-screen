@@ -48,7 +48,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Arrancar la Pi. Tras 10 a 15 minutos, abrir `http://IP_DE_LA_PI:8080`: el asistente detecta el Eversolo y crea la contraseña de administración.
+3. Arrancar la Pi. Tras 10 a 15 minutos, abrir `http://IP_DE_LA_PI:8080` e introducir el código mostrado en la TV: el asistente detecta el Eversolo y crea la contraseña de administración.
 
 ### Manual (SSH)
 

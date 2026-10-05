@@ -100,6 +100,7 @@ fi
 PI_IP="$(hostname -I | awk '{print $1}')"
 echo ""
 echo "== Termine =="
-echo "Ouvrez http://$PI_IP:8080 : l'assistant de première configuration se lance"
+echo "Ouvrez http://$PI_IP:8080 et saisissez le code affiché sur la TV : l'assistant de première configuration se lance"
+echo "(sans écran : journalctl -u eversolo-screen@$CURRENT_USER | grep code)"
 echo "(mot de passe administrateur, détection automatique du DMP-A6, langue)."
 echo "Logs : journalctl -u eversolo-screen@$CURRENT_USER -f"

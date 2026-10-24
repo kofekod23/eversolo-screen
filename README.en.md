@@ -1,4 +1,4 @@
-# eversolo-screen
+# eversolo-screen: Eversolo now playing display for Raspberry Pi
 
 Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi + HDMI screen. Album art, title, audio quality, artist biographies and production credits, driven by an infrared remote.
 

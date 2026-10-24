@@ -1,4 +1,4 @@
-# eversolo-screen
+# eversolo-screen : écran « now playing » pour Eversolo sur Raspberry Pi
 
 Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspberry Pi + écran HDMI. Pochette, titre, qualité audio, biographies d'artistes et crédits de production, pilotés à la télécommande infrarouge.
 

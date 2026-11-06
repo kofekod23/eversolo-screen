@@ -1,0 +1,77 @@
+/* Affiche : imprimé suisse. Papier neutre, encre, un seul rouge.
+   Titre géant en capitales serrées, temps restant en très grands chiffres,
+   filets épais pour séparer les zones. La nuit : encre et papier s'inversent. */
+body[data-theme="affiche"] {
+  --f-titre: "Archivo", system-ui, sans-serif;
+  --f-texte: "Geist", system-ui, sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, monospace;
+  --fond: #f1f1ee;
+  --texte: #121314;
+  --texte-2: #3d3f42;
+  --texte-3: #66696d;
+  --accent: #d92a1c;
+  --trait: #121314;
+  --piste: #d6d6d1;
+  --barre: #121314;
+  --surface: #f1f1ee;
+  --voile: rgba(18, 19, 20, 0.35);
+  --pictogramme: #f1f1ee;
+  --alerte: #d92a1c;
+  --alerte-texte: #fff;
+}
+body[data-theme="affiche"].nuit {
+  --fond: #131415; --texte: #e6e6e2; --texte-2: #b4b5b1; --texte-3: #8e8f8b;
+  --trait: #e6e6e2; --piste: #2c2d2f; --barre: #e6e6e2; --surface: #131415;
+  --pictogramme: #e6e6e2; --accent: #ff4a3a;
+}
+
+[data-theme="affiche"] .stage { padding-top: calc(var(--u) * 3); }
+[data-theme="affiche"] .faceplate { border-bottom: 3px solid var(--trait); font-weight: 600; }
+[data-theme="affiche"] .brand b { color: var(--texte); }
+[data-theme="affiche"] .brand span { color: var(--texte-3); font-weight: 500; }
+[data-theme="affiche"] .clock { color: var(--texte); font-weight: 500; }
+
+[data-theme="affiche"] .now { align-items: stretch; padding: calc(var(--u) * 3) 0 calc(var(--u) * 2.4); }
+[data-theme="affiche"] .cover-mount { align-self: center; }
+[data-theme="affiche"] .placeholder { background: var(--texte); color: var(--fond); font-stretch: 70%; font-weight: 900; }
+[data-theme="affiche"] .stage.pause .cover { filter: grayscale(1) brightness(0.6); }
+
+[data-theme="affiche"] .meta { display: flex; flex-direction: column; justify-content: flex-end; }
+[data-theme="affiche"] .eyebrow { order: -1; color: var(--texte); font-weight: 600; margin-bottom: auto; }
+/* Pavé rouge en lecture, noir en pause */
+[data-theme="affiche"] .eq { gap: 0; width: 0.9em; }
+[data-theme="affiche"] .eq i { width: 100%; background: var(--accent); animation: none; transform: none; }
+[data-theme="affiche"] .eq i + i { display: none; }
+[data-theme="affiche"] .stage.pause .eq i, [data-theme="affiche"] .stage.arret .eq i { background: var(--texte); transform: none; }
+[data-theme="affiche"] .source { margin-left: auto; font-weight: 600; }
+[data-theme="affiche"] .title {
+  font-weight: 900; font-stretch: 82%; text-transform: uppercase;
+  font-size: calc(var(--u) * 10.5); line-height: 0.9; letter-spacing: -0.03em;
+  -webkit-line-clamp: 3;
+}
+[data-theme="affiche"] .stage.pause .title, [data-theme="affiche"] .stage.arret .title { opacity: 1; color: var(--texte-3); }
+[data-theme="affiche"] .artist { font-weight: 600; font-size: calc(var(--u) * 4.6); margin-top: calc(var(--u) * 2); }
+[data-theme="affiche"] .album { color: var(--texte-2); }
+[data-theme="affiche"] .signal { color: var(--texte); }
+[data-theme="affiche"] .classe { color: #fff; background: var(--accent); padding: 0.05em 0.45em; font-family: var(--f-texte); font-weight: 700; }
+[data-theme="affiche"] .classe.cd { background: var(--texte); color: var(--fond); }
+[data-theme="affiche"] .decouverte { border-top: 3px solid var(--trait); padding-top: calc(var(--u) * 1.6); }
+[data-theme="affiche"] .decouverte .dk { color: var(--accent); }
+
+[data-theme="affiche"] .transport { border-top: 3px solid var(--trait); padding-top: calc(var(--u) * 1.4); }
+[data-theme="affiche"] .times { align-items: baseline; }
+[data-theme="affiche"] #reste {
+  font-family: var(--f-titre); font-weight: 800; font-stretch: 75%;
+  font-size: calc(var(--u) * 9); line-height: 0.9; letter-spacing: -0.02em;
+}
+[data-theme="affiche"] .filament { height: calc(var(--u) * 1.2); }
+[data-theme="affiche"] .stage.direct #reste { color: var(--accent); }
+
+[data-theme="affiche"] #osd { border: 3px solid var(--trait); }
+[data-theme="affiche"] #osd .val { font-weight: 900; font-stretch: 75%; }
+[data-theme="affiche"] #panel { border-left: 3px solid var(--trait); }
+[data-theme="affiche"] #panel .pname { font-weight: 900; font-stretch: 80%; text-transform: uppercase; letter-spacing: -0.02em; }
+
+[data-theme="affiche"] #idle .grande-heure { font-weight: 900; font-stretch: 75%; font-size: calc(var(--u) * 34); letter-spacing: -0.03em; }
+[data-theme="affiche"] #idle .grande-heure span { color: var(--accent); }
+[data-theme="affiche"] #idle .date { color: var(--texte); font-weight: 600; }

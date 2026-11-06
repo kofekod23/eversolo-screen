@@ -107,3 +107,19 @@ def test_nom_de_capture_strict(srv):
 def test_champs_utiles_au_diagnostic_conserves(srv):
     brut = {"signalLevel": 3, "userCover": "x", "sessionCount": 2, "designer": "d"}
     assert srv.masquer(brut) == brut
+
+
+def test_masque_les_adresses_mac_du_streamer(srv):
+    # Forme réelle de getModel et getState (DMP-A6, micrologiciel 1.6.15).
+    brut = {"net_mac": "80:0a:80:5c:25:22", "wif_mac": "b8:4d:43:29:80:7c",
+            "duuid": "80:0a:80:5c:25:22", "deviceInfo": {"net_mac": "80:0a:80:5c:25:22"},
+            "model": "DMP-A6"}
+    texte = json.dumps(srv.masquer(brut))
+    assert "80:0a:80" not in texte and "b8:4d:43" not in texte
+    assert "DMP-A6" in texte
+
+
+def test_masque_l_identifiant_numerique_du_nom_d_hote(srv):
+    propre = srv.masquer({"streamUrl": "https://9972691742.airable.io/play?x=1"})
+    assert "9972691742" not in propre["streamUrl"]
+    assert "airable.io" in propre["streamUrl"]

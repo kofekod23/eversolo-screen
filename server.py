@@ -27,6 +27,8 @@ from flask import (Flask, Response, jsonify, redirect, render_template_string,
 from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import affichage
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Fichiers modifiables (réglages, mot de passe, caches, captures) : à côté du
 # code par défaut, ailleurs si EVERSOLO_SCREEN_DATA le demande (tests).
@@ -64,6 +66,7 @@ T = {
         "detect_none": "Aucun streamer trouvé. Saisissez l'IP manuellement.",
         "language": "Langue",
         "save": "Enregistrer",
+        "disp_title": "Affichage", "disp_intro": "Réglez l'écran selon la distance de lecture.", "disp_theme": "Interface", "theme_pochette": "Pochette : l'écran prend la couleur du disque", "theme_console": "Console : façade d'appareil, afficheur fluorescent", "theme_affiche": "Affiche : grande typographie, papier et encre", "disp_profil": "Type d'écran", "profil_salon": "Salon : TV lue à 3-4 m", "profil_bureau": "Bureau : écran proche", "profil_petit": "Petit écran 7 à 10 pouces", "disp_nuit": "Mode nuit (luminosité réduite)", "nuit_auto": "Selon l'heure", "nuit_jamais": "Jamais", "nuit_toujours": "Toujours", "nuit_de": "Nuit de", "nuit_a": "heures à", "nuit_h": "heures", "disp_protection": "Protéger l'écran : léger décalage, atténuation après 10 min de pause, noir après 30 min", "disp_save": "Enregistrer l'affichage",
         "login_title": "Connexion",
         "login": "Se connecter",
         "logout": "Se déconnecter",
@@ -104,6 +107,7 @@ T = {
         "detect_none": "No streamer found. Enter the IP manually.",
         "language": "Language",
         "save": "Save",
+        "disp_title": "Display", "disp_intro": "Adjust the screen to your viewing distance.", "disp_theme": "Interface", "theme_pochette": "Cover: the screen takes the colour of the record", "theme_console": "Console: device front panel, fluorescent display", "theme_affiche": "Poster: large type, paper and ink", "disp_profil": "Screen type", "profil_salon": "Living room: TV read from 3-4 m", "profil_bureau": "Desk: close screen", "profil_petit": "Small 7 to 10 inch screen", "disp_nuit": "Night mode (reduced brightness)", "nuit_auto": "By time of day", "nuit_jamais": "Never", "nuit_toujours": "Always", "nuit_de": "Night from", "nuit_a": "h to", "nuit_h": "h", "disp_protection": "Protect the screen: slight shift, dimming after 10 min of pause, black after 30 min", "disp_save": "Save display",
         "login_title": "Sign in",
         "login": "Sign in",
         "logout": "Sign out",
@@ -144,6 +148,7 @@ T = {
         "detect_none": "No se encontro ningún streamer. Introduzca la IP manualmente.",
         "language": "Idioma",
         "save": "Guardar",
+        "disp_title": "Pantalla", "disp_intro": "Ajuste la pantalla a la distancia de lectura.", "disp_theme": "Interfaz", "theme_pochette": "Portada: la pantalla toma el color del disco", "theme_console": "Consola: frontal de aparato, pantalla fluorescente", "theme_affiche": "Cartel: tipografía grande, papel y tinta", "disp_profil": "Tipo de pantalla", "profil_salon": "Salón: TV leída a 3-4 m", "profil_bureau": "Escritorio: pantalla cercana", "profil_petit": "Pantalla pequeña de 7 a 10 pulgadas", "disp_nuit": "Modo noche (brillo reducido)", "nuit_auto": "Según la hora", "nuit_jamais": "Nunca", "nuit_toujours": "Siempre", "nuit_de": "Noche de las", "nuit_a": "h a las", "nuit_h": "h", "disp_protection": "Proteger la pantalla: ligero desplazamiento, atenuación tras 10 min de pausa, negro tras 30 min", "disp_save": "Guardar la pantalla",
         "login_title": "Iniciar sesión",
         "login": "Iniciar sesión",
         "logout": "Cerrar sesión",
@@ -184,6 +189,7 @@ T = {
         "detect_none": "Kein Streamer gefunden. IP manuell eingeben.",
         "language": "Sprache",
         "save": "Speichern",
+        "disp_title": "Anzeige", "disp_intro": "Passen Sie den Bildschirm an den Betrachtungsabstand an.", "disp_theme": "Oberfläche", "theme_pochette": "Cover: der Bildschirm nimmt die Farbe des Albums an", "theme_console": "Konsole: Gerätefront, Fluoreszenzanzeige", "theme_affiche": "Plakat: große Typografie, Papier und Tinte", "disp_profil": "Bildschirmtyp", "profil_salon": "Wohnzimmer: TV aus 3-4 m", "profil_bureau": "Schreibtisch: naher Bildschirm", "profil_petit": "Kleiner Bildschirm 7 bis 10 Zoll", "disp_nuit": "Nachtmodus (reduzierte Helligkeit)", "nuit_auto": "Nach Uhrzeit", "nuit_jamais": "Nie", "nuit_toujours": "Immer", "nuit_de": "Nacht von", "nuit_a": "Uhr bis", "nuit_h": "Uhr", "disp_protection": "Bildschirm schonen: leichte Verschiebung, Abdunkeln nach 10 Min. Pause, schwarz nach 30 Min.", "disp_save": "Anzeige speichern",
         "login_title": "Anmelden",
         "login": "Anmelden",
         "logout": "Abmelden",
@@ -363,7 +369,16 @@ def do_action(action):
     if action == "info":
         return toggle_artist_panel()
     if action == "mute":
-        MUTE_STATE["muted"] = not MUTE_STATE["muted"]
+        # L'état réel prime : on a pu couper le son depuis l'appli Eversolo.
+        info = STATE_CACHE.get("info") or {}
+        volume = info.get("volume")
+        reel = volume.get("muet") if volume else None
+        actuel = MUTE_STATE["muted"] if reel is None else reel
+        MUTE_STATE["muted"] = not actuel
+        if volume:
+            # Deux appuis rapprochés : le second part de l'état visé, pas
+            # d'un relevé vieux d'une seconde.
+            STATE_CACHE["info"] = {**info, "volume": {**volume, "muet": MUTE_STATE["muted"]}}
         url = f"{eversolo_base()}/ZidooMusicControl/v2/setMuteVolume?isMute={1 if MUTE_STATE['muted'] else 0}"
     elif action in ACTIONS:
         url = f"{eversolo_base()}{ACTIONS[action]}"
@@ -1489,8 +1504,8 @@ def security_headers(resp):
     # Une route peut imposer sa propre politique (proxy de pochettes: sandbox).
     resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; img-src 'self' data:; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "font-src 'self'; script-src 'self' 'unsafe-inline'; "
         "connect-src 'self'; frame-ancestors 'none'"
     ))
     return resp
@@ -1548,7 +1563,7 @@ CAPTURE_ROUTES = (
 )
 CLES_SENSIBLES = re.compile(
     r"token|passw|secret|cookie|e?mail|account|login|hmac|signature|serial|uuid|ssid|psk|imei"
-    r"|api_?key|device_?id|mac_?addr|session_?(id|key)|^mac$|^sn$|^uid$|^user(_?name|_?id)?$"
+    r"|api_?key|device_?id|mac_?addr|_mac$|session_?(id|key)|^mac$|^sn$|^uid$|^user(_?name|_?id)?$"
     r"|auth(?!or)", re.I)
 SCHEMA_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 MASQUE = "(masqué)"
@@ -1578,6 +1593,8 @@ def masquer(valeur, cle=""):
             netloc += f":{port}"
         if hote and hote == CONFIG.get("eversolo_ip"):
             return p._replace(netloc=netloc, fragment="").geturl()
+        # Sous-domaine numérique d'un service tiers : identifiant d'appareil.
+        netloc = re.sub(r"(?<![\w-])\d{6,}(?=\.)", "x", netloc)
         return f"{p.scheme}://{netloc}/{MASQUE}"
     return valeur
 
@@ -1629,26 +1646,24 @@ PAGE = """
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
 <title>Eversolo · {{ title }}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="/static/fonts/fonts.css" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <style>
 :root{--chassis:#0d0b08;--panel:#16130e;--line:#2a251c;--ivory:#ece6d8;--muted:#918a79;--tube:#e8a33d}
 *{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;background:var(--chassis);color:var(--ivory);font-family:"Archivo",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
+body{min-height:100vh;background:var(--chassis);color:var(--ivory);font-family:"Geist",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
 .card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:36px 32px;box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
 .brand{font-size:11px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px;margin-bottom:26px}
 .brand b{color:var(--ivory)}
 .lamp{width:7px;height:7px;border-radius:50%;background:var(--tube);box-shadow:0 0 10px 2px rgba(232,163,61,.55)}
-h1{font-family:"Fraunces",Georgia,serif;font-weight:560;font-size:27px;margin-bottom:8px}
+h1{font-family:"Geist",system-ui,sans-serif;font-weight:620;letter-spacing:-.01em;font-size:27px;margin-bottom:8px}
 .intro{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:26px}
 label{display:block;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
-input,select{width:100%;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--ivory);font-family:"IBM Plex Mono",monospace;font-size:15px;padding:12px 14px;outline:none}
+input,select{width:100%;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--ivory);font-family:"Geist Mono",monospace;font-size:15px;padding:12px 14px;outline:none}
 input:focus,select:focus{border-color:var(--tube)}
-button{width:100%;margin-top:26px;background:var(--tube);border:none;border-radius:4px;color:#1a1206;font-family:"Archivo";font-weight:600;font-size:15px;letter-spacing:.04em;padding:14px;cursor:pointer}
+button{width:100%;margin-top:26px;background:var(--tube);border:none;border-radius:4px;color:#1a1206;font-family:"Geist";font-weight:600;font-size:15px;letter-spacing:.04em;padding:14px;cursor:pointer}
 button:hover{filter:brightness(1.08)}
 .ghost{background:transparent;border:1px solid var(--line);color:var(--muted);margin-top:12px;font-weight:500}
 .msg{border-left:2px solid var(--tube);padding:10px 14px;font-size:13px;color:var(--ivory);background:rgba(232,163,61,.07);margin-bottom:18px;border-radius:0 4px 4px 0}
@@ -1689,8 +1704,8 @@ def page_installation_tv(t, lang):
     body = f"""
 <style>
 .card{{width:min(1100px,94vw);text-align:center;padding:5vh 4vw}}
-.tvurl{{font-family:"IBM Plex Mono",monospace;font-size:clamp(22px,4.4vh,48px);margin:1.2vh 0;word-break:break-all}}
-.tvcode{{font-family:"IBM Plex Mono",monospace;font-size:clamp(56px,15vh,170px);letter-spacing:.14em;color:var(--tube);margin-top:1vh}}
+.tvurl{{font-family:"Geist Mono",monospace;font-size:clamp(22px,4.4vh,48px);margin:1.2vh 0;word-break:break-all}}
+.tvcode{{font-family:"Geist Mono",monospace;font-size:clamp(56px,15vh,170px);letter-spacing:.14em;color:var(--tube);margin-top:1vh}}
 .card h1{{font-size:clamp(28px,6vh,64px)}}
 .card .intro{{font-size:clamp(16px,3vh,30px);margin:3vh 0 0}}
 </style>
@@ -1868,6 +1883,10 @@ def config_page():
         elif request.form.get("op") == "update":
             lancer_mise_a_jour()
             message = t["update_started"]
+        elif request.form.get("op") == "affichage":
+            CONFIG.update(affichage.reglages_depuis_formulaire(request.form))
+            save_config(CONFIG)
+            message = t["saved"]
         elif request.form.get("op") == "capture":
             situation = request.form.get("situation", "")
             if situation not in SITUATIONS:
@@ -1943,6 +1962,7 @@ __VERSION_HTML__
   <input type="password" name="current_password" autocomplete="current-password">
   <button type="submit">{t['save']}</button>
 </form>
+__AFFICHAGE_HTML__
 __CAPTURE_HTML__
 <form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}"><button class="ghost">{t['logout']}</button></form>
 <div class="foot"><a href="/remote">{t['remote_link']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
@@ -1975,8 +1995,48 @@ document.getElementById('scan').onclick = async function() {{
         version_html = ('<p class="intro" style="opacity:.6">' + t["up_to_date"]
                         + ' · <span style="font-family:monospace">' + LOCAL_REV + "</span></p>")
     body = body.replace("__VERSION_HTML__", version_html)
+    body = body.replace("__AFFICHAGE_HTML__", bloc_affichage(t))
     body = body.replace("__CAPTURE_HTML__", bloc_capture(t))
     return page(t["config_title"], body, lang)
+
+
+def bloc_affichage(t):
+    r = affichage.reglages_affichage(CONFIG)
+
+    def options(valeurs, choisie, prefixe):
+        return "".join(
+            f'<option value="{v}"{" selected" if v == choisie else ""}>{t[prefixe + v]}</option>'
+            for v in valeurs)
+
+    def heures(nom, choisie):
+        return f'<select name="{nom}" style="width:auto">' + "".join(
+            f'<option value="{h}"{" selected" if h == choisie else ""}>{h}</option>'
+            for h in range(24)) + "</select>"
+
+    coche = " checked" if r["protection"] else ""
+    return f"""
+<h2 style="margin-top:32px">{t['disp_title']}</h2>
+<p class="intro">{t['disp_intro']}</p>
+<form method="post" action="/config">
+  <input type="hidden" name="csrf" value="{csrf_token()}">
+  <input type="hidden" name="op" value="affichage">
+  <label>{t['disp_theme']}</label>
+  <select name="ecran_theme">{options(affichage.THEMES, r['theme'], 'theme_')}</select>
+  <label>{t['disp_profil']}</label>
+  <select name="ecran_profil">{options(affichage.PROFILS, r['profil'], 'profil_')}</select>
+  <label>{t['disp_nuit']}</label>
+  <select name="ecran_nuit">{options(affichage.MODES_NUIT, r['nuit'], 'nuit_')}</select>
+  <div class="row" style="align-items:center;gap:8px;margin-top:10px">
+    {t['nuit_de']} {heures('nuit_debut', r['nuit_debut'])} {t['nuit_a']}
+    {heures('nuit_fin', r['nuit_fin'])} {t['nuit_h']}
+  </div>
+  <label style="display:flex;gap:10px;align-items:flex-start;margin-top:16px">
+    <input type="checkbox" name="ecran_protection" value="1"{coche} style="width:auto;margin-top:3px">
+    <span>{t['disp_protection']}</span>
+  </label>
+  <button type="submit">{t['disp_save']}</button>
+</form>
+"""
 
 
 def bloc_capture(t):
@@ -1993,7 +2053,7 @@ def bloc_capture(t):
                  f'<div style="font-family:monospace;font-size:13px">{liens}</div>')
     return f"""
 <div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--line)">
-  <h2 style="font-family:Fraunces,Georgia,serif;font-weight:560;font-size:21px;margin-bottom:8px">{t['capture_title']}</h2>
+  <h2 style="font-family:Geist,system-ui,sans-serif;font-weight:620;font-size:21px;margin-bottom:8px">{t['capture_title']}</h2>
   <p class="intro" style="margin-bottom:6px">{t['capture_intro']}</p>
   <form method="post" action="/config">
     <input type="hidden" name="csrf" value="{csrf_token()}">
@@ -2111,7 +2171,7 @@ def remote_page():
 <style>
 .rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
 .rname{{font-size:15px}}
-.rcode{{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
+.rcode{{display:block;font-family:"Geist Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
 .rbtns{{display:flex;gap:8px;align-items:center}}
 .pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
 .hw{{margin-top:28px;padding-top:22px;border-top:1px solid var(--line)}}
@@ -2123,11 +2183,11 @@ def remote_page():
 .hwstat{{font-size:12px;color:var(--muted)}}
 .hwtab{{width:100%;border-collapse:collapse;font-size:13px}}
 .hwtab th{{text-align:left;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;padding-bottom:8px}}
-.hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;color:var(--ivory)}}
+.hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"Geist Mono",monospace;color:var(--ivory)}}
 .hwtab td:last-child{{text-align:right;color:var(--tube)}}
 .gp{{color:var(--muted);font-size:11px}}
 .hwnote{{font-size:12px;line-height:1.5;color:var(--muted);margin-top:14px}}
-.hwres{{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}}
+.hwres{{margin-top:10px;font-family:"Geist Mono",monospace;font-size:12px;color:var(--muted)}}
 .hwres.ok{{color:var(--tube)}}
 .hwres.ko{{color:#c65a4a}}
 </style>
@@ -2287,7 +2347,7 @@ def blaster_page():
     body = f'''
 <style>
 .rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
-.rname{{font-family:"IBM Plex Mono",monospace;font-size:14px}}
+.rname{{font-family:"Geist Mono",monospace;font-size:14px}}
 .rbtns{{display:flex;gap:8px;align-items:center}}
 .pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
 </style>
@@ -2464,14 +2524,19 @@ def absolute_url(path):
 
 def normalize(state):
     play_type = state.get("playType")
+    etat = affichage.etat_lecture(state)
+    lang = CONFIG.get("language", "fr")
     info = {
         "connected": True,
-        "playing": int(state.get("state", -1)) == 3,
+        "playing": etat == "lecture",
+        "etat": etat,
         "title": None, "artist": None, "album": None, "cover": None,
         "position": (state.get("position") or 0) / 1000,
         "duration": (state.get("duration") or 0) / 1000,
         "quality": find_quality(state),
-        "lang": CONFIG.get("language", "fr"),
+        "signal": affichage.signal_audio(state, lang),
+        "volume": affichage.lire_volume(state),
+        "lang": lang,
         "model": device_model(),
         "server_time": time.time(),
     }
@@ -2508,7 +2573,8 @@ def normalize(state):
     info["cover"] = (icon or art or by_id) if app_first else (art or by_id or icon)
 
     # Flux en direct (web radio): pas de durée exploitable
-    info["live"] = bool(info["title"]) and info["duration"] <= 0
+    # (à l'arrêt, la durée vaut aussi 0 : ce n'est pas une radio)
+    info["live"] = bool(info["title"]) and info["duration"] <= 0 and etat != "arret"
 
     info["cover"] = cover_ref(info["cover"])
     return info
@@ -2516,6 +2582,96 @@ def normalize(state):
 
 STATE_CACHE = {"info": None, "failures": 0, "down_since": None}
 PREFETCH = {"artist": None}
+
+# Entrée et sortie actives : relevées en fond, au plus toutes les 30 s.
+IO_CACHE = {"ts": 0.0, "sortie": None, "entree": None}
+IO_VERROU = threading.Lock()
+IO_DUREE = 30
+# Plage suivante : cherchée une fois par plage, dans ses dernières secondes.
+FILE_CACHE = {"etat": (None, None)}  # (plage, suivante), remplacé d'un bloc
+FILE_VERROU = threading.Lock()
+SUIVANT_AVANT_FIN = 30
+
+
+def rafraichir_entrees_sorties():
+    if not IO_VERROU.acquire(blocking=False):
+        return
+    try:
+        r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getInputAndOutputList", timeout=3)
+        donnees = r.json()
+        IO_CACHE.update(sortie=affichage.sortie_active(donnees),
+                        entree=affichage.entree_active(donnees))
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[diagnostic] entrées/sorties illisibles : {type(exc).__name__}", flush=True)
+    finally:
+        IO_CACHE["ts"] = time.time()
+        IO_VERROU.release()
+
+
+def chercher_suivant(cle, index, titre):
+    if not FILE_VERROU.acquire(blocking=False):
+        return
+    try:
+        r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getPlayQueue",
+                     params={"start": index, "count": 2}, timeout=3)
+        suivant = affichage.suivant_dans_file(r.json(), index, titre)
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[diagnostic] file de lecture illisible : {type(exc).__name__}", flush=True)
+        suivant = None
+    finally:
+        FILE_VERROU.release()
+    # Une recherche tardive ne doit pas écraser celle d'une plage plus récente.
+    if FILE_CACHE["etat"][0] == cle:
+        FILE_CACHE["etat"] = (cle, suivant)
+
+
+def _en_fond(cible, *args):
+    threading.Thread(target=cible, args=args, daemon=True).start()
+
+
+def _depuis_cache(cache, cle):
+    entree = cache.get(cle)
+    return entree[1] if entree else None
+
+
+def infos_ecran(brut, info):
+    """Ce que l'écran ajoute à l'état : sortie, plage suivante, découvertes,
+    réglages. Ne lit que des caches ; les relevés partent en fond."""
+    if time.time() - IO_CACHE["ts"] > IO_DUREE:
+        IO_CACHE["ts"] = time.time()
+        _en_fond(rafraichir_entrees_sorties)
+
+    titre, artiste, album = info.get("title"), info.get("artist"), info.get("album")
+    index = brut.get("trackIndex")
+    cle_file = (titre, index)
+    reste = info["duration"] - info["position"]
+    if (info["etat"] == "lecture" and not info["live"] and 0 < reste < SUIVANT_AVANT_FIN
+            and isinstance(index, int) and index >= 0 and FILE_CACHE["etat"][0] != cle_file):
+        FILE_CACHE["etat"] = (cle_file, None)
+        _en_fond(chercher_suivant, cle_file, index, titre)
+    cle_connue, suivant = FILE_CACHE["etat"]
+    ensuite = suivant if cle_connue == cle_file else None
+
+    lang = info["lang"]
+    fiche_album = fiche_art = None
+    plage = []
+    if artiste:
+        a, al = artiste.lower(), (album or "").lower()
+        fiche_album = _depuis_cache(ALBUM_CACHE, (a, al, lang)) if album else None
+        bio = _depuis_cache(ARTIST_CACHE, (a, al, lang))
+        if bio:
+            fiche_art = {"name": bio.get("artist"), "facts": bio.get("facts") or [],
+                         "text": bio.get("text")}
+        if titre:
+            plage = _depuis_cache(TRACK_CACHE, (a, titre.lower(), lang)) or []
+    return {
+        "sortie": IO_CACHE["sortie"],
+        "entree": IO_CACHE["entree"],
+        "ensuite": ensuite,
+        "decouvertes": affichage.decouvertes(titre, fiche_album, fiche_art, plage,
+                                             info["signal"], IO_CACHE["sortie"], lang),
+        "display": affichage.reglages_affichage(CONFIG),
+    }
 
 
 @app.route("/favicon.ico")
@@ -2530,8 +2686,10 @@ def api_state():
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
-        info = normalize(r.json())
+        brut = r.json()
+        info = normalize(brut)
         info["rev"] = LOCAL_REV
+        info.update(infos_ecran(brut, info))
         artiste = info.get("artist")
         cle_pf = (artiste, info.get("album"), info.get("title"))
         if artiste and cle_pf != PREFETCH["artist"]:

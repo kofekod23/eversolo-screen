@@ -23,7 +23,7 @@ done
 echo "== Installation eversolo-screen =="
 
 sudo apt-get update
-sudo apt-get install -y python3-venv curl
+sudo apt-get install -y python3-venv curl git
 if [ "$KIOSK" = "--kiosk" ]; then
     sudo apt-get install -y cage
     sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
@@ -34,11 +34,27 @@ if [ ! -f "$APP_DIR/config.json" ]; then
     cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
 fi
 
-if [ ! -d "$APP_DIR/venv" ]; then
-    python3 -m venv "$APP_DIR/venv"
+# Clé autorisée à signer les versions : épinglée sur ce Pi au premier passage,
+# jamais remplacée ensuite par une mise à jour.
+# Rangée hors du dépôt git : un « git pull » ne peut pas la remplacer.
+CONF="$HOME/.config/eversolo-screen"
+mkdir -p "$CONF"
+if [ ! -f "$CONF/signataires" ]; then
+    cp "$APP_DIR/tools/signataires" "$CONF/signataires"
+    chmod 0444 "$CONF/signataires"
 fi
-"$APP_DIR/venv/bin/pip" install --quiet --upgrade pip
-"$APP_DIR/venv/bin/pip" install --quiet -r "$APP_DIR/requirements.txt"
+# Garde de démarrage (retour arrière) : remplacé ensuite seulement par la
+# copie d'une version qui a bien démarré.
+[ -f "$CONF/garde.py" ] || install -m 0644 "$APP_DIR/versions.py" "$CONF/garde.py"
+
+# Une version par dossier dans ~/eversolo-versions : la dernière version
+# signée si elle se vérifie, sinon la copie actuelle de ce dépôt.
+# (La copie actuelle est le code qui exécute déjà ce script : l'installer
+# n'ajoute aucune confiance ; c'est le cas tant qu'aucune version n'est signée.)
+if ! python3 "$APP_DIR/versions.py" installer; then
+    echo "Aucune version signée vérifiable : installation de la copie actuelle de ce dépôt."
+    python3 "$APP_DIR/versions.py" installer --local
+fi
 
 sudo cp "$APP_DIR/eversolo-screen.service" /etc/systemd/system/eversolo-screen@.service
 sudo systemctl daemon-reload

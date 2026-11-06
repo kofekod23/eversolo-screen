@@ -6,8 +6,13 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=%i
-WorkingDirectory=/home/%i/eversolo-screen
-ExecStart=/home/%i/eversolo-screen/venv/bin/python server.py
+# Une version par dossier (versions.py) ; réglages et caches restent dans le
+# dépôt de référence. Le garde revient à la version précédente si la nouvelle
+# ne démarre pas trois fois de suite ; il n'empêche jamais le démarrage.
+WorkingDirectory=/home/%i/eversolo-versions/courante
+Environment=EVERSOLO_SCREEN_DATA=/home/%i/eversolo-screen
+ExecStartPre=-/usr/bin/python3 /home/%i/.config/eversolo-screen/garde.py garde
+ExecStart=/home/%i/eversolo-versions/courante/venv/bin/python server.py
 Restart=on-failure
 RestartSec=5
 

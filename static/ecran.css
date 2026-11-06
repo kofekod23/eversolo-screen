@@ -242,6 +242,17 @@ body.pointer { cursor: default; }
 #idle .derniere { margin-top: calc(var(--u) * 1.4); font-size: calc(var(--u) * 3); color: var(--texte-2); }
 #idle .derniere:empty { display: none; }
 
+/* ---------- Mise à jour en cours ---------- */
+.maj-bandeau {
+  position: fixed; z-index: 5; left: 50%; bottom: calc(var(--u) * 4);
+  padding: 0.6em 1.2em; font-size: calc(var(--u) * 2.8);
+  background: var(--surface); color: var(--texte); border: 1px solid var(--texte-3);
+  opacity: 0; transform: translate(-50%, 20%);
+  transition: opacity 0.3s ease, transform 0.4s var(--sortie);
+  pointer-events: none;
+}
+.maj-bandeau.on { opacity: 1; transform: translate(-50%, 0); }
+
 /* ---------- Protection d'écran ---------- */
 body.attenue .stage, body.attenue #idle { opacity: 0.3; }
 #veille { position: fixed; inset: 0; z-index: 9; background: #000; opacity: 0; pointer-events: none; transition: opacity 4s ease; }

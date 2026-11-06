@@ -86,7 +86,11 @@ Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargi
 
 ## Mise à jour
 
-Bouton sur `/config` quand une nouvelle version est publiée, ou en SSH : `./update.sh`. Configuration et mot de passe préservés.
+Quand une version est publiée, `/config` affiche ses nouveautés et un bouton pour l'installer (pas pendant la lecture). En SSH, `./update.sh` fait la même chose.
+
+Chaque version s'installe dans son propre dossier (`~/eversolo-versions`) et seulement si sa signature correspond à la clé enregistrée sur le Pi à l'installation. Si la nouvelle version ne démarre pas, le Pi revient tout seul à la précédente ; un bouton de `/config` permet aussi d'y revenir. Réglages et mot de passe restent dans `~/eversolo-screen`.
+
+Pour publier une version signée : `tools/publier-version.sh v1.2.0 "nouveauté" "autre nouveauté"`.
 
 ## Licence
 

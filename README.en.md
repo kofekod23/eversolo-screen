@@ -77,7 +77,11 @@ Everything works without any key. Optional keys on `/config` widen coverage: Las
 
 ## Update
 
-Button on `/config` when a new version is published, or over SSH: `./update.sh`. Configuration and password preserved.
+When a version is published, `/config` shows what is new and a button to install it (not during playback). Over SSH, `./update.sh` does the same.
+
+Each version installs in its own folder (`~/eversolo-versions`) and only if its signature matches the key recorded on the Pi at installation. If the new version fails to start, the Pi goes back to the previous one by itself; a `/config` button also lets you go back. Settings and password stay in `~/eversolo-screen`.
+
+To publish a signed version: `tools/publier-version.sh v1.2.0 "change" "another change"`.
 
 ## License
 

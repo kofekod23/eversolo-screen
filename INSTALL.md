@@ -145,7 +145,7 @@ Un comportement à signaler : sur `/config`, la section "Capture de l'état" enr
 
 - Le Pi démarre tout seul sur l'affichage a chaque mise sous tension, rien a faire.
 - Changer un réglage (IP, langue, mot de passe) : `http://eversolo.local:8080/config`.
-- Mettre à jour le projet :
+- Mettre à jour : bouton de `/config` quand une version signée est publiée, ou en SSH (une ancienne installation passe alors aux dossiers de versions) :
 
 ```bash
 cd ~/eversolo-screen && ./update.sh

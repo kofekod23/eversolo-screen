@@ -77,7 +77,9 @@ Todo funciona sin ninguna clave. Claves opcionales en `/config`: Last.fm (gratui
 
 ## Actualización
 
-Botón en `/config` cuando hay nueva versión, o por SSH: `./update.sh`. Configuración y contraseña preservadas.
+Cuando se publica una versión, `/config` muestra sus novedades y un botón para instalarla (no durante la reproducción). Por SSH, `./update.sh` hace lo mismo.
+
+Cada versión se instala en su propia carpeta (`~/eversolo-versions`) y solo si su firma coincide con la clave registrada en la Pi durante la instalación. Si la nueva versión no arranca, la Pi vuelve sola a la anterior; un botón de `/config` también permite volver. Los ajustes y la contraseña quedan en `~/eversolo-screen`.
 
 ## Licencia
 

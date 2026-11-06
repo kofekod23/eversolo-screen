@@ -28,11 +28,16 @@ from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import affichage
+import versions
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Installé par versions (un dossier par version) : les données vivent dans le
+# dépôt de référence, jamais dans le dossier d'une version.
+DISPO = versions.disposition_de(BASE_DIR)
 # Fichiers modifiables (réglages, mot de passe, caches, captures) : à côté du
-# code par défaut, ailleurs si EVERSOLO_SCREEN_DATA le demande (tests).
-DATA_DIR = os.path.abspath(os.environ.get("EVERSOLO_SCREEN_DATA") or BASE_DIR)
+# code par défaut, ailleurs si EVERSOLO_SCREEN_DATA le demande (service, tests).
+DATA_DIR = os.path.abspath(os.environ.get("EVERSOLO_SCREEN_DATA")
+                           or (DISPO.depot if DISPO else BASE_DIR))
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 AUTH_PATH = os.path.join(DATA_DIR, "auth.json")
 SECRET_PATH = os.path.join(DATA_DIR, ".secret_key")
@@ -65,7 +70,8 @@ T = {
         "detecting": "Recherche en cours...",
         "detect_none": "Aucun streamer trouvé. Saisissez l'IP manuellement.",
         "language": "Langue",
-        "save": "Enregistrer",
+        "save": "Enregistrer", "maj_deja": "Une mise à jour est déjà en cours.",
+        "maj_installee": "Version en service", "maj_disponible": "Nouvelle version", "maj_installer": "Installer cette version", "maj_revenir": "Revenir à la version précédente", "maj_pendant_lecture": "Mettez la lecture en pause avant de mettre à jour.", "maj_rien": "Aucune nouvelle version à installer.", "maj_lancee": "Installation lancée : téléchargement, vérification de la signature, puis redémarrage. L'écran se rechargera tout seul.", "maj_retour_lance": "Retour à la version précédente : le serveur redémarre.", "maj_etape_telechargement": "Téléchargement en cours", "maj_etape_verification": "Vérification de la signature", "maj_etape_installation": "Installation en cours", "maj_tv": "Mise à jour",
         "disp_title": "Affichage", "disp_intro": "Réglez l'écran selon la distance de lecture.", "disp_theme": "Interface", "theme_pochette": "Pochette : l'écran prend la couleur du disque", "theme_console": "Console : façade d'appareil, afficheur fluorescent", "theme_affiche": "Affiche : grande typographie, papier et encre", "disp_profil": "Type d'écran", "profil_salon": "Salon : TV lue à 3-4 m", "profil_bureau": "Bureau : écran proche", "profil_petit": "Petit écran 7 à 10 pouces", "disp_nuit": "Mode nuit (luminosité réduite)", "nuit_auto": "Selon l'heure", "nuit_jamais": "Jamais", "nuit_toujours": "Toujours", "nuit_de": "Nuit de", "nuit_a": "heures à", "nuit_h": "heures", "disp_protection": "Protéger l'écran : léger décalage, atténuation après 10 min de pause, noir après 30 min", "disp_save": "Enregistrer l'affichage",
         "login_title": "Connexion",
         "login": "Se connecter",
@@ -106,7 +112,8 @@ T = {
         "detecting": "Scanning...",
         "detect_none": "No streamer found. Enter the IP manually.",
         "language": "Language",
-        "save": "Save",
+        "save": "Save", "maj_deja": "An update is already running.",
+        "maj_installee": "Running version", "maj_disponible": "New version", "maj_installer": "Install this version", "maj_revenir": "Go back to the previous version", "maj_pendant_lecture": "Pause playback before updating.", "maj_rien": "No new version to install.", "maj_lancee": "Installation started: download, signature check, then restart. The screen will reload by itself.", "maj_retour_lance": "Going back to the previous version: the server restarts.", "maj_etape_telechargement": "Downloading", "maj_etape_verification": "Checking the signature", "maj_etape_installation": "Installing", "maj_tv": "Update",
         "disp_title": "Display", "disp_intro": "Adjust the screen to your viewing distance.", "disp_theme": "Interface", "theme_pochette": "Cover: the screen takes the colour of the record", "theme_console": "Console: device front panel, fluorescent display", "theme_affiche": "Poster: large type, paper and ink", "disp_profil": "Screen type", "profil_salon": "Living room: TV read from 3-4 m", "profil_bureau": "Desk: close screen", "profil_petit": "Small 7 to 10 inch screen", "disp_nuit": "Night mode (reduced brightness)", "nuit_auto": "By time of day", "nuit_jamais": "Never", "nuit_toujours": "Always", "nuit_de": "Night from", "nuit_a": "h to", "nuit_h": "h", "disp_protection": "Protect the screen: slight shift, dimming after 10 min of pause, black after 30 min", "disp_save": "Save display",
         "login_title": "Sign in",
         "login": "Sign in",
@@ -147,7 +154,8 @@ T = {
         "detecting": "Buscando...",
         "detect_none": "No se encontro ningún streamer. Introduzca la IP manualmente.",
         "language": "Idioma",
-        "save": "Guardar",
+        "save": "Guardar", "maj_deja": "Ya hay una actualización en curso.",
+        "maj_installee": "Versión en servicio", "maj_disponible": "Nueva versión", "maj_installer": "Instalar esta versión", "maj_revenir": "Volver a la versión anterior", "maj_pendant_lecture": "Pause la reproducción antes de actualizar.", "maj_rien": "No hay ninguna versión nueva.", "maj_lancee": "Instalación iniciada: descarga, verificación de la firma y reinicio. La pantalla se recargará sola.", "maj_retour_lance": "Volviendo a la versión anterior: el servidor se reinicia.", "maj_etape_telechargement": "Descargando", "maj_etape_verification": "Verificando la firma", "maj_etape_installation": "Instalando", "maj_tv": "Actualización",
         "disp_title": "Pantalla", "disp_intro": "Ajuste la pantalla a la distancia de lectura.", "disp_theme": "Interfaz", "theme_pochette": "Portada: la pantalla toma el color del disco", "theme_console": "Consola: frontal de aparato, pantalla fluorescente", "theme_affiche": "Cartel: tipografía grande, papel y tinta", "disp_profil": "Tipo de pantalla", "profil_salon": "Salón: TV leída a 3-4 m", "profil_bureau": "Escritorio: pantalla cercana", "profil_petit": "Pantalla pequeña de 7 a 10 pulgadas", "disp_nuit": "Modo noche (brillo reducido)", "nuit_auto": "Según la hora", "nuit_jamais": "Nunca", "nuit_toujours": "Siempre", "nuit_de": "Noche de las", "nuit_a": "h a las", "nuit_h": "h", "disp_protection": "Proteger la pantalla: ligero desplazamiento, atenuación tras 10 min de pausa, negro tras 30 min", "disp_save": "Guardar la pantalla",
         "login_title": "Iniciar sesión",
         "login": "Iniciar sesión",
@@ -188,7 +196,8 @@ T = {
         "detecting": "Suche läuft...",
         "detect_none": "Kein Streamer gefunden. IP manuell eingeben.",
         "language": "Sprache",
-        "save": "Speichern",
+        "save": "Speichern", "maj_deja": "Ein Update läuft bereits.",
+        "maj_installee": "Laufende Version", "maj_disponible": "Neue Version", "maj_installer": "Diese Version installieren", "maj_revenir": "Zur vorherigen Version zurück", "maj_pendant_lecture": "Pausieren Sie die Wiedergabe vor dem Update.", "maj_rien": "Keine neue Version verfügbar.", "maj_lancee": "Installation gestartet: Download, Signaturprüfung, dann Neustart. Der Bildschirm lädt sich selbst neu.", "maj_retour_lance": "Zurück zur vorherigen Version: der Server startet neu.", "maj_etape_telechargement": "Wird heruntergeladen", "maj_etape_verification": "Signatur wird geprüft", "maj_etape_installation": "Wird installiert", "maj_tv": "Update",
         "disp_title": "Anzeige", "disp_intro": "Passen Sie den Bildschirm an den Betrachtungsabstand an.", "disp_theme": "Oberfläche", "theme_pochette": "Cover: der Bildschirm nimmt die Farbe des Albums an", "theme_console": "Konsole: Gerätefront, Fluoreszenzanzeige", "theme_affiche": "Plakat: große Typografie, Papier und Tinte", "disp_profil": "Bildschirmtyp", "profil_salon": "Wohnzimmer: TV aus 3-4 m", "profil_bureau": "Schreibtisch: naher Bildschirm", "profil_petit": "Kleiner Bildschirm 7 bis 10 Zoll", "disp_nuit": "Nachtmodus (reduzierte Helligkeit)", "nuit_auto": "Nach Uhrzeit", "nuit_jamais": "Nie", "nuit_toujours": "Immer", "nuit_de": "Nacht von", "nuit_a": "Uhr bis", "nuit_h": "Uhr", "disp_protection": "Bildschirm schonen: leichte Verschiebung, Abdunkeln nach 10 Min. Pause, schwarz nach 30 Min.", "disp_save": "Anzeige speichern",
         "login_title": "Anmelden",
         "login": "Anmelden",
@@ -1263,7 +1272,97 @@ def _rev_locale():
 
 
 LOCAL_REV = _rev_locale()
+# Nom lisible de la version en service : « v1.2.0 » avec les versions, le
+# commit sinon (installation d'avant le lot 0 bis).
+VERSION_LOCALE = os.path.basename(os.path.realpath(BASE_DIR)) if DISPO else LOCAL_REV
 VERSION_DISTANTE = {"ts": 0.0, "sha": "", "message": ""}
+MAJ_DISPONIBLE = {"ts": 0.0, "version": None, "notes": [], "en_cours": False}
+MAJ_VERROU = threading.Lock()
+MAJ_RECHERCHE_S = 600
+MAJ_VALIDATION_S = 20
+MAJ_VALIDATION_ESSAIS = 10   # un Pi 3 peut mettre du temps à tout charger
+
+
+def chercher_mise_a_jour():
+    """Version signée plus récente publiée, et ses nouveautés (en fond)."""
+    if not DISPO:
+        return
+    with MAJ_VERROU:
+        if MAJ_DISPONIBLE["en_cours"] or time.time() - MAJ_DISPONIBLE["ts"] < MAJ_RECHERCHE_S:
+            return
+        MAJ_DISPONIBLE.update(en_cours=True, ts=time.time())
+
+    def travail():
+        try:
+            with versions.verrou(DISPO):  # jamais pendant une installation
+                cible = versions.proposable(DISPO, versions.tags_distants(DISPO), VERSION_LOCALE)
+                notes = []
+                if cible:
+                    versions.git(DISPO, "fetch", "--quiet", "--tags", "origin", duree=300)
+                    # rien n'est montré d'une version dont la signature ne tient pas
+                    versions.verifier_signature(DISPO, cible, VERSION_LOCALE)
+                    notes = versions.notes(DISPO, cible)
+            MAJ_DISPONIBLE.update(version=cible, notes=notes)
+        except (versions.ErreurMaj, versions.Occupe, OSError, subprocess.TimeoutExpired) as exc:
+            MAJ_DISPONIBLE.update(version=None, notes=[])
+            print(f"[diagnostic] recherche de mise à jour : {exc}", flush=True)
+        finally:
+            MAJ_DISPONIBLE["en_cours"] = False
+    threading.Thread(target=travail, daemon=True).start()
+
+
+def maj_en_cours():
+    if not DISPO:
+        return None
+    etat = versions.lire_etat(DISPO)
+    if versions.en_cours(etat):
+        return {"etape": etat["etape"], "version": etat.get("version")}
+    return None
+
+
+def lecture_en_cours():
+    return ((STATE_CACHE.get("info") or {}).get("etat") == "lecture")
+
+
+def installer_version(cible):
+    """Installe une version signée puis redémarre ; en cas d'échec, le serveur
+    continue sur la version actuelle et /config affiche la raison."""
+    def travail():
+        try:
+            versions.installer(DISPO, cible)
+        except Exception as exc:  # noqa: BLE001 - le fil ne doit jamais mourir en silence
+            print(f"[diagnostic] mise à jour refusée : {exc}", flush=True)
+            versions.noter_echec(DISPO, cible, exc)
+            return
+        os._exit(1)  # systemd relance sur la nouvelle version
+    threading.Thread(target=travail, daemon=True).start()
+
+
+def revenir_version():
+    versions.revenir(DISPO)
+    threading.Timer(1.0, lambda: os._exit(1)).start()
+
+
+def valider_au_demarrage(port):
+    """Après quelques secondes, si le serveur répond, la version est adoptée ;
+    sinon le garde de systemd reviendra à la précédente."""
+    if not DISPO:
+        return
+
+    def travail():
+        for _ in range(MAJ_VALIDATION_ESSAIS):
+            time.sleep(MAJ_VALIDATION_S if _ == 0 else 10)
+            try:
+                r = requests.get(f"http://127.0.0.1:{port}/favicon.ico", timeout=5,
+                                 headers={"Host": f"localhost:{port}"})
+                if r.status_code != 200:
+                    continue
+                if versions.valider(DISPO):
+                    print(f"[mise à jour] {VERSION_LOCALE} adoptée", flush=True)
+                return
+            except (requests.RequestException, versions.Occupe, OSError) as exc:
+                print(f"[diagnostic] validation, nouvel essai : {exc}", flush=True)
+    threading.Thread(target=travail, daemon=True).start()
 
 
 def derniere_version():
@@ -1880,6 +1979,23 @@ def config_page():
     if request.method == "POST":
         if not csrf_ok():
             error = t["session_expired"]
+        elif request.form.get("op") == "update" and DISPO:
+            cible = MAJ_DISPONIBLE.get("version")
+            if maj_en_cours():
+                error = t["maj_deja"]
+            elif lecture_en_cours():
+                error = t["maj_pendant_lecture"]
+            elif not cible:
+                error = t["maj_rien"]
+            else:
+                installer_version(cible)
+                message = t["maj_lancee"]
+        elif request.form.get("op") == "retour" and DISPO:
+            try:
+                revenir_version()
+                message = t["maj_retour_lance"]
+            except (versions.ErreurMaj, versions.Occupe, OSError) as exc:
+                error = str(exc)
         elif request.form.get("op") == "update":
             lancer_mise_a_jour()
             message = t["update_started"]
@@ -1978,8 +2094,10 @@ document.getElementById('scan').onclick = async function() {{
 }};
 </script>
 """
-    distante = derniere_version()
-    if distante["sha"] and LOCAL_REV and distante["sha"] != LOCAL_REV:
+    distante = {"sha": ""} if DISPO else derniere_version()
+    if DISPO:
+        version_html = bloc_mise_a_jour(t)
+    elif distante["sha"] and LOCAL_REV and distante["sha"] != LOCAL_REV:
         version_html = (
             '<div class="msg" style="display:flex;justify-content:space-between;'
             'align-items:center;gap:12px;flex-wrap:wrap"><span>'
@@ -1998,6 +2116,38 @@ document.getElementById('scan').onclick = async function() {{
     body = body.replace("__AFFICHAGE_HTML__", bloc_affichage(t))
     body = body.replace("__CAPTURE_HTML__", bloc_capture(t))
     return page(t["config_title"], body, lang)
+
+
+def bloc_mise_a_jour(t):
+    """Section « Mise à jour » : version en service, disponible, retour."""
+    chercher_mise_a_jour()
+    etat = versions.lire_etat(DISPO)
+    precedente = versions.version_de_lien(DISPO.precedente)
+    jeton = csrf_token()
+    lignes = [f'<p class="intro">{t["maj_installee"]} : <b>{escape(VERSION_LOCALE)}</b></p>']
+    if etat.get("etape") in ("echec", "retour") and etat.get("erreur"):
+        lignes.append(f'<div class="msg err">{escape(etat["erreur"])}</div>')
+    en_cours = maj_en_cours()
+    if en_cours:
+        lignes.append(f'<div class="msg">{t["maj_etape_" + en_cours["etape"]]} '
+                      f'({escape(en_cours["version"] or "")})</div>')
+    cible = MAJ_DISPONIBLE.get("version")
+    if cible and not en_cours:
+        notes = "".join(f"<li>{escape(n)}</li>" for n in MAJ_DISPONIBLE.get("notes") or [])
+        lignes.append(
+            f'<div class="msg"><b>{t["maj_disponible"]} : {escape(cible)}</b>'
+            f'<ul style="margin:8px 0 0 18px">{notes}</ul>'
+            f'<form method="post" style="margin:0"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<input type="hidden" name="op" value="update">'
+            f'<button style="margin-top:12px">{t["maj_installer"]}</button></form></div>')
+    elif not en_cours:
+        lignes.append(f'<p class="intro" style="opacity:.7">{t["up_to_date"]}</p>')
+    if precedente and not en_cours:
+        lignes.append(
+            f'<form method="post"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<input type="hidden" name="op" value="retour">'
+            f'<button class="ghost">{t["maj_revenir"]} ({escape(precedente)})</button></form>')
+    return "\n".join(lignes)
 
 
 def bloc_affichage(t):
@@ -2690,6 +2840,7 @@ def api_state():
         info = normalize(brut)
         info["rev"] = LOCAL_REV
         info.update(infos_ecran(brut, info))
+        info["maj"] = maj_en_cours() if requete_locale() else None
         artiste = info.get("artist")
         cle_pf = (artiste, info.get("album"), info.get("title"))
         if artiste and cle_pf != PREFETCH["artist"]:
@@ -2862,4 +3013,5 @@ if load_auth() is None:
 
 if __name__ == "__main__":
     from waitress import serve
+    valider_au_demarrage(CONFIG["listen_port"])
     serve(app, host="0.0.0.0", port=CONFIG["listen_port"], threads=8)

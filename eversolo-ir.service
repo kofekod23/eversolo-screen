@@ -10,7 +10,8 @@ Type=simple
 User=%i
 SupplementaryGroups=input
 ExecStartPre=-+/usr/bin/ir-keytable -p all
-ExecStart=/usr/bin/python3 /home/%i/eversolo-screen/ir_remote.py
+Environment=EVERSOLO_SCREEN_DATA=/home/%i/eversolo-screen
+ExecStart=/usr/bin/python3 /home/%i/eversolo-versions/courante/ir_remote.py
 Restart=always
 RestartSec=10
 

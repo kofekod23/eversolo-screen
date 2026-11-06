@@ -24,7 +24,8 @@ EVENT_SIZE = struct.calcsize(EVENT_FORMAT)
 
 def listen_port():
     try:
-        with open(os.path.join(BASE_DIR, "config.json"), encoding="utf-8") as f:
+        donnees = os.environ.get("EVERSOLO_SCREEN_DATA") or BASE_DIR
+        with open(os.path.join(donnees, "config.json"), encoding="utf-8") as f:
             return int(json.load(f).get("listen_port", 8080))
     except Exception:
         return 8080

@@ -77,7 +77,9 @@ Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.f
 
 ## Aktualisierung
 
-Button unter `/config` bei neuer Version, oder per SSH: `./update.sh`. Konfiguration und Passwort bleiben erhalten.
+Wenn eine Version veröffentlicht wird, zeigt `/config` die Neuerungen und eine Schaltfläche zum Installieren (nicht während der Wiedergabe). Per SSH erledigt `./update.sh` dasselbe.
+
+Jede Version wird in einem eigenen Ordner (`~/eversolo-versions`) installiert, und nur wenn ihre Signatur zum bei der Installation auf dem Pi hinterlegten Schlüssel passt. Startet die neue Version nicht, kehrt der Pi von selbst zur vorherigen zurück; eine Schaltfläche in `/config` erlaubt das ebenfalls. Einstellungen und Passwort bleiben in `~/eversolo-screen`.
 
 ## Lizenz
 

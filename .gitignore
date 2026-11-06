@@ -6,5 +6,7 @@ ir_codes/
 config.json
 cache_fiches.json
 captures/
+/maj.json
+/signataires
 .coverage
 .pytest_cache/

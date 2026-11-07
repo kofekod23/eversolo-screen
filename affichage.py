@@ -35,7 +35,7 @@ TEXTES = {
            "signal": "Signal", "ensuite": "Als Nächstes"},
 }
 
-THEMES = ("pochette", "console", "affiche")
+THEMES = ("pochette", "console", "affiche", "cadre")
 PROFILS = ("salon", "bureau", "petit")
 MODES_NUIT = ("auto", "jamais", "toujours")
 REGLAGES_DEFAUT = {"theme": "pochette", "profil": "salon", "nuit": "auto", "nuit_debut": 22, "nuit_fin": 7,

@@ -4,7 +4,14 @@ Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + 
 
 [Français](README.md) · [English](README.en.md) · [Español](README.es.md)
 
-![Wiedergabebildschirm](docs/screen-now-playing.png)
+![Oberfläche Vollbild: das Cover füllt die ganze Bildschirmhöhe](docs/interface-plein-cadre.jpg)
+
+Vier Oberflächen zur Auswahl unter `/config`:
+
+| Cover | Konsole | Plakat |
+|---|---|---|
+| ![Oberfläche Cover: der Bildschirm nimmt die Farbe des Albums an](docs/interface-pochette.jpg) | ![Oberfläche Konsole: Gerätefront, Fluoreszenzanzeige](docs/interface-console.jpg) | ![Oberfläche Plakat: große Typografie, Papier und Tinte](docs/interface-affiche.jpg) |
+| Der Bildschirm nimmt die Farbe des Albums an | Gerätefront, Fluoreszenzanzeige | Große Typografie, Papier und Tinte |
 
 | Künstlerseite | Albumseite | Produktionsseite |
 |---|---|---|
@@ -20,6 +27,7 @@ Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + 
 - Lernende Infrarot-Fernbedienung: 7 Aktionen mit jeder beliebigen Fernbedienung koppelbar
 - Optionaler Infrarot-Sender: der Pi lernt Befehle und sendet sie an TV oder Verstärker
 - Kiosk-Modus beim Start, passwortgeschützte Verwaltung
+- 4 Oberflächen zur Auswahl (Vollbild, Cover, Konsole, Plakat), aus 3-4 m lesbar, Nachtmodus und Bildschirmschutz
 - 4 Sprachen: Französisch, Englisch, Spanisch, Deutsch
 - Aktualisierung mit einem Klick aus der Oberfläche
 

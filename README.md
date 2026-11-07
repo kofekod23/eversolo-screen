@@ -4,7 +4,14 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 
 [English](README.en.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![Écran de lecture](docs/screen-now-playing.png)
+![Interface Plein cadre : la pochette occupe toute la hauteur de l'écran](docs/interface-plein-cadre.jpg)
+
+Quatre interfaces au choix dans `/config` :
+
+| Pochette | Console | Affiche |
+|---|---|---|
+| ![Interface Pochette : l'écran prend la couleur du disque](docs/interface-pochette.jpg) | ![Interface Console : façade d'appareil, afficheur fluorescent](docs/interface-console.jpg) | ![Interface Affiche : grande typographie, papier et encre](docs/interface-affiche.jpg) |
+| L'écran prend la couleur du disque | Façade d'appareil, afficheur fluorescent | Grande typographie, papier et encre |
 
 | Page artiste | Page album | Page production |
 |---|---|---|
@@ -20,6 +27,7 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 - Télécommande infrarouge par apprentissage : 7 actions appairables avec n'importe quelle télécommande
 - Émetteur infrarouge optionnel : le Pi apprend et réémet des commandes vers TV ou ampli
 - Kiosque automatique au démarrage, interface d'administration protégée par mot de passe
+- 4 interfaces au choix (Plein cadre, Pochette, Console, Affiche), lisibles à 3-4 m, mode nuit et protection d'écran
 - 4 langues : français, anglais, espagnol, allemand
 - Mise à jour en un clic depuis l'interface
 

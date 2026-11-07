@@ -4,7 +4,14 @@ Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi +
 
 [Français](README.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![Now playing screen](docs/screen-now-playing.png)
+![Full frame interface: the cover fills the full height of the screen](docs/interface-plein-cadre.jpg)
+
+Four interfaces to choose from in `/config`:
+
+| Cover | Console | Poster |
+|---|---|---|
+| ![Cover interface: the screen takes the colour of the record](docs/interface-pochette.jpg) | ![Console interface: device front panel, fluorescent display](docs/interface-console.jpg) | ![Poster interface: large type, paper and ink](docs/interface-affiche.jpg) |
+| The screen takes the colour of the record | Device front panel, fluorescent display | Large type, paper and ink |
 
 | Artist page | Album page | Production page |
 |---|---|---|
@@ -20,6 +27,7 @@ Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi +
 - Learning infrared remote: 7 actions pairable with any remote you own
 - Optional infrared blaster: the Pi learns and replays commands to your TV or amp
 - Kiosk mode at boot, password-protected admin pages
+- 4 interfaces to choose from (Full frame, Cover, Console, Poster), readable from 3-4 m, night mode and screen protection
 - 4 languages: French, English, Spanish, German
 - One-click update from the interface
 

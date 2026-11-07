@@ -4,7 +4,14 @@ Pantalla « now playing » para streamers Eversolo (DMP-A6, A8, A10) en Raspberr
 
 [Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md)
 
-![Pantalla de reproducción](docs/screen-now-playing.png)
+![Interfaz Pantalla completa: la portada ocupa toda la altura de la pantalla](docs/interface-plein-cadre.jpg)
+
+Cuatro interfaces a elegir en `/config`:
+
+| Portada | Consola | Cartel |
+|---|---|---|
+| ![Interfaz Portada: la pantalla toma el color del disco](docs/interface-pochette.jpg) | ![Interfaz Consola: frontal de aparato, pantalla fluorescente](docs/interface-console.jpg) | ![Interfaz Cartel: tipografía grande, papel y tinta](docs/interface-affiche.jpg) |
+| La pantalla toma el color del disco | Frontal de aparato, pantalla fluorescente | Tipografía grande, papel y tinta |
 
 | Página del artista | Página del álbum | Página de producción |
 |---|---|---|
@@ -20,6 +27,7 @@ Pantalla « now playing » para streamers Eversolo (DMP-A6, A8, A10) en Raspberr
 - Mando infrarrojo por aprendizaje: 7 acciones emparejables con cualquier mando
 - Emisor infrarrojo opcional: la Pi aprende y reemite comandos hacia la TV o el amplificador
 - Modo quiosco al arrancar, administración protegida por contraseña
+- 4 interfaces a elegir (Pantalla completa, Portada, Consola, Cartel), legibles a 3-4 m, modo noche y protección de pantalla
 - 4 idiomas: francés, inglés, español, alemán
 - Actualización con un clic desde la interfaz
 

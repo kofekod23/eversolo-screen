@@ -87,6 +87,15 @@ L'installation prend 5 a 10 minutes selon le modèle. A la fin, le script affich
 3. Bouton "Détecter sur le réseau" : votre Eversolo est trouve automatiquement, son adresse se remplit toute seule. Vérifiez qu'il est allume.
 4. Enregistrez. C'est termine.
 
+**Clés optionnelles.** Tout fonctionne sans elles. Gratuites, elles ajoutent biographies et crédits ; collez-les dans `/config`, rubrique des sources, puis enregistrez :
+
+- **Last.fm** (biographies, descriptions d'albums) : [créez un compte API](https://www.last.fm/api/account/create), avec un nom et une description au choix et l'URL de rappel vide. Copiez la valeur « API key ». Une clé déjà créée se retrouve sur [last.fm/api/accounts](https://www.last.fm/api/accounts).
+- **Discogs** (crédits de production, mixage, studios) : [Settings > Developers](https://www.discogs.com/settings/developers), bouton « Generate new token ». Le jeton reste affiché sur cette page.
+- **Genius** (crédits de la plage en cours) : sur [genius.com/api-clients](https://genius.com/api-clients), « New API Client » avec un nom et une adresse de site au choix, puis « Generate Access Token ». Copiez le « Client Access Token ».
+- **TheAudioDB** (biographies, photos) : rien à faire, la clé gratuite `123` est utilisée par défaut. Seuls les abonnés Premium remplacent cette clé par la leur, visible sur leur profil.
+
+Ces clés vivent seulement dans `config.json` sur le Pi : en cas de réinstallation, reprenez-les sur les pages ci-dessus.
+
 Lancez un morceau sur l'Eversolo : l'écran HDMI du Pi affiche la pochette, le titre et la progression. Le modèle exact de votre streamer (DMP-A6, A8, A10...) apparait dans le bandeau du haut.
 
 

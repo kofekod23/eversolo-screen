@@ -73,7 +73,14 @@ Opciones acumulables: `--kiosk` (pantalla TV), `--ir` (receptor del mando), `--i
 | Biografías | TheAudioDB, Last.fm, Wikipedia vía Wikidata |
 | Pistas, créditos, estudios | MusicBrainz, Discogs, Genius (pista en curso) |
 
-Todo funciona sin ninguna clave. Claves opcionales en `/config`: Last.fm (gratuita), Discogs (token personal gratuito), TheAudioDB.
+Todo funciona sin ninguna clave. Las claves siguientes son gratuitas; pegadas en `/config`, añaden biografías y créditos.
+
+| Servicio | Qué aporta | Dónde obtener la clave |
+|---|---|---|
+| Last.fm | Biografías de artistas, descripciones de álbumes | [Crear una cuenta API](https://www.last.fm/api/account/create) (nombre y descripción libres, URL de retorno vacía). Sus claves existentes: [last.fm/api/accounts](https://www.last.fm/api/accounts). Copie la «API key», no el «Shared secret». |
+| Discogs | Créditos detallados: producción, mezcla, estudios | [Settings > Developers](https://www.discogs.com/settings/developers), botón «Generate new token». |
+| Genius | Créditos de la pista en curso, útiles para lanzamientos recientes | [genius.com/api-clients](https://genius.com/api-clients): «New API Client» (nombre y sitio libres) y luego «Generate Access Token». Copie el «Client Access Token». |
+| TheAudioDB | Biografías y fotos | Clave gratuita `123` usada por defecto. Una clave personal (suscripción Premium) aparece en su perfil; detalles en [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Actualización
 

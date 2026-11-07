@@ -73,7 +73,14 @@ Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänge
 | Biografien | TheAudioDB, Last.fm, Wikipedia über Wikidata |
 | Titel, Credits, Studios | MusicBrainz, Discogs, Genius (laufender Titel) |
 
-Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.fm (kostenlos), Discogs (kostenloses persönliches Token), TheAudioDB.
+Alles funktioniert ohne Schlüssel. Die folgenden Schlüssel sind kostenlos; in `/config` eingetragen, ergänzen sie Biografien und Credits.
+
+| Dienst | Was er beiträgt | Wo es den Schlüssel gibt |
+|---|---|---|
+| Last.fm | Künstlerbiografien, Albumbeschreibungen | [API-Konto anlegen](https://www.last.fm/api/account/create) (Name und Beschreibung frei, Callback-URL leer). Vorhandene Schlüssel: [last.fm/api/accounts](https://www.last.fm/api/accounts). „API key“ kopieren, nicht „Shared secret“. |
+| Discogs | Ausführliche Credits: Produktion, Mischung, Studios | [Settings > Developers](https://www.discogs.com/settings/developers), Schaltfläche „Generate new token“. |
+| Genius | Credits des laufenden Titels, nützlich bei neuen Veröffentlichungen | [genius.com/api-clients](https://genius.com/api-clients): „New API Client“ (Name und Website frei), dann „Generate Access Token“. Den „Client Access Token“ kopieren. |
+| TheAudioDB | Biografien und Fotos | Standardmäßig wird der kostenlose Schlüssel `123` verwendet. Ein persönlicher Schlüssel (Premium-Abo) steht in Ihrem Profil; siehe [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Aktualisierung
 

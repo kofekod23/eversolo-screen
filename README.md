@@ -82,7 +82,14 @@ Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande
 | Biographies | TheAudioDB, Last.fm, Wikipédia via Wikidata |
 | Plages, crédits, studios | MusicBrainz, Discogs, Genius (plage en cours) |
 
-Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargir la couverture : Last.fm (gratuite), Discogs (jeton personnel gratuit, Genius crédits des sorties récentes), TheAudioDB.
+Tout fonctionne sans clé. Les clés ci-dessous sont gratuites ; collées dans `/config`, elles ajoutent des biographies et des crédits.
+
+| Service | Ce qu'il apporte | Où trouver la clé |
+|---|---|---|
+| Last.fm | Biographies d'artistes, descriptions d'albums | [Créer un compte API](https://www.last.fm/api/account/create) (nom et description au choix, URL de rappel vide). Vos clés existantes : [last.fm/api/accounts](https://www.last.fm/api/accounts). Copiez « API key », pas « Shared secret ». |
+| Discogs | Crédits détaillés : production, mixage, studios | [Settings > Developers](https://www.discogs.com/settings/developers), bouton « Generate new token ». |
+| Genius | Crédits de la plage en cours, utiles pour les sorties récentes | [genius.com/api-clients](https://genius.com/api-clients) : « New API Client » (nom et adresse de site au choix), puis « Generate Access Token ». Copiez le « Client Access Token ». |
+| TheAudioDB | Biographies et photos | Clé gratuite `123` utilisée par défaut. Une clé personnelle (abonnement Premium) figure sur votre profil ; détails sur [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Mise à jour
 

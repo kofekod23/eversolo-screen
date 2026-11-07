@@ -43,3 +43,12 @@ def test_situation_inconnue_devient_autre(configure, distant, monkeypatch):
     jeton = connecter(distant)
     distant.post("/config", data={"csrf": jeton, "op": "capture", "situation": "../../x"})
     assert configure.liste_captures()[0].endswith("-autre.json")
+
+
+def test_ancienne_cle_d_essai_theaudiodb_remplacee(srv):
+    """La clé d'essai « 2 » n'est plus acceptée par TheAudioDB (404)."""
+    for perimee in ("2", "", None):
+        srv.CONFIG["theaudiodb_key"] = perimee
+        assert srv.cle_theaudiodb() == "123"
+    srv.CONFIG["theaudiodb_key"] = "cle-premium"
+    assert srv.cle_theaudiodb() == "cle-premium"

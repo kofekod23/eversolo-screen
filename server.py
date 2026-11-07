@@ -47,7 +47,7 @@ DEFAULTS = {
     "eversolo_port": 9529,
     "listen_port": 8080,
     "language": "fr",
-    "theaudiodb_key": "2",
+    "theaudiodb_key": "123",
     "lastfm_api_key": "",
     "discogs_token": "",
     "genius_token": "",
@@ -453,6 +453,15 @@ ARTIST_CACHE = {}
 ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0, "page": "artist"}
 
 
+TADB_CLE_GRATUITE = "123"
+TADB_CLES_PERIMEES = {"", "1", "2"}  # anciennes clés d'essai, refusées par le service
+
+
+def cle_theaudiodb():
+    cle = (CONFIG.get("theaudiodb_key") or "").strip()
+    return TADB_CLE_GRATUITE if cle in TADB_CLES_PERIMEES else cle
+
+
 def _entetes_api():
     return {"User-Agent": "eversolo-screen/1.0 (affichage hifi local)"}
 
@@ -663,7 +672,7 @@ def _wiki_recherche(artist, lang, facts):
 
 
 def theaudiodb_bio(artist, lang, facts):
-    key = (CONFIG.get("theaudiodb_key") or "2").strip()
+    key = cle_theaudiodb()
     try:
         r = http.get(
             f"https://www.theaudiodb.com/api/v1/json/{key}/search.php",
@@ -889,7 +898,7 @@ def fetch_album_info(artist, album, lang):
 
     data = None
     try:
-        k = (CONFIG.get("theaudiodb_key") or "2").strip()
+        k = cle_theaudiodb()
         r = http.get(
             f"https://www.theaudiodb.com/api/v1/json/{k}/searchalbum.php",
             params={"s": nom, "a": album}, headers=_entetes_api(), timeout=5,
@@ -2017,7 +2026,7 @@ def config_page():
                 CONFIG.update({
                     "eversolo_ip": ip,
                     "language": new_lang if new_lang in LANGS else lang,
-                    "theaudiodb_key": request.form.get("tadb_key", "").strip() or "2",
+                    "theaudiodb_key": request.form.get("tadb_key", "").strip() or TADB_CLE_GRATUITE,
                     "lastfm_api_key": request.form.get("lastfm_key", "").strip(),
                     "discogs_token": request.form.get("discogs_token", "").strip(),
                     "genius_token": request.form.get("genius_token", "").strip(),
@@ -2047,7 +2056,7 @@ __VERSION_HTML__
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
   <label>{t['tadb_key']}</label>
-  <input type="text" name="tadb_key" value="{escape(CONFIG.get('theaudiodb_key', '2'))}" autocomplete="off">
+  <input type="text" name="tadb_key" value="{escape(cle_theaudiodb())}" autocomplete="off">
   <label>{t['lastfm_key']}</label>
   <input type="text" name="lastfm_key" value="{escape(CONFIG.get('lastfm_api_key', ''))}" autocomplete="off">
   <label>{t['discogs_token']}</label>

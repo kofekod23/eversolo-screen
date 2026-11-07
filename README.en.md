@@ -73,7 +73,14 @@ Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (
 | Biographies | TheAudioDB, Last.fm, Wikipedia via Wikidata |
 | Tracks, credits, studios | MusicBrainz, Discogs, Genius (current track) |
 
-Everything works without any key. Optional keys on `/config` widen coverage: Last.fm (free), Discogs (free personal token, credits of recent releases), TheAudioDB.
+Everything works without any key. The keys below are free; pasted into `/config`, they add biographies and credits.
+
+| Service | What it adds | Where to get the key |
+|---|---|---|
+| Last.fm | Artist biographies, album descriptions | [Create an API account](https://www.last.fm/api/account/create) (any name and description, empty callback URL). Your existing keys: [last.fm/api/accounts](https://www.last.fm/api/accounts). Copy the "API key", not the "Shared secret". |
+| Discogs | Detailed credits: production, mixing, studios | [Settings > Developers](https://www.discogs.com/settings/developers), "Generate new token" button. |
+| Genius | Credits of the current track, useful for recent releases | [genius.com/api-clients](https://genius.com/api-clients): "New API Client" (any name and website), then "Generate Access Token". Copy the "Client Access Token". |
+| TheAudioDB | Biographies and photos | Free key `123` used by default. A personal key (Premium subscription) is on your profile; see [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Update
 

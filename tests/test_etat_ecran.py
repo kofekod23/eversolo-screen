@@ -64,6 +64,15 @@ def test_radio_en_lecture_reste_en_direct(configure, local, monkeypatch):
     assert e["etat"] == "lecture" and e["live"] is True
 
 
+def test_pause_pendant_le_chargement_n_est_pas_en_direct(configure, local, monkeypatch):
+    """Au démarrage d'un morceau, l'Eversolo annonce un instant une durée nulle."""
+    morceau = copy.deepcopy(REEL["getState"])
+    morceau.update(state=4, duration=0, position=0)
+    brancher(configure, monkeypatch, morceau)
+    e = etat(configure, local)
+    assert e["etat"] == "pause" and e["live"] is False
+
+
 def test_decouvertes_lues_dans_les_caches(configure, local, monkeypatch):
     brancher(configure, monkeypatch, REEL["getState"])
     configure.ALBUM_CACHE[("carla bruni", "french touch", "fr")] = (

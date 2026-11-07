@@ -90,7 +90,7 @@ body.pointer { cursor: default; }
   transition: opacity 0.5s ease, transform 0.6s var(--sortie);
   pointer-events: none;
 }
-.pause-glyph i { display: flex; gap: 22%; width: 32%; height: 32%; justify-content: center; }
+.pause-glyph i { display: flex; gap: 24%; width: 20%; height: 20%; justify-content: center; opacity: 0.88; }
 .pause-glyph i::before, .pause-glyph i::after { content: ""; width: 30%; height: 100%; background: var(--pictogramme); }
 .stage.pause .pause-glyph { opacity: 1; transform: none; }
 /* À l'arrêt, « Arrêté » est écrit à côté du titre : la pochette s'assombrit

@@ -2695,7 +2695,7 @@ def normalize(state):
 
     # Flux en direct (web radio): pas de durée exploitable
     # (à l'arrêt, la durée vaut aussi 0 : ce n'est pas une radio)
-    info["live"] = bool(info["title"]) and info["duration"] <= 0 and etat != "arret"
+    info["live"] = bool(info["title"]) and info["duration"] <= 0 and etat == "lecture"
 
     info["cover"] = cover_ref(info["cover"])
     return info

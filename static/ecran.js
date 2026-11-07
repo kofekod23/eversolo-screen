@@ -219,7 +219,6 @@ function renderPanel(s) {
     const off = Math.min((p.scroll || 0) * wrapEl.clientHeight * 0.6, max);
     txt.style.transform = `translateY(${-off}px)`;
     const debord = max > 4;
-    $("p_hint").style.display = "block";
     $("p_fade").style.opacity = debord && off < max ? "1" : "0";
     $("p_rail").style.opacity = debord ? "1" : "0";
     const railH = wrapEl.clientHeight;

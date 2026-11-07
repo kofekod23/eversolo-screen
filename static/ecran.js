@@ -32,6 +32,15 @@ let volPrecedent = null;
 let osdTimer = null;
 let calmeDepuis = performance.now();
 let panelVisible = false;
+// Crans de défilement que permet le texte du volet, mesurés au moment de
+// chaque relevé : la photo et les polices peuvent allonger le texte après
+// le dessin.
+function cransVolet() {
+  const wrapEl = $("p_wrap"), txt = $("p_text");
+  const cran = wrapEl.clientHeight * 0.6;
+  const max = Math.max(0, txt.scrollHeight - wrapEl.clientHeight);
+  return cran > 0 ? Math.ceil(max / cran) : 0;
+}
 let reglages = { theme: "pochette", profil: "salon", nuit: "auto", nuit_debut: 22, nuit_fin: 7, protection: true };
 
 function fmt(s) {
@@ -58,7 +67,10 @@ async function relever() {
   const arret = new AbortController();
   const minuteur = setTimeout(() => arret.abort(), RELEVE_MAX_MS);
   try {
-    const r = await fetch("/api/state", { cache: "no-store", signal: arret.signal });
+    // Volet ouvert : le serveur apprend où s'arrête le texte, pour ne pas
+    // compter des crans de défilement au-delà de la fin.
+    const url = panelVisible ? `/api/state?volet_pas=${cransVolet()}` : "/api/state";
+    const r = await fetch(url, { cache: "no-store", signal: arret.signal });
     return await r.json();
   } finally {
     clearTimeout(minuteur);

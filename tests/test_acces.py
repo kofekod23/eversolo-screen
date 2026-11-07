@@ -80,3 +80,20 @@ def test_blocage_global_quand_les_adresses_changent(configure, srv):
 def test_nom_de_code_ir_sans_retour_a_la_ligne(srv):
     assert srv.NAME_RE.fullmatch("abc")
     assert not srv.NAME_RE.fullmatch("abc\n")
+
+
+def test_defilement_du_volet_borne_par_la_longueur_du_texte(srv, monkeypatch):
+    """Arrivé en bas, « volume − » ne compte plus : « volume + » remonte aussitôt."""
+    import time as _t
+    srv.CONFIG["eversolo_ip"] = "192.168.1.42"
+    srv.ARTIST_PANEL.update({"until": _t.time() + 60, "data": {"artist": {}}, "scroll": 0,
+                             "scroll_max": None, "page": "artist"})
+    srv.noter_longueur_volet("2")
+    for _ in range(5):
+        srv.do_action("vol_down")
+    assert srv.ARTIST_PANEL["scroll"] == 2
+    srv.do_action("vol_up")
+    assert srv.ARTIST_PANEL["scroll"] == 1
+    srv.noter_longueur_volet("abc")
+    srv.noter_longueur_volet("99999")
+    assert srv.ARTIST_PANEL["scroll_max"] == 2

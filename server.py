@@ -82,10 +82,10 @@ T = {
         "current_password": "Mot de passe actuel",
         "new_password": "Nouveau mot de passe (laisser vide pour conserver)",
         "saved": "Enregistré.",
-        "back_display": "Retour a l'affichage",
+        "back_display": "Retour à l'affichage",
         "invalid_ip": "Adresse IP invalide.",
-        "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche a apprendre, face àu capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien recu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installee et redémarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
-        "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas: OUT a gauche, GND au milieu, VCC a droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installe (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal recu, capteur fonctionnel.", "hw_test_ko": "Aucun signal recu en 15 s.",
+        "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche à apprendre, face au capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien reçu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installée et redémarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
+        "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas : OUT à gauche, GND au milieu, VCC à droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installé (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal reçu, capteur fonctionnel.", "hw_test_ko": "Aucun signal reçu en 15 s.",
         "no_bio": "Aucune biographie trouvée pour cet artiste dans les sources consultées.",
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
@@ -232,7 +232,7 @@ TEXTES_REGLAGES = {
     "fr": {"sec_streamer": "Streamer", "sec_streamer_intro": "Adresse de l'Eversolo sur le réseau local et langue des textes.",
            "sec_sources": "Sources d'informations", "sec_sources_intro": "Biographies, crédits et studios. Tout fonctionne sans clé ; ces clés gratuites ajoutent des fiches.",
            "sec_compte": "Mot de passe", "sec_compte_intro": "Laissez vide pour garder le mot de passe actuel. Le changer déconnecte les autres appareils.",
-           "sec_maj": "Mise à jour", "get_key": "Obtenir une clé", "back_display": "Retour à l'affichage"},
+           "sec_maj": "Mise à jour", "get_key": "Obtenir une clé"},
     "en": {"sec_streamer": "Streamer", "sec_streamer_intro": "Address of the Eversolo on the local network and language of the texts.",
            "sec_sources": "Information sources", "sec_sources_intro": "Biographies, credits and studios. Everything works without keys; these free keys add more.",
            "sec_compte": "Password", "sec_compte_intro": "Leave empty to keep the current password. Changing it signs out other devices.",
@@ -379,7 +379,7 @@ LAST_IR = {"code": None, "time": 0.0}
 
 
 def do_action(action):
-    """Envoie une commande de pilotage a l'Eversolo."""
+    """Envoie une commande de pilotage à l'Eversolo."""
     if not CONFIG.get("eversolo_ip"):
         return False
     if action in ("next", "previous") and ARTIST_PANEL["until"] > time.time():
@@ -389,12 +389,15 @@ def do_action(action):
         i = min(len(ordre) - 1, i + 1) if action == "next" else max(0, i - 1)
         ARTIST_PANEL["page"] = ordre[i]
         ARTIST_PANEL["scroll"] = 0
+        ARTIST_PANEL["scroll_max"] = None  # nouvelle page : l'écran redira sa longueur
         ARTIST_PANEL["until"] = time.time() + 60
         return True
     if action in ("vol_up", "vol_down") and ARTIST_PANEL["until"] > time.time():
         # volet ouvert: les volumes defilent le texte au lieu d'agir sur le son
         delta = -1 if action == "vol_up" else 1
-        ARTIST_PANEL["scroll"] = max(0, ARTIST_PANEL["scroll"] + delta)
+        plafond = ARTIST_PANEL.get("scroll_max")
+        nouveau = max(0, ARTIST_PANEL["scroll"] + delta)
+        ARTIST_PANEL["scroll"] = min(nouveau, plafond) if plafond is not None else nouveau
         ARTIST_PANEL["until"] = time.time() + 60
         return True
     if action == "info":
@@ -1191,10 +1194,18 @@ def fiche_artiste(bio, artist, lang):
             "facts": bio["facts"], "source": bio["source"]}
 
 
+def noter_longueur_volet(valeur):
+    """L'écran indique combien de crans de défilement le texte permet."""
+    if not valeur.isdigit() or int(valeur) > 500:
+        return
+    ARTIST_PANEL["scroll_max"] = int(valeur)
+    ARTIST_PANEL["scroll"] = min(ARTIST_PANEL["scroll"], int(valeur))
+
+
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
-        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0, "page": "artist"})
+        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0, "scroll_max": None, "page": "artist"})
         return True
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
@@ -1224,7 +1235,7 @@ def toggle_artist_panel():
         data, duree = assembler(fetch_artist_info(artist, lang, album_titre), alb)
         jeton = ARTIST_PANEL.get("token", 0) + 1
         ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
-                             "scroll": 0, "page": "artist", "token": jeton})
+                             "scroll": 0, "scroll_max": None, "page": "artist", "token": jeton})
         if alb is not None and not alb.get("credits"):
             def _enrichir_fond():
                 enrichi = enrichir_album(alb, artist, titre_courant, lang)
@@ -1247,7 +1258,7 @@ def toggle_artist_panel():
                             "tracks": [], "credits": [], "prod_facts": [],
                             "source": "", "loading": True}
     ARTIST_PANEL.update({
-        "until": time.time() + 30, "scroll": 0, "page": "artist", "token": jeton,
+        "until": time.time() + 30, "scroll": 0, "scroll_max": None, "page": "artist", "token": jeton,
         "data": {"artist": {"name": artist, "text": attente,
                             "image": None, "facts": [], "source": ""},
                  "album": album_provisoire},
@@ -2904,6 +2915,7 @@ def api_state():
             print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)
         STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
         if ARTIST_PANEL["until"] > time.time():
+            noter_longueur_volet(request.args.get("volet_pas", ""))
             info["panel"] = dict(ARTIST_PANEL["data"])
             info["panel"]["scroll"] = ARTIST_PANEL["scroll"]
             info["panel"]["page"] = ARTIST_PANEL["page"]

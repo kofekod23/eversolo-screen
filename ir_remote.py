@@ -114,7 +114,7 @@ def main():
                     last_code, last_time = value, now
                     forward(port, value)
         except PermissionError:
-            print("accès refuse au peripherique, verifier que le service tourne en root", flush=True)
+            print("accès refusé au périphérique : le compte du service doit appartenir au groupe input", flush=True)
             time.sleep(30)
         except Exception as exc:
             print(f"lecture interrompue ({exc}), reprise dans 5 s", flush=True)

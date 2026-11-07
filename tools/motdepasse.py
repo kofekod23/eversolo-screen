@@ -17,8 +17,10 @@ import time
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AUTH_PATH = os.path.join(BASE_DIR, "auth.json")
-SECRET_PATH = os.path.join(BASE_DIR, ".secret_key")
+# Réglages hors du dossier de version : même règle que le serveur.
+DATA_DIR = os.environ.get("EVERSOLO_SCREEN_DATA") or BASE_DIR
+AUTH_PATH = os.path.join(DATA_DIR, "auth.json")
+SECRET_PATH = os.path.join(DATA_DIR, ".secret_key")
 
 
 def usage():

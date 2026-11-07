@@ -44,7 +44,7 @@ FIN_CLOUD
     echo "Carte préparée (mecanisme cloud-init)."
     echo "1. Éjectez la carte proprement, insérez-la dans le Raspberry, branchez."
     echo "2. Attendez 10 a 15 minutes: le Pi installe tout seul."
-    echo "3. Ouvrez http://eversolo.local:8080 pour la première configuration."
+    echo "3. Ouvrez http://<nom-du-pi>.local:8080 pour la première configuration."
     exit 0
 fi
 
@@ -111,4 +111,4 @@ echo "Carte préparée."
 echo "1. Éjectez la carte proprement (Finder ou: diskutil eject '$BOOT')."
 echo "2. Insérez-la dans le Raspberry, branchez écran puis alimentation."
 echo "3. Attendez 10 a 15 minutes: le Pi télécharge et installe tout seul."
-echo "4. Ouvrez http://eversolo.local:8080 pour la première configuration."
+echo "4. Ouvrez http://<nom-du-pi>.local:8080 pour la première configuration."

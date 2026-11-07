@@ -4,7 +4,14 @@ Pantalla « now playing » para streamers Eversolo (DMP-A6, A8, A10) en Raspberr
 
 [Français](README.md) · [English](README.en.md) · [Deutsch](README.de.md)
 
-![Pantalla de reproducción](docs/screen-now-playing.png)
+![Interfaz Pantalla completa: la portada ocupa toda la altura de la pantalla](docs/interface-plein-cadre.jpg)
+
+Cuatro interfaces a elegir en `/config`:
+
+| Portada | Consola | Cartel |
+|---|---|---|
+| ![Interfaz Portada: la pantalla toma el color del disco](docs/interface-pochette.jpg) | ![Interfaz Consola: frontal de aparato, pantalla fluorescente](docs/interface-console.jpg) | ![Interfaz Cartel: tipografía grande, papel y tinta](docs/interface-affiche.jpg) |
+| La pantalla toma el color del disco | Frontal de aparato, pantalla fluorescente | Tipografía grande, papel y tinta |
 
 | Página del artista | Página del álbum | Página de producción |
 |---|---|---|
@@ -20,6 +27,7 @@ Pantalla « now playing » para streamers Eversolo (DMP-A6, A8, A10) en Raspberr
 - Mando infrarrojo por aprendizaje: 7 acciones emparejables con cualquier mando
 - Emisor infrarrojo opcional: la Pi aprende y reemite comandos hacia la TV o el amplificador
 - Modo quiosco al arrancar, administración protegida por contraseña
+- 4 interfaces a elegir (Pantalla completa, Portada, Consola, Cartel), legibles a 3-4 m, modo noche y protección de pantalla
 - 4 idiomas: francés, inglés, español, alemán
 - Actualización con un clic desde la interfaz
 
@@ -48,7 +56,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Arrancar la Pi. Tras 10 a 15 minutos, abrir `http://IP_DE_LA_PI:8080`: el asistente detecta el Eversolo y crea la contraseña de administración.
+3. Arrancar la Pi. Tras 10 a 15 minutos, abrir `http://IP_DE_LA_PI:8080` e introducir el código mostrado en la TV: el asistente detecta el Eversolo y crea la contraseña de administración.
 
 ### Manual (SSH)
 
@@ -73,11 +81,20 @@ Opciones acumulables: `--kiosk` (pantalla TV), `--ir` (receptor del mando), `--i
 | Biografías | TheAudioDB, Last.fm, Wikipedia vía Wikidata |
 | Pistas, créditos, estudios | MusicBrainz, Discogs, Genius (pista en curso) |
 
-Todo funciona sin ninguna clave. Claves opcionales en `/config`: Last.fm (gratuita), Discogs (token personal gratuito), TheAudioDB.
+Todo funciona sin ninguna clave. Las claves siguientes son gratuitas; pegadas en `/config`, añaden biografías y créditos.
+
+| Servicio | Qué aporta | Dónde obtener la clave |
+|---|---|---|
+| Last.fm | Biografías de artistas, descripciones de álbumes | [Crear una cuenta API](https://www.last.fm/api/account/create) (nombre y descripción libres, URL de retorno vacía). Sus claves existentes: [last.fm/api/accounts](https://www.last.fm/api/accounts). Copie la «API key», no el «Shared secret». |
+| Discogs | Créditos detallados: producción, mezcla, estudios | [Settings > Developers](https://www.discogs.com/settings/developers), botón «Generate new token». |
+| Genius | Créditos de la pista en curso, útiles para lanzamientos recientes | [genius.com/api-clients](https://genius.com/api-clients): «New API Client» (nombre y sitio libres) y luego «Generate Access Token». Copie el «Client Access Token». |
+| TheAudioDB | Biografías y fotos | Clave gratuita `123` usada por defecto. Una clave personal (suscripción Premium) aparece en su perfil; detalles en [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Actualización
 
-Botón en `/config` cuando hay nueva versión, o por SSH: `./update.sh`. Configuración y contraseña preservadas.
+Cuando se publica una versión, `/config` muestra sus novedades y un botón para instalarla (no durante la reproducción). Por SSH, `./update.sh` hace lo mismo.
+
+Cada versión se instala en su propia carpeta (`~/eversolo-versions`) y solo si su firma coincide con la clave registrada en la Pi durante la instalación. Si la nueva versión no arranca, la Pi vuelve sola a la anterior; un botón de `/config` también permite volver. Los ajustes y la contraseña quedan en `~/eversolo-screen`.
 
 ## Licencia
 

@@ -8,427 +8,60 @@
 <link rel="icon" type="image/png" href="/static/favicon.png">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <title>Eversolo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..640;1,9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --chassis: #0d0b08;
-    --panel: #16130e;
-    --line: #2a251c;
-    --ivory: #ece6d8;
-    --muted: #918a79;
-    --faint: #5c564a;
-    --tube: #e8a33d;
-    --tube-hot: #ffc46b;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html, body { height: 100%; }
-
-  body {
-    background: var(--chassis);
-    color: var(--ivory);
-    font-family: "Archivo", system-ui, sans-serif;
-    overflow: hidden;
-    cursor: none;
-  }
-  body.pointer { cursor: default; }
-
-  /* Ambiance coloree tiree de la pochette */
-  #ambient {
-    position: fixed;
-    inset: -12%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(90px) saturate(1.3) brightness(0.5);
-    opacity: 0;
-    transition: opacity 2.5s ease, background-image 1s ease;
-    z-index: 0;
-  }
-  #ambient.on { opacity: 0.32; }
-  #ambient::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 30% 45%, transparent 0%, rgba(13,11,8,0.75) 75%);
-  }
-
-  .stage {
-    position: relative;
-    z-index: 1;
-    height: 100vh;
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding: clamp(20px, 4vh, 48px) clamp(24px, 5vw, 72px);
-  }
-
-  /* Bandeau de facade */
-  .faceplate {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: clamp(10px, 1.8vh, 18px);
-  }
-  .brand {
-    font-size: clamp(11px, 1.4vh, 14px);
-    font-weight: 600;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .brand b { color: var(--ivory); font-weight: 600; }
-  .clock {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(11px, 1.4vh, 14px);
-    color: var(--faint);
-    letter-spacing: 0.12em;
-  }
-
-  /* Scene centrale */
-  .now {
-    display: flex;
-    align-items: center;
-    gap: clamp(28px, 5vw, 80px);
-    min-height: 0;
-    overflow: hidden;
-    padding: clamp(16px, 3.5vh, 40px) 0;
-  }
-
-  .cover-mount {
-    position: relative;
-    flex: 0 0 auto;
-    height: 100%;
-    max-height: min(62vh, 44vw);
-    aspect-ratio: 1;
-  }
-  .cover {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 6px;
-    background: var(--panel);
-    box-shadow:
-      0 30px 80px -20px rgba(0, 0, 0, 0.85),
-      0 0 0 1px rgba(236, 230, 216, 0.07);
-    opacity: 0;
-    transition: opacity 0.9s ease;
-  }
-  .cover.on { opacity: 1; }
-  .cover-mount::after {
-    /* reflet de vitre, discret */
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 6px;
-    background: linear-gradient(155deg, rgba(255,255,255,0.09) 0%, transparent 34%);
-    pointer-events: none;
-  }
-
-  .meta { flex: 1; min-width: 0; }
-  .eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: clamp(10px, 1.3vh, 13px);
-    font-weight: 500;
-    letter-spacing: 0.38em;
-    text-transform: uppercase;
-    color: var(--tube);
-    margin-bottom: clamp(14px, 2.6vh, 28px);
-  }
-  .lamp {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--tube);
-    box-shadow: 0 0 10px 2px rgba(232, 163, 61, 0.55);
-    animation: breathe 3.2s ease-in-out infinite;
-  }
-  .paused .lamp { background: var(--faint); box-shadow: none; animation: none; }
-  .paused .eyebrow { color: var(--muted); }
-  @keyframes breathe { 50% { box-shadow: 0 0 16px 4px rgba(232, 163, 61, 0.8); } }
-
-  .title {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 560;
-    font-size: clamp(30px, 7.2vh, 76px);
-    line-height: 1.16;
-    padding-bottom: 0.1em;
-    letter-spacing: -0.01em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-wrap: balance;
-  }
-  .artist {
-    font-family: "Fraunces", Georgia, serif;
-    font-style: italic;
-    font-weight: 420;
-    font-size: clamp(24px, 5vh, 54px);
-    color: var(--ivory);
-    opacity: 0.86;
-    margin-top: clamp(8px, 1.6vh, 16px);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .album {
-    font-size: clamp(17px, 3vh, 30px);
-    font-weight: 400;
-    color: #b3ab99;
-    letter-spacing: 0.04em;
-    margin-top: clamp(6px, 1.2vh, 12px);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .stream {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: clamp(16px, 3vh, 32px);
-  }
-  .stream span {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(14px, 2.2vh, 21px);
-    letter-spacing: 0.08em;
-    color: #b8b1a0;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 8px 14px;
-    background: rgba(22, 19, 14, 0.6);
-  }
-
-  /* Filament de progression */
-  .transport { padding-top: clamp(10px, 2vh, 20px); }
-  .times {
-    display: flex;
-    justify-content: space-between;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(11px, 1.5vh, 14px);
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-  }
-  .filament {
-    position: relative;
-    height: 2px;
-    background: var(--line);
-    border-radius: 2px;
-  }
-  .filament .glow {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 0%;
-    background: linear-gradient(90deg, #b5771f, var(--tube) 70%, var(--tube-hot));
-    border-radius: 2px;
-    box-shadow: 0 0 12px 1px rgba(232, 163, 61, 0.5);
-    transition: width 0.25s linear;
-  }
-  .filament .tip {
-    position: absolute;
-    top: 50%;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--tube-hot);
-    box-shadow: 0 0 14px 3px rgba(255, 196, 107, 0.7);
-    transform: translate(-50%, -50%);
-    transition: left 0.25s linear;
-  }
-  .paused .glow { background: var(--faint); box-shadow: none; }
-  .islive .glow {
-    width: 100% !important;
-    opacity: 0.3;
-    animation: liveglow 4s ease-in-out infinite;
-  }
-  .islive .tip { display: none; }
-  @keyframes liveglow { 50% { opacity: 0.55; } }
-  .paused .tip { background: var(--muted); box-shadow: none; }
-
-
-  /* Volet infos artiste */
-  #dimmer {
-    position: fixed; inset: 0; z-index: 2;
-    background: rgba(8, 7, 5, 0.55);
-    opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
-  }
-  #dimmer.on { opacity: 1; }
-  #panel {
-    position: fixed; top: 0; right: 0; bottom: 0; z-index: 3;
-    width: min(40vw, 580px); min-width: 340px;
-    background: #14110d;
-    border-left: 2px solid var(--tube);
-    box-shadow: -30px 0 80px rgba(0, 0, 0, 0.6);
-    transform: translateX(106%);
-    transition: transform 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
-    display: flex; flex-direction: column;
-    padding: clamp(20px, 4vh, 40px) clamp(20px, 2.5vw, 40px);
-  }
-  #panel.on { transform: none; }
-  #panel .phead { display: flex; gap: clamp(12px, 1.5vw, 20px); align-items: flex-start; }
-  #p_img {
-    flex: 0 0 auto;
-    width: clamp(84px, 9vw, 136px);
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    object-position: top center;
-    border-radius: 6px; display: none;
-    background: var(--chassis);
-    box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
-  }
-  #panel .pname {
-    font-family: "Fraunces", Georgia, serif; font-weight: 560;
-    font-size: clamp(24px, 4.6vh, 44px); line-height: 1.1;
-  }
-  #panel .pfacts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  #panel .pfacts span {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(11px, 1.7vh, 15px); letter-spacing: 0.06em;
-    color: #b8b1a0; border: 1px solid var(--line); border-radius: 4px;
-    padding: 5px 10px;
-  }
-  #panel .pwrap { position: relative; flex: 1; overflow: hidden; margin-top: clamp(12px, 2.2vh, 20px); }
-  #panel .pseclabel {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(10px, 1.5vh, 13px); letter-spacing: 0.2em;
-    color: var(--tube); margin-bottom: 8px;
-  }
-  #panel .palbumtitle {
-    font-family: "Fraunces", Georgia, serif; font-weight: 560;
-    font-size: clamp(18px, 3vh, 28px); margin-bottom: 8px;
-  }
-  #panel .psec { margin-top: clamp(18px, 3.5vh, 30px); }
-  #panel .ptracks div, #panel .pcredits div {
-    display: flex; justify-content: space-between; gap: 12px;
-    font-size: clamp(14px, 2.2vh, 20px); line-height: 1.75;
-    color: #ded8c8;
-  }
-  #panel .ptracks .tn {
-    font-family: "IBM Plex Mono", monospace; color: var(--faint);
-    min-width: 2ch; flex: 0 0 auto;
-  }
-  #panel .ptracks .tt { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #panel .ptracks .td { font-family: "IBM Plex Mono", monospace; color: var(--muted); flex: 0 0 auto; }
-  #panel .pcredits .cr { color: var(--muted); flex: 0 0 auto; }
-  #panel .pcredits .cn { text-align: right; }
-  #panel .psec .pfacts { margin: 0 0 10px 0; }
-  #panel .ptext {
-    font-size: clamp(15px, 2.5vh, 23px); line-height: 1.55;
-    color: #ded8c8; transition: transform 0.35s ease;
-    padding-right: 18px;
-  }
-  #panel .pfade {
-    position: absolute; left: 0; right: 0; bottom: 0; height: 64px;
-    background: linear-gradient(transparent, #14110d);
-    pointer-events: none; opacity: 0; transition: opacity 0.3s;
-  }
-  #panel .prail {
-    position: absolute; top: 0; bottom: 0; right: 2px; width: 4px;
-    background: var(--line); border-radius: 2px; opacity: 0; transition: opacity 0.3s;
-  }
-  #panel .pthumb {
-    position: absolute; right: 0; width: 4px; height: 25%;
-    background: var(--tube); border-radius: 2px;
-    box-shadow: 0 0 8px rgba(232, 163, 61, 0.5);
-    transition: top 0.35s ease;
-  }
-  #panel .phint {
-    margin-top: clamp(10px, 2vh, 16px);
-    border: 1px solid var(--line); border-radius: 6px;
-    padding: 10px 14px; text-align: center;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(10px, 1.5vh, 13px); letter-spacing: 0.06em;
-    color: #c8a25a; background: rgba(16, 13, 9, 0.8);
-    display: none;
-  }
-  #panel .psrc {
-    margin-top: 10px; font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(9px, 1.3vh, 11px); letter-spacing: 0.12em;
-    color: var(--faint); text-transform: uppercase;
-  }
-
-  /* Écran d'attente */
-  #idle {
-    user-select: none;
-    position: fixed;
-    inset: 0;
-    z-index: 2;
-    display: grid;
-    place-content: center;
-    text-align: center;
-    background: var(--chassis);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1.2s ease;
-  }
-  #idle.on { opacity: 1; pointer-events: auto; }
-  #idle .mark {
-    font-size: clamp(16px, 3vh, 26px);
-    font-weight: 600;
-    letter-spacing: 0.5em;
-    text-transform: uppercase;
-    padding-left: 0.5em;
-  }
-  #idle .sub {
-    margin-top: 18px;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: clamp(11px, 1.6vh, 14px);
-    color: var(--faint);
-    letter-spacing: 0.14em;
-  }
-  #idle .lamp { margin: 0 auto 26px; }
-
-
-  @media (min-aspect-ratio: 8/5) {
-    .cover-mount { max-height: min(66vh, 40vw); }
-    .now { gap: clamp(36px, 4.5vw, 72px); }
-  }
-
-  @media (max-aspect-ratio: 1/1) {
-    .now { flex-direction: column; justify-content: center; text-align: center; gap: 24px; }
-    .cover-mount { height: min(42vh, 78vw); max-height: none; }
-    .meta { flex: 0 0 auto; width: 100%; }
-    .artist, .album { white-space: normal; }
-    .stream { justify-content: center; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .lamp { animation: none; }
-    #ambient, .cover, #idle { transition: none; }
-  }
-</style>
+<link href="/static/fonts/fonts.css" rel="stylesheet">
+<link href="/static/ecran.css" rel="stylesheet">
+<link href="/static/themes/pochette.css" rel="stylesheet">
+<link href="/static/themes/console.css" rel="stylesheet">
+<link href="/static/themes/affiche.css" rel="stylesheet">
+<link href="/static/themes/cadre.css" rel="stylesheet">
 </head>
-<body>
-  <div id="ambient"></div>
-
-  <main class="stage" id="stage">
+<body data-theme="pochette" data-profil="salon">
+  <main class="stage arret" id="stage">
     <header class="faceplate">
-      <a class="brand" href="/config" style="text-decoration:none;color:inherit"><b>Eversolo</b>&ensp;<span id="model"></span></a>
-      <div class="clock" id="clock"></div>
+      <a class="brand" href="/config"><b>Eversolo</b> <span id="model"></span></a>
+      <div class="face-right">
+        <div class="volmini" id="volmini" hidden>
+          <span class="volbarre"><i id="volbarre"></i></span>
+          <span id="voltexte"></span>
+        </div>
+        <span class="muet-badge" id="muetBadge"></span>
+        <div class="clock" id="clock"></div>
+      </div>
     </header>
 
     <section class="now">
       <div class="cover-mount">
+        <div class="placeholder" id="placeholder"></div>
         <img class="cover" id="cover" alt="">
+        <div class="pause-glyph"><i></i></div>
       </div>
-      <div class="meta">
-        <div class="eyebrow"><span class="lamp"></span><span id="status"></span></div>
+      <div class="meta" id="meta">
+        <div class="eyebrow">
+          <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span id="status"></span>
+          <span class="source" id="source"></span>
+        </div>
         <h1 class="title" id="title"></h1>
         <div class="artist" id="artist"></div>
         <div class="album" id="album"></div>
-        <div class="stream" id="stream"></div>
+        <div class="signal" id="signal"></div>
+        <div class="decouverte" id="decouverte">
+          <div class="fiche" id="fiche"><div class="dk" id="dk"></div><div class="dv" id="dv"></div></div>
+        </div>
       </div>
     </section>
 
     <footer class="transport" id="transport">
-      <div class="times"><span id="pos">0:00</span><span id="dur">0:00</span></div>
-      <div class="filament"><div class="glow" id="glow"></div><div class="tip" id="tip"></div></div>
+      <div class="times">
+        <span id="pos"></span>
+        <span class="ensuite" id="ensuite"><b id="ensuiteK"></b> <span id="ensuiteV"></span></span>
+        <span id="reste"></span>
+      </div>
+      <div class="filament"><div class="glow" id="glow"></div><div class="rail" id="rail"><div class="tip"></div></div></div>
     </footer>
   </main>
+
+  <div id="osd"><div class="ok" id="osdK"></div><div class="val" id="osdV"></div><div class="jauge"><i id="osdJ"></i></div></div>
 
   <div id="dimmer"></div>
   <div id="panel">
@@ -442,11 +75,11 @@
     <div class="pwrap" id="p_wrap">
       <div class="ptext" id="p_text">
         <div class="pbody" id="b_text"></div>
-        <div class="psec" id="t_wrap" style="display:none">
+        <div class="psec" id="t_wrap" hidden>
           <div class="pseclabel" id="t_label"></div>
           <div class="ptracks" id="t_list"></div>
         </div>
-        <div class="psec" id="c_wrap" style="display:none">
+        <div class="psec" id="c_wrap" hidden>
           <div class="pseclabel" id="c_label"></div>
           <div class="pcredits" id="c_list"></div>
         </div>
@@ -459,257 +92,14 @@
   </div>
 
   <div id="idle" class="on">
-    <span class="lamp"></span>
-    <div class="mark">Eversolo</div>
+    <div class="grande-heure" id="grandeHeure"></div>
+    <div class="date" id="date"></div>
     <div class="sub" id="idleMsg"></div>
+    <div class="derniere" id="derniere"></div>
   </div>
+  <div id="majBandeau" class="maj-bandeau" role="status"></div>
+  <div id="veille"></div>
 
-<script>
-  const $ = id => document.getElementById(id);
-  const I18N = {
-    fr: { playing: "En lecture", paused: "Pause", waiting: "En attente de lecture", offline: "Streamer introuvable sur le réseau", live: "En direct", hintArtist: "SUIV → ALBUM · VOL DÉFILER · INFO FERMER", hintAlbum: "SUIV → PRODUCTION · PRÉC → ARTISTE · INFO FERMER", hintProd: "PRÉC → ALBUM · VOL DÉFILER · INFO FERMER", tracksSec: "PLAGES", prodSec: "PRODUCTION", noAlbum: "Aucune information trouvée pour ce disque.", noProd: "Aucun crédit de production trouvé pour cette édition.", loading: "Chargement…" },
-    en: { playing: "Now playing", paused: "Paused", waiting: "Waiting for playback", offline: "Streamer not found on the network", live: "Live", hintArtist: "NEXT → ALBUM · VOL SCROLL · INFO CLOSE", hintAlbum: "NEXT → PRODUCTION · PREV → ARTIST · INFO CLOSE", hintProd: "PREV → ALBUM · VOL SCROLL · INFO CLOSE", tracksSec: "TRACKS", prodSec: "PRODUCTION", noAlbum: "No information found for this record.", noProd: "No production credits found for this edition.", loading: "Loading…" },
-    es: { playing: "Reproduciendo", paused: "Pausa", waiting: "Esperando reproducción", offline: "Streamer no encontrado en la red", live: "En directo", hintArtist: "SIG → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", hintAlbum: "SIG → PRODUCCIÓN · ANT → ARTISTA · INFO CERRAR", hintProd: "ANT → ÁLBUM · VOL DESPLAZAR · INFO CERRAR", tracksSec: "PISTAS", prodSec: "PRODUCCIÓN", noAlbum: "No se encontró información de este disco.", noProd: "No se encontraron créditos de producción de esta edición.", loading: "Cargando…" },
-    de: { playing: "Wiedergabe", paused: "Pause", waiting: "Warten auf Wiedergabe", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", hintArtist: "WEITER → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", hintAlbum: "WEITER → PRODUKTION · ZURÜCK → KÜNSTLER · INFO SCHLIESSEN", hintProd: "ZURÜCK → ALBUM · VOL BLÄTTERN · INFO SCHLIESSEN", tracksSec: "TITEL", prodSec: "PRODUKTION", noAlbum: "Keine Informationen zu diesem Album gefunden.", noProd: "Keine Produktions-Credits zu dieser Ausgabe gefunden.", loading: "Wird geladen…" }
-  };
-  let L = I18N.fr;
-
-  let state = null;
-  let receivedAt = 0;
-  let lastCover = null;
-  let revInitiale = null;
-  let coverTitle = null;
-
-  function fmt(s) {
-    s = Math.max(0, Math.floor(s));
-    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
-  }
-
-  function qualityChips(q) {
-    const chips = [];
-    if (q.format) chips.push(String(q.format).toUpperCase());
-    const sr = Number(q.sample_rate);
-    if (isFinite(sr) && sr > 0) {
-      chips.push(sr > 1000 ? (sr / 1000).toFixed(1).replace(".0", "") + " kHz" : sr + " kHz");
-    }
-    const bd = Number(q.bit_depth);
-    if (isFinite(bd) && bd > 0) chips.push(bd + " bit");
-    const br = Number(q.bitrate);
-    if (isFinite(br) && br > 0) chips.push(br + " kbps");
-    return chips;
-  }
-
-  async function poll() {
-    try {
-      const r = await fetch("/api/state", { cache: "no-store" });
-      state = await r.json();
-      if (state.setup) { location = "/setup"; return; }
-      if (state.lang && I18N[state.lang]) L = I18N[state.lang];
-      receivedAt = performance.now();
-      render();
-    } catch (e) {
-      state = { connected: false };
-      render();
-    }
-  }
-
-
-  let panelVisible = false;
-  function remplirFaits(conteneur, faits) {
-    conteneur.textContent = "";
-    (faits || []).forEach(f => {
-      const el = document.createElement("span");
-      el.textContent = f;
-      conteneur.appendChild(el);
-    });
-  }
-  function montrerImage(im, src) {
-    if (src) {
-      if (im.dataset.src !== src) {
-        im.dataset.src = src;
-        im.onload = () => { im.style.display = "block"; };
-        im.onerror = () => { im.style.display = "none"; };
-        im.src = src;
-      }
-    } else {
-      im.style.display = "none";
-      im.dataset.src = "";
-    }
-  }
-
-  function renderPanel(s) {
-    const p = s.panel;
-    const on = !!(p && (p.artist || p.text));
-    $("panel").classList.toggle("on", on);
-    $("dimmer").classList.toggle("on", on);
-    panelVisible = on;
-    if (!on) return;
-    const page = p.page || "artist";
-    const art = p.artist || {};
-    const alb = p.album;
-    const im = $("p_img");
-    if (page === "artist") {
-      $("p_name").textContent = art.name || "";
-      remplirFaits($("p_facts"), art.facts);
-      $("b_text").textContent = art.text || "";
-      $("t_wrap").style.display = "none";
-      $("c_wrap").style.display = "none";
-      $("p_src").textContent = art.source || "";
-      $("p_hint").textContent = L.hintArtist;
-      montrerImage(im, art.image);
-    } else if (page === "album") {
-      $("p_name").textContent = alb ? (alb.title || "") : "";
-      remplirFaits($("p_facts"), alb ? alb.facts : []);
-      $("b_text").textContent = alb ? (alb.text || "") : L.noAlbum;
-      const tracks = (alb && alb.tracks) || [];
-      $("t_wrap").style.display = tracks.length ? "block" : "none";
-      if (tracks.length) {
-        $("t_label").textContent = L.tracksSec;
-        const tl = $("t_list");
-        tl.textContent = "";
-        tracks.forEach(t => {
-          const row = document.createElement("div");
-          const n = document.createElement("span"); n.className = "tn"; n.textContent = t.n;
-          const ti = document.createElement("span"); ti.className = "tt"; ti.textContent = t.title;
-          const du = document.createElement("span"); du.className = "td"; du.textContent = t.dur || "";
-          row.append(n, ti, du);
-          tl.appendChild(row);
-        });
-      }
-      $("c_wrap").style.display = "none";
-      $("p_src").textContent = (alb && alb.source) || "";
-      $("p_hint").textContent = L.hintAlbum;
-      montrerImage(im, alb ? ($("cover").src || null) : null);
-    } else {
-      $("p_name").textContent = (alb && alb.title) || "";
-      remplirFaits($("p_facts"), (alb && alb.prod_facts) || []);
-      const credits = (alb && alb.credits) || [];
-      $("b_text").textContent = credits.length ? "" : (alb && alb.loading ? L.loading : L.noProd);
-      $("t_wrap").style.display = "none";
-      $("c_wrap").style.display = credits.length ? "block" : "none";
-      if (credits.length) {
-        $("c_label").textContent = L.prodSec;
-        const cl = $("c_list");
-        cl.textContent = "";
-        credits.forEach(c => {
-          const row = document.createElement("div");
-          const r = document.createElement("span"); r.className = "cr"; r.textContent = c.role;
-          const nmo = document.createElement("span"); nmo.className = "cn"; nmo.textContent = c.name;
-          row.append(r, nmo);
-          cl.appendChild(row);
-        });
-      }
-      $("p_src").textContent = (alb && alb.source) || "";
-      $("p_hint").textContent = L.hintProd;
-      montrerImage(im, alb ? ($("cover").src || null) : null);
-    }
-
-    requestAnimationFrame(() => {
-      const wrapEl = $("p_wrap"), txt = $("p_text");
-      const max = Math.max(0, txt.scrollHeight - wrapEl.clientHeight);
-      const step = wrapEl.clientHeight * 0.6;
-      const off = Math.min((p.scroll || 0) * step, max);
-      txt.style.transform = `translateY(${-off}px)`;
-      const overflow = max > 4;
-      $("p_hint").style.display = "block";
-      $("p_fade").style.opacity = overflow && off < max ? "1" : "0";
-      $("p_rail").style.opacity = overflow ? "1" : "0";
-      const railH = wrapEl.clientHeight;
-      const thumbH = railH * 0.25;
-      const top = max > 0 ? (off / max) * (railH - thumbH) : 0;
-      $("p_thumb").style.top = top + "px";
-    });
-  }
-
-  function render() {
-    const s = state;
-    const hasTrack = s && s.connected && s.title;
-
-    $("idle").classList.toggle("on", !hasTrack);
-    if (!hasTrack) {
-      $("idleMsg").textContent = s && s.connected ? L.waiting : L.offline;
-      $("ambient").classList.remove("on");
-      return;
-    }
-
-    $("stage").classList.toggle("paused", !s.playing);
-    $("status").textContent = s.playing ? L.playing : L.paused;
-    if (s.rev) {
-      if (revInitiale === null) revInitiale = s.rev;
-      else if (s.rev !== revInitiale) location.reload();
-    }
-    $("transport").classList.toggle("islive", !!s.live);
-
-    try { renderPanel(s); } catch (e) { console.error('volet:', e); }
-
-    if (s.model) $("model").textContent = s.model;
-    $("title").textContent = s.title;
-    $("artist").textContent = s.artist || "";
-    $("album").textContent = s.album || "";
-
-    const chips = qualityChips(s.quality || {});
-    $("stream").innerHTML = chips.map(c => `<span>${c}</span>`).join("");
-
-    if (s.cover && s.cover !== lastCover) {
-      // Prechargement invisible puis echange: la pochette actuelle reste
-      // affichee tant que la nouvelle n'est pas prete, aucun clignotement.
-      lastCover = s.cover;
-      const wanted = s.cover;
-      const probe = new Image();
-      probe.onload = () => {
-        if (lastCover !== wanted) return;
-        const img = $("cover");
-        img.src = wanted;
-        img.classList.add("on");
-        $("ambient").style.backgroundImage = `url("${wanted}")`;
-        $("ambient").classList.add("on");
-        coverTitle = s.title;
-      };
-      probe.onerror = () => {
-        // echec passager (CDN, réseau): on garde l'ancienne image et on
-        // retentera dans quelques secondes
-        setTimeout(() => { if (lastCover === wanted) lastCover = null; }, 5000);
-      };
-      probe.src = wanted;
-    } else if (!s.cover && s.title !== coverTitle) {
-      // nouveau morceau reellement sans pochette: on efface
-      lastCover = null;
-      coverTitle = null;
-      $("cover").classList.remove("on");
-      $("ambient").classList.remove("on");
-    }
-  }
-
-  function tick() {
-    if (state && state.connected && state.live) {
-      $("pos").textContent = L.live;
-      $("dur").textContent = "";
-    } else if (state && state.connected && state.duration > 0) {
-      let pos = state.position;
-      if (state.playing) pos += (performance.now() - receivedAt) / 1000;
-      pos = Math.min(pos, state.duration);
-      const pct = (pos / state.duration) * 100;
-      $("glow").style.width = pct + "%";
-      $("tip").style.left = pct + "%";
-      $("pos").textContent = fmt(pos);
-      $("dur").textContent = fmt(state.duration);
-    }
-    const now = new Date();
-    $("clock").textContent =
-      String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
-    requestAnimationFrame(tick);
-  }
-
-  document.addEventListener("mousemove", () => {
-    document.body.classList.add("pointer");
-    clearTimeout(window._cursorTimer);
-    window._cursorTimer = setTimeout(() => document.body.classList.remove("pointer"), 3000);
-  });
-
-  (function loop() {
-    Promise.resolve(poll()).finally(() => setTimeout(loop, panelVisible ? 300 : 1000));
-  })();
-  tick();
-</script>
+<script src="/static/ecran.js"></script>
 </body>
 </html>

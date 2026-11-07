@@ -30,9 +30,16 @@ def set_password(password):
     if len(password) < 8:
         print("Refusé : 8 caractères minimum.")
         sys.exit(1)
-    fd = os.open(AUTH_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    # Écriture atomique, comme le serveur: une coupure ne laisse jamais un
+    # auth.json vide.
+    temporaire = AUTH_PATH + ".tmp"
+    fd = os.open(temporaire, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump({"password_hash": generate_password_hash(password, method="scrypt")}, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.chmod(temporaire, 0o600)
+    os.replace(temporaire, AUTH_PATH)
     print(f"Mot de passe enregistré dans {AUTH_PATH}")
     print("Relancez le serveur : sudo systemctl restart eversolo-screen@$(whoami)")
 

@@ -4,7 +4,14 @@ Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + 
 
 [Français](README.md) · [English](README.en.md) · [Español](README.es.md)
 
-![Wiedergabebildschirm](docs/screen-now-playing.png)
+![Oberfläche Vollbild: das Cover füllt die ganze Bildschirmhöhe](docs/interface-plein-cadre.jpg)
+
+Vier Oberflächen zur Auswahl unter `/config`:
+
+| Cover | Konsole | Plakat |
+|---|---|---|
+| ![Oberfläche Cover: der Bildschirm nimmt die Farbe des Albums an](docs/interface-pochette.jpg) | ![Oberfläche Konsole: Gerätefront, Fluoreszenzanzeige](docs/interface-console.jpg) | ![Oberfläche Plakat: große Typografie, Papier und Tinte](docs/interface-affiche.jpg) |
+| Der Bildschirm nimmt die Farbe des Albums an | Gerätefront, Fluoreszenzanzeige | Große Typografie, Papier und Tinte |
 
 | Künstlerseite | Albumseite | Produktionsseite |
 |---|---|---|
@@ -20,6 +27,7 @@ Now-Playing-Anzeige für Eversolo-Streamer (DMP-A6, A8, A10) auf Raspberry Pi + 
 - Lernende Infrarot-Fernbedienung: 7 Aktionen mit jeder beliebigen Fernbedienung koppelbar
 - Optionaler Infrarot-Sender: der Pi lernt Befehle und sendet sie an TV oder Verstärker
 - Kiosk-Modus beim Start, passwortgeschützte Verwaltung
+- 4 Oberflächen zur Auswahl (Vollbild, Cover, Konsole, Plakat), aus 3-4 m lesbar, Nachtmodus und Bildschirmschutz
 - 4 Sprachen: Französisch, Englisch, Spanisch, Deutsch
 - Aktualisierung mit einem Klick aus der Oberfläche
 
@@ -48,7 +56,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Pi starten. Nach 10 bis 15 Minuten `http://PI_IP:8080` öffnen: der Assistent erkennt den Eversolo und legt das Admin-Passwort an.
+3. Pi starten. Nach 10 bis 15 Minuten `http://PI_IP:8080` öffnen und den am Fernseher angezeigten Code eingeben: der Assistent erkennt den Eversolo und legt das Admin-Passwort an.
 
 ### Manuell (SSH)
 
@@ -73,11 +81,20 @@ Kombinierbare Optionen: `--kiosk` (TV-Anzeige), `--ir` (Fernbedienungs-Empfänge
 | Biografien | TheAudioDB, Last.fm, Wikipedia über Wikidata |
 | Titel, Credits, Studios | MusicBrainz, Discogs, Genius (laufender Titel) |
 
-Alles funktioniert ohne Schlüssel. Optionale Schlüssel unter `/config`: Last.fm (kostenlos), Discogs (kostenloses persönliches Token), TheAudioDB.
+Alles funktioniert ohne Schlüssel. Die folgenden Schlüssel sind kostenlos; in `/config` eingetragen, ergänzen sie Biografien und Credits.
+
+| Dienst | Was er beiträgt | Wo es den Schlüssel gibt |
+|---|---|---|
+| Last.fm | Künstlerbiografien, Albumbeschreibungen | [API-Konto anlegen](https://www.last.fm/api/account/create) (Name und Beschreibung frei, Callback-URL leer). Vorhandene Schlüssel: [last.fm/api/accounts](https://www.last.fm/api/accounts). „API key“ kopieren, nicht „Shared secret“. |
+| Discogs | Ausführliche Credits: Produktion, Mischung, Studios | [Settings > Developers](https://www.discogs.com/settings/developers), Schaltfläche „Generate new token“. |
+| Genius | Credits des laufenden Titels, nützlich bei neuen Veröffentlichungen | [genius.com/api-clients](https://genius.com/api-clients): „New API Client“ (Name und Website frei), dann „Generate Access Token“. Den „Client Access Token“ kopieren. |
+| TheAudioDB | Biografien und Fotos | Standardmäßig wird der kostenlose Schlüssel `123` verwendet. Ein persönlicher Schlüssel (Premium-Abo) steht in Ihrem Profil; siehe [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Aktualisierung
 
-Button unter `/config` bei neuer Version, oder per SSH: `./update.sh`. Konfiguration und Passwort bleiben erhalten.
+Wenn eine Version veröffentlicht wird, zeigt `/config` die Neuerungen und eine Schaltfläche zum Installieren (nicht während der Wiedergabe). Per SSH erledigt `./update.sh` dasselbe.
+
+Jede Version wird in einem eigenen Ordner (`~/eversolo-versions`) installiert, und nur wenn ihre Signatur zum bei der Installation auf dem Pi hinterlegten Schlüssel passt. Startet die neue Version nicht, kehrt der Pi von selbst zur vorherigen zurück; eine Schaltfläche in `/config` erlaubt das ebenfalls. Einstellungen und Passwort bleiben in `~/eversolo-screen`.
 
 ## Lizenz
 

@@ -7,6 +7,7 @@ jeton CSRF, proxy pochettes limite au streamer, en-tetes de sécurité.
 """
 
 import glob
+import hashlib
 import ipaddress
 import json
 import re
@@ -16,26 +17,37 @@ import os
 import secrets
 import socket
 import time
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from flask import (Flask, Response, jsonify, redirect, render_template_string,
                    request, send_from_directory, session)
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import affichage
+import versions
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
-AUTH_PATH = os.path.join(BASE_DIR, "auth.json")
-SECRET_PATH = os.path.join(BASE_DIR, ".secret_key")
+# Installé par versions (un dossier par version) : les données vivent dans le
+# dépôt de référence, jamais dans le dossier d'une version.
+DISPO = versions.disposition_de(BASE_DIR)
+# Fichiers modifiables (réglages, mot de passe, caches, captures) : à côté du
+# code par défaut, ailleurs si EVERSOLO_SCREEN_DATA le demande (service, tests).
+DATA_DIR = os.path.abspath(os.environ.get("EVERSOLO_SCREEN_DATA")
+                           or (DISPO.depot if DISPO else BASE_DIR))
+CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
+AUTH_PATH = os.path.join(DATA_DIR, "auth.json")
+SECRET_PATH = os.path.join(DATA_DIR, ".secret_key")
 
 DEFAULTS = {
     "eversolo_ip": "",
     "eversolo_port": 9529,
     "listen_port": 8080,
     "language": "fr",
-    "theaudiodb_key": "2",
+    "theaudiodb_key": "123",
     "lastfm_api_key": "",
     "discogs_token": "",
     "genius_token": "",
@@ -58,7 +70,9 @@ T = {
         "detecting": "Recherche en cours...",
         "detect_none": "Aucun streamer trouvé. Saisissez l'IP manuellement.",
         "language": "Langue",
-        "save": "Enregistrer",
+        "save": "Enregistrer", "maj_deja": "Une mise à jour est déjà en cours.",
+        "maj_installee": "Version en service", "maj_disponible": "Nouvelle version", "maj_installer": "Installer cette version", "maj_revenir": "Revenir à la version précédente", "maj_pendant_lecture": "Mettez la lecture en pause avant de mettre à jour.", "maj_rien": "Aucune nouvelle version à installer.", "maj_lancee": "Installation lancée : téléchargement, vérification de la signature, puis redémarrage. L'écran se rechargera tout seul.", "maj_retour_lance": "Retour à la version précédente : le serveur redémarre.", "maj_etape_telechargement": "Téléchargement en cours", "maj_etape_verification": "Vérification de la signature", "maj_etape_installation": "Installation en cours", "maj_tv": "Mise à jour",
+        "disp_title": "Affichage", "disp_intro": "Réglez l'écran selon la distance de lecture.", "disp_theme": "Interface", "theme_pochette": "Pochette : l'écran prend la couleur du disque", "theme_console": "Console : façade d'appareil, afficheur fluorescent", "theme_affiche": "Affiche : grande typographie, papier et encre", "theme_cadre": "Plein cadre : la pochette occupe tout un côté de l'écran", "disp_profil": "Type d'écran", "profil_salon": "Salon : TV lue à 3-4 m", "profil_bureau": "Bureau : écran proche", "profil_petit": "Petit écran 7 à 10 pouces", "disp_nuit": "Mode nuit (luminosité réduite)", "nuit_auto": "Selon l'heure", "nuit_jamais": "Jamais", "nuit_toujours": "Toujours", "nuit_de": "Nuit de", "nuit_a": "heures à", "nuit_h": "heures", "disp_protection": "Protéger l'écran : léger décalage, atténuation après 10 min de pause, noir après 30 min", "disp_save": "Enregistrer l'affichage",
         "login_title": "Connexion",
         "login": "Se connecter",
         "logout": "Se déconnecter",
@@ -76,10 +90,15 @@ T = {
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
-        "update_avail": "Nouvelle version disponible", "update_btn": "Mettre à jour maintenant", "update_started": "Mise à jour lancée. Le serveur redémarre, l'écran se rechargera tout seul dans une minute.", "up_to_date": "Application à jour",
+        "maj_ancienne": "Mises à jour : lancez ./update.sh une fois sur le Pi pour passer aux versions signées", "up_to_date": "Application à jour",
         "genius_token_lbl": "Jeton Genius (crédits de la plage en cours, optionnel)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
+        "code_label": "Code affiché sur la TV", "code_bad": "Code incorrect. Recopiez le code affiché sur la TV.", "code_first": "Saisissez d'abord le code affiché sur la TV.",
+        "tv_setup_intro": "Sur votre téléphone ou votre ordinateur, ouvrez", "tv_setup_code": "puis saisissez ce code", "tv_setup_here": "Configurer depuis cet écran",
+        "host_refused": "Adresse non reconnue. Ouvrez la page par l'adresse IP du Pi (par exemple http://{ip}:{port}), ou ajoutez ce nom à la liste hotes_autorises de config.json.",
+        "capture_title": "Capture de l'état", "capture_intro": "Lancez une lecture sur l'Eversolo, choisissez la situation puis capturez. Ce que l'Eversolo renvoie est enregistré sur le Pi, sans adresse de flux ni identifiant.", "capture_situation": "Situation", "capture_btn": "Capturer l'état", "capture_done": "Capture enregistrée", "capture_failed": "Eversolo injoignable : capture impossible.", "capture_busy": "Une capture est déjà en cours.", "captures_list": "Captures enregistrées",
+        "sit_fichier": "Fichier local", "sit_pause": "Pause", "sit_muet": "Son coupé", "sit_autre": "Autre",
     },
     "en": {
         "setup_title": "First-time setup",
@@ -93,7 +112,9 @@ T = {
         "detecting": "Scanning...",
         "detect_none": "No streamer found. Enter the IP manually.",
         "language": "Language",
-        "save": "Save",
+        "save": "Save", "maj_deja": "An update is already running.",
+        "maj_installee": "Running version", "maj_disponible": "New version", "maj_installer": "Install this version", "maj_revenir": "Go back to the previous version", "maj_pendant_lecture": "Pause playback before updating.", "maj_rien": "No new version to install.", "maj_lancee": "Installation started: download, signature check, then restart. The screen will reload by itself.", "maj_retour_lance": "Going back to the previous version: the server restarts.", "maj_etape_telechargement": "Downloading", "maj_etape_verification": "Checking the signature", "maj_etape_installation": "Installing", "maj_tv": "Update",
+        "disp_title": "Display", "disp_intro": "Adjust the screen to your viewing distance.", "disp_theme": "Interface", "theme_pochette": "Cover: the screen takes the colour of the record", "theme_console": "Console: device front panel, fluorescent display", "theme_affiche": "Poster: large type, paper and ink", "theme_cadre": "Full frame: the cover fills one side of the screen", "disp_profil": "Screen type", "profil_salon": "Living room: TV read from 3-4 m", "profil_bureau": "Desk: close screen", "profil_petit": "Small 7 to 10 inch screen", "disp_nuit": "Night mode (reduced brightness)", "nuit_auto": "By time of day", "nuit_jamais": "Never", "nuit_toujours": "Always", "nuit_de": "Night from", "nuit_a": "h to", "nuit_h": "h", "disp_protection": "Protect the screen: slight shift, dimming after 10 min of pause, black after 30 min", "disp_save": "Save display",
         "login_title": "Sign in",
         "login": "Sign in",
         "logout": "Sign out",
@@ -111,10 +132,15 @@ T = {
         "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
         "searching": "Looking up artist and record information...",
         "discogs_token": "Discogs token (detailed production credits, optional)",
-        "update_avail": "New version available", "update_btn": "Update now", "update_started": "Update started. The server restarts, the display will reload by itself within a minute.", "up_to_date": "Application up to date",
+        "maj_ancienne": "Updates: run ./update.sh once on the Pi to switch to signed versions", "up_to_date": "Application up to date",
         "genius_token_lbl": "Genius token (credits of the current track, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
+        "code_label": "Code shown on the TV", "code_bad": "Wrong code. Copy the code shown on the TV.", "code_first": "Enter the code shown on the TV first.",
+        "tv_setup_intro": "On your phone or computer, open", "tv_setup_code": "then enter this code", "tv_setup_here": "Set up from this screen",
+        "host_refused": "Unrecognised address. Open the page through the Pi's IP address (for example http://{ip}:{port}), or add this name to the hotes_autorises list in config.json.",
+        "capture_title": "State capture", "capture_intro": "Start playback on the Eversolo, pick the situation, then capture. What the Eversolo reports is saved on the Pi, without stream addresses or identifiers.", "capture_situation": "Situation", "capture_btn": "Capture state", "capture_done": "Capture saved", "capture_failed": "Eversolo unreachable: capture impossible.", "capture_busy": "A capture is already running.", "captures_list": "Saved captures",
+        "sit_fichier": "Local file", "sit_pause": "Paused", "sit_muet": "Muted", "sit_autre": "Other",
     },
     "es": {
         "setup_title": "Configuración inicial",
@@ -128,7 +154,9 @@ T = {
         "detecting": "Buscando...",
         "detect_none": "No se encontro ningún streamer. Introduzca la IP manualmente.",
         "language": "Idioma",
-        "save": "Guardar",
+        "save": "Guardar", "maj_deja": "Ya hay una actualización en curso.",
+        "maj_installee": "Versión en servicio", "maj_disponible": "Nueva versión", "maj_installer": "Instalar esta versión", "maj_revenir": "Volver a la versión anterior", "maj_pendant_lecture": "Pause la reproducción antes de actualizar.", "maj_rien": "No hay ninguna versión nueva.", "maj_lancee": "Instalación iniciada: descarga, verificación de la firma y reinicio. La pantalla se recargará sola.", "maj_retour_lance": "Volviendo a la versión anterior: el servidor se reinicia.", "maj_etape_telechargement": "Descargando", "maj_etape_verification": "Verificando la firma", "maj_etape_installation": "Instalando", "maj_tv": "Actualización",
+        "disp_title": "Pantalla", "disp_intro": "Ajuste la pantalla a la distancia de lectura.", "disp_theme": "Interfaz", "theme_pochette": "Portada: la pantalla toma el color del disco", "theme_console": "Consola: frontal de aparato, pantalla fluorescente", "theme_affiche": "Cartel: tipografía grande, papel y tinta", "theme_cadre": "Pantalla completa: la portada ocupa un lado entero", "disp_profil": "Tipo de pantalla", "profil_salon": "Salón: TV leída a 3-4 m", "profil_bureau": "Escritorio: pantalla cercana", "profil_petit": "Pantalla pequeña de 7 a 10 pulgadas", "disp_nuit": "Modo noche (brillo reducido)", "nuit_auto": "Según la hora", "nuit_jamais": "Nunca", "nuit_toujours": "Siempre", "nuit_de": "Noche de las", "nuit_a": "h a las", "nuit_h": "h", "disp_protection": "Proteger la pantalla: ligero desplazamiento, atenuación tras 10 min de pausa, negro tras 30 min", "disp_save": "Guardar la pantalla",
         "login_title": "Iniciar sesión",
         "login": "Iniciar sesión",
         "logout": "Cerrar sesión",
@@ -146,10 +174,15 @@ T = {
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
         "searching": "Buscando información del artista y del disco...",
         "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
-        "update_avail": "Nueva versión disponible", "update_btn": "Actualizar ahora", "update_started": "Actualización iniciada. El servidor se reinicia, la pantalla se recargará sola en un minuto.", "up_to_date": "Aplicación al día",
+        "maj_ancienne": "Actualizaciones: ejecute ./update.sh una vez en la Pi para pasar a las versiones firmadas", "up_to_date": "Aplicación al día",
         "genius_token_lbl": "Token Genius (créditos de la pista en curso, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
+        "code_label": "Código mostrado en la TV", "code_bad": "Código incorrecto. Copie el código mostrado en la TV.", "code_first": "Introduzca primero el código mostrado en la TV.",
+        "tv_setup_intro": "En su teléfono u ordenador, abra", "tv_setup_code": "e introduzca este código", "tv_setup_here": "Configurar desde esta pantalla",
+        "host_refused": "Dirección no reconocida. Abra la página con la dirección IP de la Pi (por ejemplo http://{ip}:{port}) o añada este nombre a la lista hotes_autorises de config.json.",
+        "capture_title": "Captura del estado", "capture_intro": "Inicie una reproducción en el Eversolo, elija la situación y capture. Lo que devuelve el Eversolo se guarda en la Pi, sin direcciones de flujo ni identificadores.", "capture_situation": "Situación", "capture_btn": "Capturar el estado", "capture_done": "Captura guardada", "capture_failed": "Eversolo inaccesible: captura imposible.", "capture_busy": "Ya hay una captura en curso.", "captures_list": "Capturas guardadas",
+        "sit_fichier": "Archivo local", "sit_pause": "Pausa", "sit_muet": "Silencio", "sit_autre": "Otra",
     },
     "de": {
         "setup_title": "Ersteinrichtung",
@@ -163,7 +196,9 @@ T = {
         "detecting": "Suche läuft...",
         "detect_none": "Kein Streamer gefunden. IP manuell eingeben.",
         "language": "Sprache",
-        "save": "Speichern",
+        "save": "Speichern", "maj_deja": "Ein Update läuft bereits.",
+        "maj_installee": "Laufende Version", "maj_disponible": "Neue Version", "maj_installer": "Diese Version installieren", "maj_revenir": "Zur vorherigen Version zurück", "maj_pendant_lecture": "Pausieren Sie die Wiedergabe vor dem Update.", "maj_rien": "Keine neue Version verfügbar.", "maj_lancee": "Installation gestartet: Download, Signaturprüfung, dann Neustart. Der Bildschirm lädt sich selbst neu.", "maj_retour_lance": "Zurück zur vorherigen Version: der Server startet neu.", "maj_etape_telechargement": "Wird heruntergeladen", "maj_etape_verification": "Signatur wird geprüft", "maj_etape_installation": "Wird installiert", "maj_tv": "Update",
+        "disp_title": "Anzeige", "disp_intro": "Passen Sie den Bildschirm an den Betrachtungsabstand an.", "disp_theme": "Oberfläche", "theme_pochette": "Cover: der Bildschirm nimmt die Farbe des Albums an", "theme_console": "Konsole: Gerätefront, Fluoreszenzanzeige", "theme_affiche": "Plakat: große Typografie, Papier und Tinte", "theme_cadre": "Vollbild: das Cover füllt eine Bildschirmseite", "disp_profil": "Bildschirmtyp", "profil_salon": "Wohnzimmer: TV aus 3-4 m", "profil_bureau": "Schreibtisch: naher Bildschirm", "profil_petit": "Kleiner Bildschirm 7 bis 10 Zoll", "disp_nuit": "Nachtmodus (reduzierte Helligkeit)", "nuit_auto": "Nach Uhrzeit", "nuit_jamais": "Nie", "nuit_toujours": "Immer", "nuit_de": "Nacht von", "nuit_a": "Uhr bis", "nuit_h": "Uhr", "disp_protection": "Bildschirm schonen: leichte Verschiebung, Abdunkeln nach 10 Min. Pause, schwarz nach 30 Min.", "disp_save": "Anzeige speichern",
         "login_title": "Anmelden",
         "login": "Anmelden",
         "logout": "Abmelden",
@@ -181,43 +216,105 @@ T = {
         "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
         "searching": "Informationen zu Künstler und Album werden gesucht...",
         "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
-        "update_avail": "Neue Version verfügbar", "update_btn": "Jetzt aktualisieren", "update_started": "Aktualisierung gestartet. Der Server startet neu, der Bildschirm lädt sich in einer Minute selbst neu.", "up_to_date": "Anwendung aktuell",
+        "maj_ancienne": "Aktualisierungen: führen Sie einmal ./update.sh auf dem Pi aus, um auf signierte Versionen umzustellen", "up_to_date": "Anwendung aktuell",
         "genius_token_lbl": "Genius-Token (Credits des laufenden Titels, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
+        "code_label": "Am Fernseher angezeigter Code", "code_bad": "Falscher Code. Übernehmen Sie den am Fernseher angezeigten Code.", "code_first": "Geben Sie zuerst den am Fernseher angezeigten Code ein.",
+        "tv_setup_intro": "Öffnen Sie auf Ihrem Telefon oder Computer", "tv_setup_code": "und geben Sie diesen Code ein", "tv_setup_here": "Auf diesem Bildschirm einrichten",
+        "host_refused": "Unbekannte Adresse. Öffnen Sie die Seite über die IP-Adresse des Pi (zum Beispiel http://{ip}:{port}) oder tragen Sie diesen Namen in die Liste hotes_autorises von config.json ein.",
+        "capture_title": "Zustandserfassung", "capture_intro": "Starten Sie die Wiedergabe am Eversolo, wählen Sie die Situation und erfassen Sie. Die Antwort des Eversolo wird auf dem Pi gespeichert, ohne Stream-Adressen oder Kennungen.", "capture_situation": "Situation", "capture_btn": "Zustand erfassen", "capture_done": "Erfassung gespeichert", "capture_failed": "Eversolo nicht erreichbar: Erfassung unmöglich.", "capture_busy": "Eine Erfassung läuft bereits.", "captures_list": "Gespeicherte Erfassungen",
+        "sit_fichier": "Lokale Datei", "sit_pause": "Pause", "sit_muet": "Stumm", "sit_autre": "Andere",
     },
 }
 
+TEXTES_REGLAGES = {
+    "fr": {"sec_streamer": "Streamer", "sec_streamer_intro": "Adresse de l'Eversolo sur le réseau local et langue des textes.",
+           "sec_sources": "Sources d'informations", "sec_sources_intro": "Biographies, crédits et studios. Tout fonctionne sans clé ; ces clés gratuites ajoutent des fiches.",
+           "sec_compte": "Mot de passe", "sec_compte_intro": "Laissez vide pour garder le mot de passe actuel. Le changer déconnecte les autres appareils.",
+           "sec_maj": "Mise à jour", "get_key": "Obtenir une clé", "back_display": "Retour à l'affichage"},
+    "en": {"sec_streamer": "Streamer", "sec_streamer_intro": "Address of the Eversolo on the local network and language of the texts.",
+           "sec_sources": "Information sources", "sec_sources_intro": "Biographies, credits and studios. Everything works without keys; these free keys add more.",
+           "sec_compte": "Password", "sec_compte_intro": "Leave empty to keep the current password. Changing it signs out other devices.",
+           "sec_maj": "Update", "get_key": "Get a key"},
+    "es": {"sec_streamer": "Streamer", "sec_streamer_intro": "Dirección del Eversolo en la red local e idioma de los textos.",
+           "sec_sources": "Fuentes de información", "sec_sources_intro": "Biografías, créditos y estudios. Todo funciona sin claves; estas claves gratuitas añaden fichas.",
+           "sec_compte": "Contraseña", "sec_compte_intro": "Déjelo vacío para conservar la contraseña actual. Cambiarla cierra la sesión en los demás aparatos.",
+           "sec_maj": "Actualización", "get_key": "Obtener una clave"},
+    "de": {"sec_streamer": "Streamer", "sec_streamer_intro": "Adresse des Eversolo im lokalen Netz und Sprache der Texte.",
+           "sec_sources": "Informationsquellen", "sec_sources_intro": "Biografien, Credits und Studios. Alles funktioniert ohne Schlüssel; diese kostenlosen Schlüssel ergänzen Einträge.",
+           "sec_compte": "Passwort", "sec_compte_intro": "Leer lassen, um das aktuelle Passwort zu behalten. Eine Änderung meldet andere Geräte ab.",
+           "sec_maj": "Aktualisierung", "get_key": "Schlüssel erhalten"},
+}
+for _langue, _textes in TEXTES_REGLAGES.items():
+    T[_langue].update(_textes)
+
+
 # ------------------------------------------------------------- configuration
+
+
+def ecrire_json(path, data, mode=0o600):
+    """Écriture atomique: fichier temporaire, fsync puis renommage. Une coupure
+    de courant laisse l'ancien fichier intact au lieu d'un fichier vide."""
+    temporaire = path + ".tmp"
+    fd = os.open(temporaire, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+    os.chmod(temporaire, mode)
+    os.replace(temporaire, path)
 
 
 def load_config():
     config = dict(DEFAULTS)
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            config.update(json.load(f))
+            lu = json.load(f)
+        if isinstance(lu, dict):
+            config.update(lu)
     except FileNotFoundError:
         pass
+    except (OSError, ValueError):
+        # Fichier illisible (coupure de courant): on démarre sur les valeurs
+        # par défaut plutôt que de planter en boucle; /config permet de refaire
+        # le réglage.
+        print("[config] config.json illisible, valeurs par défaut utilisées", flush=True)
     return config
 
 
 def save_config(config):
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
+    ecrire_json(CONFIG_PATH, config)
 
 
 def load_auth():
+    """None seulement si aucun mot de passe n'a jamais été créé. Un fichier
+    illisible renvoie {}: /setup reste fermé (sinon le premier venu sur le
+    réseau reprendrait la main) et le mot de passe se redéfinit avec
+    tools/motdepasse.py."""
     try:
         with open(AUTH_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            lu = json.load(f)
+        return lu if isinstance(lu, dict) else {}
     except FileNotFoundError:
         return None
+    except (OSError, ValueError):
+        print("[auth] auth.json illisible: tools/motdepasse.py nouveau ...", flush=True)
+        return {}
 
 
 def save_auth(password_hash):
-    fd = os.open(AUTH_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        json.dump({"password_hash": password_hash}, f)
+    ecrire_json(AUTH_PATH, {"password_hash": password_hash})
+
+
+def password_ok(password):
+    stored = (load_auth() or {}).get("password_hash", "")
+    if not stored:
+        return False
+    try:
+        return check_password_hash(stored, password)
+    except ValueError:
+        return False
 
 
 def get_secret_key():
@@ -303,7 +400,16 @@ def do_action(action):
     if action == "info":
         return toggle_artist_panel()
     if action == "mute":
-        MUTE_STATE["muted"] = not MUTE_STATE["muted"]
+        # L'état réel prime : on a pu couper le son depuis l'appli Eversolo.
+        info = STATE_CACHE.get("info") or {}
+        volume = info.get("volume")
+        reel = volume.get("muet") if volume else None
+        actuel = MUTE_STATE["muted"] if reel is None else reel
+        MUTE_STATE["muted"] = not actuel
+        if volume:
+            # Deux appuis rapprochés : le second part de l'état visé, pas
+            # d'un relevé vieux d'une seconde.
+            STATE_CACHE["info"] = {**info, "volume": {**volume, "muet": MUTE_STATE["muted"]}}
         url = f"{eversolo_base()}/ZidooMusicControl/v2/setMuteVolume?isMute={1 if MUTE_STATE['muted'] else 0}"
     elif action in ACTIONS:
         url = f"{eversolo_base()}{ACTIONS[action]}"
@@ -316,8 +422,8 @@ def do_action(action):
         return False
 
 
-IR_CODES_DIR = os.path.join(BASE_DIR, "ir_codes")
-NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+IR_CODES_DIR = os.path.join(DATA_DIR, "ir_codes")
+NAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
 
 
 def lirc_devices():
@@ -367,6 +473,15 @@ def send_raw(path):
 
 ARTIST_CACHE = {}
 ARTIST_PANEL = {"until": 0.0, "data": None, "scroll": 0, "page": "artist"}
+
+
+TADB_CLE_GRATUITE = "123"
+TADB_CLES_PERIMEES = {"", "1", "2"}  # anciennes clés d'essai, refusées par le service
+
+
+def cle_theaudiodb():
+    cle = (CONFIG.get("theaudiodb_key") or "").strip()
+    return TADB_CLE_GRATUITE if cle in TADB_CLES_PERIMEES else cle
 
 
 def _entetes_api():
@@ -532,7 +647,7 @@ def _wiki_data(artist, title, wl, facts, via):
     thumb = (j.get("thumbnail") or {}).get("source")
     return {
         "artist": artist, "text": extract,
-        "image": "/api/cover?u=" + requests.utils.quote(thumb, safe="") if thumb else None,
+        "image": thumb or None,
         "facts": facts, "source": f"Wikipedia ({wl}){via}",
     }
 
@@ -579,7 +694,7 @@ def _wiki_recherche(artist, lang, facts):
 
 
 def theaudiodb_bio(artist, lang, facts):
-    key = (CONFIG.get("theaudiodb_key") or "2").strip()
+    key = cle_theaudiodb()
     try:
         r = http.get(
             f"https://www.theaudiodb.com/api/v1/json/{key}/search.php",
@@ -595,7 +710,7 @@ def theaudiodb_bio(artist, lang, facts):
         img = a.get("strArtistThumb") or a.get("strArtistFanart")
         return {
             "artist": artist, "text": _couper(bio),
-            "image": "/api/cover?u=" + requests.utils.quote(img, safe="") if img else None,
+            "image": img or None,
             "facts": facts, "source": "TheAudioDB",
         }
     except Exception:
@@ -805,7 +920,7 @@ def fetch_album_info(artist, album, lang):
 
     data = None
     try:
-        k = (CONFIG.get("theaudiodb_key") or "2").strip()
+        k = cle_theaudiodb()
         r = http.get(
             f"https://www.theaudiodb.com/api/v1/json/{k}/searchalbum.php",
             params={"s": nom, "a": album}, headers=_entetes_api(), timeout=5,
@@ -982,7 +1097,7 @@ def enrichir_album(album_info, artist, titre, lang):
     return album_info
 
 
-FICHIER_FICHES = os.path.join(BASE_DIR, "cache_fiches.json")
+FICHIER_FICHES = os.path.join(DATA_DIR, "cache_fiches.json")
 _SAUVEGARDE = {"minuteur": None, "verrou": threading.Lock()}
 RG_CACHE = {}
 
@@ -1067,6 +1182,15 @@ def _mb_release_group(artist, album):
     return groupe
 
 
+def fiche_artiste(bio, artist, lang):
+    """Page artiste du volet ; la photo passe par le proxy de pochettes."""
+    if not bio:
+        return {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
+                "image": None, "facts": [], "source": ""}
+    return {"name": bio["artist"], "text": bio["text"], "image": cover_ref(bio.get("image")),
+            "facts": bio["facts"], "source": bio["source"]}
+
+
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
     if ARTIST_PANEL["until"] > time.time():
@@ -1085,11 +1209,7 @@ def toggle_artist_panel():
     lang = CONFIG.get("language", "fr")
 
     def assembler(bio, album_info):
-        art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
-                "facts": bio["facts"], "source": bio["source"]}
-               if bio else
-               {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
-                "image": None, "facts": [], "source": ""})
+        art = fiche_artiste(bio, artist, lang)
         return {"artist": art, "album": album_info}, (60 if (bio or album_info) else 8)
 
     cle_art = (artist.lower(), (album_titre or "").lower(), lang)
@@ -1145,11 +1265,7 @@ def toggle_artist_panel():
             bio = fetch_artist_info(artist, lang, album_titre)
         except Exception:
             bio = None
-        art = ({"name": bio["artist"], "text": bio["text"], "image": bio["image"],
-                "facts": bio["facts"], "source": bio["source"]}
-               if bio else
-               {"name": artist, "text": T.get(lang, T["fr"])["no_bio"],
-                "image": None, "facts": [], "source": ""})
+        art = fiche_artiste(bio, artist, lang)
         publier(lambda d: d.__setitem__("artist", art))
 
     def fil_album():
@@ -1187,42 +1303,94 @@ def _rev_locale():
 
 
 LOCAL_REV = _rev_locale()
-VERSION_DISTANTE = {"ts": 0.0, "sha": "", "message": ""}
+# Nom lisible de la version en service : « v1.2.0 » avec les versions, le
+# commit sinon (installation d'avant le lot 0 bis).
+VERSION_LOCALE = os.path.basename(os.path.realpath(BASE_DIR)) if DISPO else LOCAL_REV
+MAJ_DISPONIBLE = {"ts": 0.0, "version": None, "notes": [], "en_cours": False}
+MAJ_VERROU = threading.Lock()
+MAJ_RECHERCHE_S = 600
+MAJ_VALIDATION_S = 20
+MAJ_VALIDATION_ESSAIS = 10   # un Pi 3 peut mettre du temps à tout charger
 
 
-def derniere_version():
-    """Dernier commit publié sur GitHub, vérifié au plus toutes les 10 minutes."""
-    if time.time() - VERSION_DISTANTE["ts"] < 600:
-        return VERSION_DISTANTE
-    VERSION_DISTANTE["ts"] = time.time()
-    try:
-        r = http.get(
-            "https://api.github.com/repos/kofekod23/eversolo-screen/commits/main",
-            headers=_entetes_api(), timeout=5,
-        )
-        j = r.json()
-        VERSION_DISTANTE["sha"] = (j.get("sha") or "")[:7]
-        VERSION_DISTANTE["message"] = (j.get("commit", {}).get("message") or "").split("\n")[0]
-    except Exception:
-        pass
-    return VERSION_DISTANTE
+def chercher_mise_a_jour():
+    """Version signée plus récente publiée, et ses nouveautés (en fond)."""
+    if not DISPO:
+        return
+    with MAJ_VERROU:
+        if MAJ_DISPONIBLE["en_cours"] or time.time() - MAJ_DISPONIBLE["ts"] < MAJ_RECHERCHE_S:
+            return
+        MAJ_DISPONIBLE.update(en_cours=True, ts=time.time())
 
-
-def lancer_mise_a_jour():
-    """Met à jour depuis GitHub puis laisse systemd relancer le serveur."""
     def travail():
-        time.sleep(1.0)
         try:
-            subprocess.run(["git", "fetch", "origin"], cwd=BASE_DIR, timeout=60)
-            subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=BASE_DIR, timeout=30)
-            subprocess.run(
-                [os.path.join(BASE_DIR, "venv", "bin", "pip"), "install",
-                 "--quiet", "-r", os.path.join(BASE_DIR, "requirements.txt")],
-                cwd=BASE_DIR, timeout=300,
-            )
-        except Exception:
-            pass
-        os._exit(1)  # systemd (Restart=on-failure) relance avec le nouveau code
+            with versions.verrou(DISPO):  # jamais pendant une installation
+                versions.git(DISPO, "fetch", "--quiet", "--tags", "origin", duree=300)
+                # seule une version dont la signature tient est proposée
+                locaux = versions.tags_de_ls_remote(
+                    versions.git(DISPO, "ls-remote", "--tags", "."))
+                cible = versions.proposable(DISPO, locaux, VERSION_LOCALE)
+                notes = versions.notes(DISPO, cible) if cible else []
+            MAJ_DISPONIBLE.update(version=cible, notes=notes)
+        except (versions.ErreurMaj, versions.Occupe, OSError, subprocess.TimeoutExpired) as exc:
+            MAJ_DISPONIBLE.update(version=None, notes=[])
+            print(f"[diagnostic] recherche de mise à jour : {exc}", flush=True)
+        finally:
+            MAJ_DISPONIBLE["en_cours"] = False
+    threading.Thread(target=travail, daemon=True).start()
+
+
+def maj_en_cours():
+    if not DISPO:
+        return None
+    etat = versions.lire_etat(DISPO)
+    if versions.en_cours(etat):
+        return {"etape": etat["etape"], "version": etat.get("version")}
+    return None
+
+
+def lecture_en_cours():
+    return ((STATE_CACHE.get("info") or {}).get("etat") == "lecture")
+
+
+def installer_version(cible):
+    """Installe une version signée puis redémarre ; en cas d'échec, le serveur
+    continue sur la version actuelle et /config affiche la raison."""
+    def travail():
+        try:
+            versions.installer(DISPO, cible)
+        except Exception as exc:  # noqa: BLE001 - le fil ne doit jamais mourir en silence
+            print(f"[diagnostic] mise à jour refusée : {exc}", flush=True)
+            versions.noter_echec(DISPO, cible, exc)
+            return
+        os._exit(1)  # systemd relance sur la nouvelle version
+    threading.Thread(target=travail, daemon=True).start()
+
+
+def revenir_version():
+    versions.revenir(DISPO)
+    threading.Timer(1.0, lambda: os._exit(1)).start()
+
+
+def valider_au_demarrage(port):
+    """Après quelques secondes, si le serveur répond, la version est adoptée ;
+    sinon le garde de systemd reviendra à la précédente."""
+    if not DISPO:
+        return
+
+    def travail():
+        for _ in range(MAJ_VALIDATION_ESSAIS):
+            time.sleep(MAJ_VALIDATION_S if _ == 0 else 10)
+            try:
+                r = requests.get(f"http://127.0.0.1:{port}/favicon.ico", timeout=5,
+                                 headers={"Host": f"localhost:{port}"})
+                if r.status_code != 200:
+                    continue
+                if versions.valider(DISPO):
+                    print(f"[mise à jour] {VERSION_LOCALE} adoptée", flush=True)
+                return
+            except (requests.RequestException, versions.Occupe, OSError) as exc:
+                print(f"[diagnostic] validation, nouvel essai : {exc}", flush=True)
     threading.Thread(target=travail, daemon=True).start()
 
 
@@ -1231,15 +1399,26 @@ MAX_ATTEMPTS = 5
 LOCK_WINDOW = 15 * 60
 
 
+ECHECS_CONNEXION = []
+MAX_ECHECS_CONNEXION = 30  # toutes adresses confondues : changer d'IP ne suffit plus
+
+
 def is_locked(ip):
     now = time.time()
     attempts = [t for t in FAILED.get(ip, []) if now - t < LOCK_WINDOW]
-    FAILED[ip] = attempts
-    return len(attempts) >= MAX_ATTEMPTS
+    if attempts:
+        FAILED[ip] = attempts
+    else:
+        FAILED.pop(ip, None)
+    ECHECS_CONNEXION[:] = [t for t in ECHECS_CONNEXION if now - t < LOCK_WINDOW]
+    return len(attempts) >= MAX_ATTEMPTS or len(ECHECS_CONNEXION) >= MAX_ECHECS_CONNEXION
 
 
 def record_failure(ip):
+    if len(FAILED) > 1000:
+        FAILED.clear()  # borne la mémoire ; le compteur global reste
     FAILED.setdefault(ip, []).append(time.time())
+    ECHECS_CONNEXION.append(time.time())
 
 
 # ------------------------------------------------------------------- helpers
@@ -1258,8 +1437,22 @@ def is_configured():
     return load_auth() is not None and CONFIG.get("eversolo_ip")
 
 
+def empreinte_auth():
+    """Empreinte du mot de passe en vigueur : une session ouverte avant un
+    changement de mot de passe cesse d'être valable."""
+    stored = (load_auth() or {}).get("password_hash", "")
+    return hashlib.sha256(stored.encode()).hexdigest()[:32] if stored else ""
+
+
+def ouvrir_session():
+    session.clear()
+    session["auth"] = empreinte_auth()
+    session.permanent = True
+
+
 def logged_in():
-    return session.get("auth") is True
+    attendu, recu = empreinte_auth(), session.get("auth")
+    return bool(attendu) and isinstance(recu, str) and secrets.compare_digest(recu, attendu)
 
 
 def csrf_token():
@@ -1282,17 +1475,156 @@ def valid_ip(value):
         return False
 
 
+ENTETES_RELAIS = ("X-Forwarded-For", "Forwarded", "X-Real-IP")
+
+
+def requete_locale():
+    """Vrai pour le kiosque et le démon IR, qui tournent sur le Pi lui-même.
+    Un relais installé un jour sur le Pi (proxy, tunnel) se présenterait lui
+    aussi en 127.0.0.1 : on exige en plus un nom local et aucun en-tête de relais."""
+    if request.remote_addr not in ("127.0.0.1", "::1"):
+        return False
+    if any(request.headers.get(h) for h in ENTETES_RELAIS):
+        return False
+    return nom_hote(request.host) in ("localhost", "127.0.0.1", "::1")
+
+
+def ip_locale():
+    """Adresse du Pi sur le réseau local (aucun paquet n'est envoyé)."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+
+def nom_hote(hote):
+    """Nom ou adresse d'un en-tête Host, sans port, en minuscules."""
+    nom = (hote or "").strip().lower()
+    if nom.startswith("["):
+        nom = nom[1:nom.find("]")] if "]" in nom else nom[1:]
+    elif nom.count(":") == 1:
+        nom = nom.split(":", 1)[0]
+    return nom.rstrip(".")
+
+
+def hote_autorise(hote):
+    """Vrai si l'en-tête Host désigne bien le Pi : adresse IP, localhost, nom
+    du Pi avec ou sans .local, ou nom ajouté dans config.json. Une page piégée
+    qui rebondit par DNS vers le Pi arrive toujours avec son propre nom."""
+    nom = nom_hote(hote)
+    if not nom:
+        return False
+    try:
+        ipaddress.ip_address(nom)
+        return True
+    except ValueError:
+        pass
+    if "." not in nom:
+        # Nom court (eversolo, localhost) : jamais un domaine d'attaquant, qui
+        # a toujours au moins un point.
+        return True
+    pi = socket.gethostname().lower()
+    court = pi.split(".")[0]
+    ajoutes = CONFIG.get("hotes_autorises") or []
+    if isinstance(ajoutes, str):
+        ajoutes = [ajoutes]
+    noms = {pi, court + ".local"}
+    noms.update(nom_hote(str(n)) for n in ajoutes)
+    return nom in noms
+
+
+# Code de première configuration : affiché sur la TV, exigé de tout appareil
+# du réseau tant qu'aucun mot de passe n'existe. Le code reste stable (un
+# invité ne peut pas le faire changer sous les yeux du propriétaire) ; ce sont
+# les essais qui sont limités : 5 erreurs bloquent une adresse 15 minutes,
+# 30 erreurs en tout suspendent l'installation réseau 10 minutes. Au mieux
+# 180 essais par heure contre un million de codes possibles.
+INSTALLATION = {"code": None, "echecs": {}, "recents": [], "pause_jusqu": 0.0}
+INSTALLATION_VERROU = threading.Lock()
+ECHECS_PAR_ADRESSE = 5
+BLOCAGE_ADRESSE = 15 * 60
+ECHECS_GLOBAUX = 30
+PAUSE_GLOBALE = 10 * 60
+
+
+def code_installation():
+    with INSTALLATION_VERROU:
+        if INSTALLATION["code"] is None:
+            INSTALLATION["code"] = f"{secrets.randbelow(10 ** 6):06d}"
+            # Le journal sert de repli quand aucune TV n'est branchée.
+            print(f"[installation] code affiché sur la TV : {INSTALLATION['code']}", flush=True)
+        return INSTALLATION["code"]
+
+
+def _echecs_recents(adresse, maintenant):
+    return [t for t in INSTALLATION["echecs"].get(adresse, []) if maintenant - t < BLOCAGE_ADRESSE]
+
+
+def code_bloque(adresse):
+    maintenant = time.time()
+    with INSTALLATION_VERROU:
+        return (maintenant < INSTALLATION["pause_jusqu"]
+                or len(_echecs_recents(adresse, maintenant)) >= ECHECS_PAR_ADRESSE)
+
+
+def verifier_code(saisi, adresse=None):
+    """Compare le code saisi, sauf si l'adresse ou l'installation est bloquée."""
+    attendu = code_installation()
+    if code_bloque(adresse):
+        return False
+    if secrets.compare_digest(attendu.encode(), (saisi or "").strip().encode()):
+        return True
+    maintenant = time.time()
+    with INSTALLATION_VERROU:
+        echecs = INSTALLATION["echecs"]
+        echecs[adresse] = _echecs_recents(adresse, maintenant) + [maintenant]
+        if len(echecs) > 256:
+            for ancienne in [a for a in echecs if not _echecs_recents(a, maintenant)]:
+                echecs.pop(ancienne, None)
+        recents = [t for t in INSTALLATION["recents"] if maintenant - t < PAUSE_GLOBALE]
+        recents.append(maintenant)
+        if len(recents) >= ECHECS_GLOBAUX:
+            INSTALLATION["pause_jusqu"] = maintenant + PAUSE_GLOBALE
+            recents = []
+        INSTALLATION["recents"] = recents
+    return False
+
+
+def oublier_code():
+    with INSTALLATION_VERROU:
+        INSTALLATION.update({"code": None, "echecs": {}, "recents": [], "pause_jusqu": 0.0})
+
+
+def csrf_entete_ok():
+    token = session.get("csrf")
+    sent = request.headers.get("X-CSRF-Token", "")
+    return bool(token and sent and secrets.compare_digest(token, sent))
+
+
+@app.before_request
+def controler_hote():
+    if hote_autorise(request.host):
+        return None
+    texte = tr()["host_refused"].format(ip=ip_locale(), port=CONFIG.get("listen_port", 8080))
+    return Response(texte, status=400, mimetype="text/plain")
+
+
 @app.after_request
 def security_headers(resp):
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["Referrer-Policy"] = "no-referrer"
-    resp.headers["Content-Security-Policy"] = (
+    # Une route peut imposer sa propre politique (proxy de pochettes: sandbox).
+    resp.headers.setdefault("Content-Security-Policy", (
         "default-src 'self'; img-src 'self' data:; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "font-src 'self'; script-src 'self' 'unsafe-inline'; "
         "connect-src 'self'; frame-ancestors 'none'"
-    )
+    ))
     return resp
 
 
@@ -1314,13 +1646,10 @@ def probe(ip, port, timeout=0.4):
 
 
 def local_subnet():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        local_ip = s.getsockname()[0]
-    finally:
-        s.close()
-    return ipaddress.ip_network(f"{local_ip}/24", strict=False)
+    return ipaddress.ip_network(f"{ip_locale()}/24", strict=False)
+
+
+SCAN_VERROU = threading.Lock()
 
 
 def scan_network():
@@ -1334,53 +1663,145 @@ def scan_network():
     return found
 
 
+# ------------------------------------------------------------ capture d'état
+
+CAPTURES_DIR = os.path.join(DATA_DIR, "captures")
+CAPTURES_MAX = 40
+CAPTURE_NOM_RE = re.compile(r"^\d{8}-\d{6}-[a-z]+\.json$")
+CAPTURE_VERROU = threading.Lock()
+SITUATIONS = ("qobuz", "tidal", "radio", "dsd", "fichier", "pause", "muet", "autre")
+# Routes sûres : ni bibliothèque ni recherche, qui peuvent bloquer la base
+# musicale de l'Eversolo plusieurs minutes.
+CAPTURE_ROUTES = (
+    ("getState", "/ZidooMusicControl/v2/getState"),
+    ("getInputAndOutputList", "/ZidooMusicControl/v2/getInputAndOutputList"),
+    ("getPlayQueue", "/ZidooMusicControl/v2/getPlayQueue?start=0&count=20"),
+    ("getModel", "/ControlCenter/getModel"),
+)
+CLES_SENSIBLES = re.compile(
+    r"token|passw|secret|cookie|e?mail|account|login|hmac|signature|serial|uuid|ssid|psk|imei"
+    r"|api_?key|device_?id|mac_?addr|_mac$|session_?(id|key)|^mac$|^sn$|^uid$|^user(_?name|_?id)?$"
+    r"|auth(?!or)", re.I)
+SCHEMA_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
+MASQUE = "(masqué)"
+
+
+def masquer(valeur, cle=""):
+    """Copie sans secrets : champs d'identité masqués, adresses de flux
+    réduites à leur hôte (les URL Qobuz et Tidal sont signées). Les adresses
+    de l'Eversolo lui-même restent intactes."""
+    if cle and CLES_SENSIBLES.search(cle) and valeur not in (None, "", [], {}):
+        return MASQUE
+    if isinstance(valeur, dict):
+        return {k: masquer(v, str(k)) for k, v in valeur.items()}
+    if isinstance(valeur, list):
+        return [masquer(v, cle) for v in valeur]
+    if isinstance(valeur, str) and SCHEMA_RE.match(valeur):
+        # Toute adresse (http, smb, nfs, rtsp…) : identifiants retirés ; pour
+        # un hôte tiers, chemin et paramètres aussi (adresses de flux signées).
+        try:
+            p = urlparse(valeur)
+            hote = p.hostname or ""
+            port = p.port
+        except ValueError:
+            return MASQUE
+        netloc = f"[{hote}]" if ":" in hote else hote
+        if port:
+            netloc += f":{port}"
+        if hote and hote == CONFIG.get("eversolo_ip"):
+            return p._replace(netloc=netloc, fragment="").geturl()
+        # Sous-domaine numérique d'un service tiers : identifiant d'appareil.
+        netloc = re.sub(r"(?<![\w-])\d{6,}(?=\.)", "x", netloc)
+        return f"{p.scheme}://{netloc}/{MASQUE}"
+    return valeur
+
+
+def capturer_etat(situation):
+    """Enregistre ce que l'Eversolo renvoie, une requête à la fois. Renvoie le
+    nom du fichier, ou None si l'Eversolo n'a pas répondu du tout."""
+    if not CONFIG.get("eversolo_ip"):
+        return None
+    contenu = {"capture": {"date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                           "situation": situation, "version": LOCAL_REV}}
+    repondu = False
+    for nom, chemin in CAPTURE_ROUTES:
+        try:
+            contenu[nom] = http.get(eversolo_base() + chemin, timeout=4).json()
+            repondu = True
+        except Exception as exc:
+            contenu[nom] = {"erreur": type(exc).__name__}
+    if not repondu:
+        return None
+    try:
+        propre = masquer(contenu)
+    except Exception:
+        # Jamais de capture non masquée sur le disque.
+        return None
+    os.makedirs(CAPTURES_DIR, mode=0o700, exist_ok=True)
+    fichier = time.strftime("%Y%m%d-%H%M%S") + "-" + situation + ".json"
+    ecrire_json(os.path.join(CAPTURES_DIR, fichier), propre)
+    for ancien in liste_captures()[CAPTURES_MAX:]:
+        try:
+            os.remove(os.path.join(CAPTURES_DIR, ancien))
+        except OSError:
+            pass
+    return fichier
+
+
+def liste_captures():
+    try:
+        noms = [n for n in os.listdir(CAPTURES_DIR) if CAPTURE_NOM_RE.fullmatch(n)]
+    except FileNotFoundError:
+        return []
+    return sorted(noms, reverse=True)
+
+
 # ------------------------------------------------------------------ templates
 
 PAGE = """
-<!DOCTYPE html><html lang="{{ lang }}"><head>
+<!DOCTYPE html><html lang="{{ lang }}" class="{{ classe }}"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
+<meta name="color-scheme" content="light dark">
 <title>Eversolo · {{ title }}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,340..640&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  <link rel="icon" type="image/png" href="/static/favicon.png">
-  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<style>
-:root{--chassis:#0d0b08;--panel:#16130e;--line:#2a251c;--ivory:#ece6d8;--muted:#918a79;--tube:#e8a33d}
-*{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;background:var(--chassis);color:var(--ivory);font-family:"Archivo",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
-.card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:36px 32px;box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
-.brand{font-size:11px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px;margin-bottom:26px}
-.brand b{color:var(--ivory)}
-.lamp{width:7px;height:7px;border-radius:50%;background:var(--tube);box-shadow:0 0 10px 2px rgba(232,163,61,.55)}
-h1{font-family:"Fraunces",Georgia,serif;font-weight:560;font-size:27px;margin-bottom:8px}
-.intro{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:26px}
-label{display:block;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
-input,select{width:100%;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--ivory);font-family:"IBM Plex Mono",monospace;font-size:15px;padding:12px 14px;outline:none}
-input:focus,select:focus{border-color:var(--tube)}
-button{width:100%;margin-top:26px;background:var(--tube);border:none;border-radius:4px;color:#1a1206;font-family:"Archivo";font-weight:600;font-size:15px;letter-spacing:.04em;padding:14px;cursor:pointer}
-button:hover{filter:brightness(1.08)}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);margin-top:12px;font-weight:500}
-.msg{border-left:2px solid var(--tube);padding:10px 14px;font-size:13px;color:var(--ivory);background:rgba(232,163,61,.07);margin-bottom:18px;border-radius:0 4px 4px 0}
-.msg.err{border-color:#c65a4a;background:rgba(198,90,74,.09)}
-.row{display:flex;gap:10px}.row input{flex:1}
-.row button{width:auto;margin-top:0;padding:0 16px;font-size:13px}
-.foot{margin-top:24px;text-align:center}
-.foot a{color:var(--muted);font-size:12px;letter-spacing:.08em;text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:2px}
-.foot a:hover{color:var(--ivory)}
-</style></head><body>
-<div class="card">
-  <div class="brand"><span class="lamp"></span><span><b>Eversolo</b></span></div>
+<link href="/static/fonts/fonts.css" rel="stylesheet">
+<link href="/static/reglages.css" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+</head><body>
+{{ nav }}
+{% if large %}<main class="reglages">{{ body }}</main>
+{% else %}<main class="card">
+  {% if not nav %}<div class="brand"><span class="marque"></span><b>Eversolo</b></div>{% endif %}
   {{ body }}
-</div>
+</main>{% endif %}
 </body></html>
 """
 
 
-def page(title, body, lang):
-    return render_template_string(PAGE, title=title, body=Markup(body), lang=lang)
+def barre_navigation(courant):
+    """Bandeau des pages réservées : où l'on est, où aller, se déconnecter."""
+    t = tr()
+    liens = (("config", "/config", t["config_title"]), ("remote", "/remote", t["remote_title"]),
+             ("blaster", "/blaster", t["blaster_title"]))
+    actif = ' aria-current="page"'
+    items = "".join(
+        f'<a href="{href}"{actif if cle == courant else ""}>{escape(nom)}</a>'
+        for cle, href, nom in liens)
+    modele = escape(MODEL_CACHE.get("name") or "")
+    return Markup(f"""<header class="entete"><div class="entete-in">
+  <a class="brand" href="/"><span class="marque"></span><b>Eversolo</b><span class="modele">{modele}</span></a>
+  <nav>{items}<a href="/" class="vers-ecran">{escape(t['back_display'])}</a>
+    <form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}">
+    <button class="lien">{escape(t['logout'])}</button></form></nav>
+</div></header>""")
+
+
+def page(title, body, lang, large=False, nav=None, sombre=False):
+    return render_template_string(
+        PAGE, title=title, body=Markup(body), lang=lang, large=large,
+        nav=barre_navigation(nav) if nav else "", classe="sombre" if sombre else "")
 
 
 # --------------------------------------------------------------------- routes
@@ -1393,6 +1814,39 @@ def index():
     return send_from_directory(app.static_folder, "index.html")
 
 
+def page_installation_tv(t, lang):
+    """Écran de la TV avant la première configuration : où aller, quel code."""
+    port = CONFIG.get("listen_port", 8080)
+    nom = socket.gethostname()
+    code = code_installation()
+    body = f"""
+<style>
+.card{{width:min(1100px,94vw);text-align:center;padding:5vh 4vw}}
+.tvurl{{font-family:"Geist Mono",monospace;font-size:clamp(22px,4.4vh,48px);margin:1.2vh 0;word-break:break-all}}
+.tvcode{{font-family:"Geist Mono",monospace;font-size:clamp(56px,15vh,170px);letter-spacing:.14em;color:var(--tube);margin-top:1vh}}
+.card h1{{font-size:clamp(28px,6vh,64px)}}
+.card .intro{{font-size:clamp(16px,3vh,30px);margin:3vh 0 0}}
+</style>
+<h1>{t['setup_title']}</h1>
+<p class="intro">{t['tv_setup_intro']}</p>
+<div class="tvurl">http://{escape(ip_locale())}:{port}</div>
+<div class="tvurl" style="color:var(--muted)">http://{escape(nom)}.local:{port}</div>
+<p class="intro">{t['tv_setup_code']}</p>
+<div class="tvcode" id="code">{code}</div>
+<div class="foot"><a href="/setup?ici=1&amp;lang={lang}">{t['tv_setup_here']}</a></div>
+<script>
+setInterval(async function() {{
+  try {{
+    const d = await (await fetch('/api/setup/etat', {{cache: 'no-store'}})).json();
+    if (d.configure) location = '/';
+    else if (d.code) document.getElementById('code').textContent = d.code;
+  }} catch (e) {{}}
+}}, 3000);
+</script>
+"""
+    return page(t["setup_title"], body, lang, sombre=True)
+
+
 @app.route("/setup", methods=["GET", "POST"])
 def setup():
     if load_auth() is not None:
@@ -1401,12 +1855,20 @@ def setup():
     if lang not in LANGS:
         lang = "fr"
     t = T[lang]
+    locale = requete_locale()
+    if locale and request.method == "GET" and not request.args.get("ici"):
+        return page_installation_tv(t, lang)
     error = None
+    code_saisi = ""
 
     if request.method == "POST":
         if not csrf_ok():
             error = "CSRF"
+        elif not locale and not verifier_code(request.form.get("code"), request.remote_addr):
+            # Le code passe avant tout le reste : sans lui, aucun champ n'est examiné.
+            error = t["locked"] if code_bloque(request.remote_addr) else t["code_bad"]
         else:
+            code_saisi = "" if locale else request.form.get("code", "").strip()
             pw = request.form.get("password", "")
             pw2 = request.form.get("password2", "")
             ip = request.form.get("device_ip", "").strip()
@@ -1418,21 +1880,23 @@ def setup():
                 error = t["invalid_ip"]
             else:
                 save_auth(generate_password_hash(pw, method="scrypt"))
+                oublier_code()
                 CONFIG.update({"eversolo_ip": ip, "language": lang})
                 save_config(CONFIG)
-                session.clear()
-                session["auth"] = True
-                session.permanent = True
+                ouvrir_session()
                 return redirect("/")
 
+    champ_code = "" if locale else f"""
+  <label for="code">{t['code_label']}</label>
+  <input type="text" name="code" id="code" value="{escape(code_saisi)}" inputmode="numeric" pattern="[0-9]{{6}}" maxlength="6" autocomplete="one-time-code" required>"""
     body = f"""
 <h1>{t['setup_title']}</h1>
 <p class="intro">{t['setup_intro']}</p>
 {f'<div class="msg err">{error}</div>' if error else ''}
-<form method="post" action="/setup?lang={lang}">
-  <input type="hidden" name="csrf" value="{csrf_token()}">
+<form method="post" action="/setup?lang={lang}{'&amp;ici=1' if locale else ''}">
+  <input type="hidden" name="csrf" value="{csrf_token()}">{champ_code}
   <label>{t['language']}</label>
-  <select onchange="location='/setup?lang='+this.value">
+  <select onchange="location='/setup?{'ici=1&' if locale else ''}lang='+this.value">
     <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
     <option value="en" {'selected' if lang=='en' else ''}>English</option>
     <option value="es" {'selected' if lang=='es' else ''}>Español</option>
@@ -1451,11 +1915,22 @@ def setup():
 </form>
 <script>
 document.getElementById('scan').onclick = async function() {{
+  const champ = document.getElementById('code');
+  const entetes = {{}};
+  if (champ) {{
+    if (!champ.value.trim()) {{ alert({json.dumps(t['code_first'])}); champ.focus(); return; }}
+    entetes['X-Code-Installation'] = champ.value.trim();
+  }}
   this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
   try {{
-    const r = await fetch('/api/detect'); const d = await r.json();
-    if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
-    else alert({json.dumps(t['detect_none'])});
+    const r = await fetch('/api/detect', {{headers: entetes}});
+    if (r.status === 403) alert({json.dumps(t['code_bad'])});
+    else if (r.status === 429) alert({json.dumps(t['detecting'])});
+    else {{
+      const d = await r.json();
+      if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
+      else alert({json.dumps(t['detect_none'])});
+    }}
   }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
 }};
@@ -1479,12 +1954,9 @@ def login():
         elif not csrf_ok():
             error = t["session_expired"]
         else:
-            auth = load_auth()
-            if check_password_hash(auth["password_hash"], request.form.get("password", "")):
+            if password_ok(request.form.get("password", "")):
                 FAILED.pop(ip, None)
-                session.clear()
-                session["auth"] = True
-                session.permanent = True
+                ouvrir_session()
                 return redirect("/config")
             record_failure(ip)
             error = t["locked"] if is_locked(ip) else t["bad_password"]
@@ -1522,9 +1994,42 @@ def config_page():
     if request.method == "POST":
         if not csrf_ok():
             error = t["session_expired"]
-        elif request.form.get("op") == "update":
-            lancer_mise_a_jour()
-            message = t["update_started"]
+        elif request.form.get("op") == "update" and DISPO:
+            cible = MAJ_DISPONIBLE.get("version")
+            if maj_en_cours():
+                error = t["maj_deja"]
+            elif lecture_en_cours():
+                error = t["maj_pendant_lecture"]
+            elif not cible:
+                error = t["maj_rien"]
+            else:
+                installer_version(cible)
+                message = t["maj_lancee"]
+        elif request.form.get("op") == "retour" and DISPO:
+            try:
+                revenir_version()
+                message = t["maj_retour_lance"]
+            except (versions.ErreurMaj, versions.Occupe, OSError) as exc:
+                error = str(exc)
+        elif request.form.get("op") == "affichage":
+            CONFIG.update(affichage.reglages_depuis_formulaire(request.form))
+            save_config(CONFIG)
+            message = t["saved"]
+        elif request.form.get("op") == "capture":
+            situation = request.form.get("situation", "")
+            if situation not in SITUATIONS:
+                situation = "autre"
+            if CAPTURE_VERROU.acquire(blocking=False):
+                try:
+                    fichier = capturer_etat(situation)
+                finally:
+                    CAPTURE_VERROU.release()
+                if fichier:
+                    message = f"{t['capture_done']} : {fichier}"
+                else:
+                    error = t["capture_failed"]
+            else:
+                error = t["capture_busy"]
         else:
             ip = request.form.get("device_ip", "").strip()
             new_lang = request.form.get("language", lang)
@@ -1534,15 +2039,17 @@ def config_page():
                 error = t["invalid_ip"]
             elif new_pw and len(new_pw) < 8:
                 error = t["password_short"]
-            elif new_pw and not check_password_hash(load_auth()["password_hash"], cur_pw):
+            elif new_pw and not password_ok(cur_pw):
                 error = t["bad_password"]
             else:
                 if new_pw:
                     save_auth(generate_password_hash(new_pw, method="scrypt"))
+                    # les autres sessions (cookie volé, autre appareil) tombent
+                    session["auth"] = empreinte_auth()
                 CONFIG.update({
                     "eversolo_ip": ip,
                     "language": new_lang if new_lang in LANGS else lang,
-                    "theaudiodb_key": request.form.get("tadb_key", "").strip() or "2",
+                    "theaudiodb_key": request.form.get("tadb_key", "").strip() or TADB_CLE_GRATUITE,
                     "lastfm_api_key": request.form.get("lastfm_key", "").strip(),
                     "discogs_token": request.form.get("discogs_token", "").strip(),
                     "genius_token": request.form.get("genius_token", "").strip(),
@@ -1552,80 +2059,227 @@ def config_page():
                 lang = CONFIG["language"]
                 message = t["saved"]
 
+    choix_langue = "".join(
+        f'<option value="{code}"{" selected" if lang == code else ""}>{nom}</option>'
+        for code, nom in (("fr", "Français"), ("en", "English"), ("es", "Español"), ("de", "Deutsch")))
+    section_streamer = groupe("02", t["sec_streamer"], t["sec_streamer_intro"], f"""
+    <label for="ip">{t['device_ip']}</label>
+    <div class="row">
+      <input type="text" name="device_ip" id="ip" class="mono" value="{escape(CONFIG['eversolo_ip'])}" required inputmode="decimal">
+      <button type="button" class="second" id="scan">{t['detect']}</button>
+    </div>
+    <p class="aide" id="scanEtat" role="status"></p>
+    <label for="langue">{t['language']}</label>
+    <select name="language" id="langue">{choix_langue}</select>""")
+    section_sources = groupe("03", t["sec_sources"], t["sec_sources_intro"], "".join((
+        champ_cle(t, "lastfm_key", t["lastfm_key"], CONFIG.get("lastfm_api_key", ""), LIENS_CLES["lastfm"]),
+        champ_cle(t, "discogs_token", t["discogs_token"], CONFIG.get("discogs_token", ""), LIENS_CLES["discogs"]),
+        champ_cle(t, "genius_token", t["genius_token_lbl"], CONFIG.get("genius_token", ""), LIENS_CLES["genius"]),
+        champ_cle(t, "tadb_key", t["tadb_key"], cle_theaudiodb(), LIENS_CLES["theaudiodb"]))))
+    section_compte = groupe("04", t["sec_compte"], t["sec_compte_intro"], f"""
+    <div class="deux">
+      <div><label for="npw">{libelle(t['new_password'])[0]}</label>
+      <input type="password" name="new_password" id="npw" autocomplete="new-password"></div>
+      <div><label for="cpw">{t['current_password']}</label>
+      <input type="password" name="current_password" id="cpw" autocomplete="current-password"></div>
+    </div>
+    <div class="actions"><button type="submit">{t['save']}</button></div>""")
+    messages = (f'<div class="msg">{message}</div>' if message else "") + (
+        f'<div class="msg err">{error}</div>' if error else "")
     body = f"""
-<h1>{t['config_title']}</h1>
-__VERSION_HTML__
-{f'<div class="msg">{message}</div>' if message else ''}
-{f'<div class="msg err">{error}</div>' if error else ''}
-<form method="post" action="/config">
+<div class="titre-page"><h1>{t['config_title']}</h1>{messages}</div>
+{bloc_affichage(t)}
+<form method="post" action="/config" class="formulaire">
   <input type="hidden" name="csrf" value="{csrf_token()}">
-  <label>{t['device_ip']}</label>
-  <div class="row">
-    <input type="text" name="device_ip" id="ip" value="{CONFIG['eversolo_ip']}" required>
-    <button type="button" id="scan">{t['detect']}</button>
-  </div>
-  <label>{t['language']}</label>
-  <select name="language">
-    <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
-    <option value="en" {'selected' if lang=='en' else ''}>English</option>
-    <option value="es" {'selected' if lang=='es' else ''}>Español</option>
-    <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
-  </select>
-  <label>{t['tadb_key']}</label>
-  <input type="text" name="tadb_key" value="{CONFIG.get('theaudiodb_key', '2')}" autocomplete="off">
-  <label>{t['lastfm_key']}</label>
-  <input type="text" name="lastfm_key" value="{CONFIG.get('lastfm_api_key', '')}" autocomplete="off">
-  <label>{t['discogs_token']}</label>
-  <input type="text" name="discogs_token" value="{CONFIG.get('discogs_token', '')}" autocomplete="off">
-  <label>{t['genius_token_lbl']}</label>
-  <input type="text" name="genius_token" value="{CONFIG.get('genius_token', '')}" autocomplete="off">
-  <label>{t['new_password']}</label>
-  <input type="password" name="new_password" autocomplete="new-password">
-  <label>{t['current_password']}</label>
-  <input type="password" name="current_password" autocomplete="current-password">
-  <button type="submit">{t['save']}</button>
+  {section_streamer}
+  {section_sources}
+  {section_compte}
 </form>
-<form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}"><button class="ghost">{t['logout']}</button></form>
-<div class="foot"><a href="/remote">{t['remote_link']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
+__VERSION_HTML__
+{bloc_capture(t)}
 <script>
 document.getElementById('scan').onclick = async function() {{
-  this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
+  const etat = document.getElementById('scanEtat');
+  this.textContent = {json.dumps(t['detecting'])}; this.disabled = true; etat.textContent = '';
   try {{
     const r = await fetch('/api/detect'); const d = await r.json();
     if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
-    else alert({json.dumps(t['detect_none'])});
-  }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
+    else etat.textContent = {json.dumps(t['detect_none'])};
+  }} catch (e) {{ etat.textContent = {json.dumps(t['detect_none'])}; }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
 }};
 </script>
 """
-    distante = derniere_version()
-    if distante["sha"] and LOCAL_REV and distante["sha"] != LOCAL_REV:
-        version_html = (
-            '<div class="msg" style="display:flex;justify-content:space-between;'
-            'align-items:center;gap:12px;flex-wrap:wrap"><span>'
-            + t["update_avail"] + " : <span style=\'font-family:monospace\'>"
-            + distante["sha"] + "</span> — " + distante["message"][:70]
-            + '</span><form method="post" style="margin:0">'
-            + '<input type="hidden" name="csrf" value="' + csrf_token() + '">'
-            + '<input type="hidden" name="op" value="update">'
-            + '<button style="margin:0;width:auto;padding:10px 16px">'
-            + t["update_btn"] + "</button></form></div>"
-        )
+    if DISPO:
+        version_html = groupe("05", t["sec_maj"], "", bloc_mise_a_jour(t))
     else:
-        version_html = ('<p class="intro" style="opacity:.6">' + t["up_to_date"]
-                        + ' · <span style="font-family:monospace">' + LOCAL_REV + "</span></p>")
+        # ancienne installation (sans dossiers de version) : la mise à jour
+        # passe par update.sh, qui migre vers les versions signées
+        version_html = groupe("05", t["sec_maj"], "",
+                              f'<p class="intro">{t["maj_ancienne"]}</p>'
+                              f'<p class="aide mono">{escape(LOCAL_REV)}</p>')
     body = body.replace("__VERSION_HTML__", version_html)
-    return page(t["config_title"], body, lang)
+    return page(t["config_title"], body, lang, large=True, nav="config")
+
+
+LIENS_CLES = {
+    "lastfm": "https://www.last.fm/api/account/create",
+    "discogs": "https://www.discogs.com/settings/developers",
+    "genius": "https://genius.com/api-clients",
+    "theaudiodb": "https://www.theaudiodb.com/free_music_api",
+}
+
+
+def libelle(texte):
+    """« Clé Last.fm (repli biographies) » → ("Clé Last.fm", "repli biographies")."""
+    m = re.fullmatch(r"(.+?)\s*\((.+)\)", texte)
+    return (m.group(1), m.group(2)) if m else (texte, "")
+
+
+def nom_et_detail(texte):
+    """« Salon : TV lue à 3-4 m » → ("Salon", "TV lue à 3-4 m")."""
+    m = re.match(r"(.+?)\s?:\s(.+)", texte)
+    return (m.group(1), m.group(2)) if m else (texte, "")
+
+
+def groupe(numero, titre, intro, contenu):
+    """Une section de réglages : explication à gauche, champs à droite."""
+    intro_html = f'<p class="intro">{intro}</p>' if intro else ""
+    return f"""<section class="groupe">
+  <header><span class="num">{numero}</span><h2>{titre}</h2>{intro_html}</header>
+  <div class="champs">{contenu}</div>
+</section>"""
+
+
+def champ_cle(t, nom, texte, valeur, lien):
+    titre, aide = libelle(texte)
+    return f"""<div class="cle">
+  <div class="cle-tete"><label for="{nom}">{escape(titre)}</label>
+  <a href="{lien}" target="_blank" rel="noopener noreferrer">{t['get_key']}</a></div>
+  <input type="text" name="{nom}" id="{nom}" class="mono" value="{escape(valeur)}" autocomplete="off" spellcheck="false">
+  {f'<p class="aide">{escape(aide)}</p>' if aide else ''}
+</div>"""
+
+
+def choix(nom, valeurs, choisie, textes, classe="choix"):
+    """Boutons radio présentés en cartes."""
+    cartes = []
+    for v in valeurs:
+        titre, detail = nom_et_detail(textes[v])
+        mini = (f'<span class="mini {v}"><i class="c"></i><i class="t"></i><i class="a"></i><i class="b"></i></span>'
+                if classe == "themes" else "")
+        cartes.append(
+            f'<label class="option"><input type="radio" name="{nom}" value="{v}"'
+            f'{" checked" if v == choisie else ""}><span class="carte">{mini}'
+            f'<span class="nom">{escape(titre)}</span>'
+            f'{f"<span class=detail>{escape(detail)}</span>" if detail else ""}</span></label>')
+    return f'<div class="{classe}">{"".join(cartes)}</div>'
+
+
+def bloc_mise_a_jour(t):
+    """Section « Mise à jour » : version en service, disponible, retour."""
+    chercher_mise_a_jour()
+    etat = versions.lire_etat(DISPO)
+    precedente = versions.version_de_lien(DISPO.precedente)
+    jeton = csrf_token()
+    lignes = [f'<p class="version"><span>{t["maj_installee"]}</span> <b class="mono">{escape(VERSION_LOCALE)}</b></p>']
+    if etat.get("etape") in ("echec", "retour") and etat.get("erreur"):
+        lignes.append(f'<div class="msg err">{escape(etat["erreur"])}</div>')
+    en_cours = maj_en_cours()
+    if en_cours:
+        lignes.append(f'<div class="msg">{t["maj_etape_" + en_cours["etape"]]} '
+                      f'({escape(en_cours["version"] or "")})</div>')
+    cible = MAJ_DISPONIBLE.get("version")
+    if cible and not en_cours:
+        notes = "".join(f"<li>{escape(n)}</li>" for n in MAJ_DISPONIBLE.get("notes") or [])
+        lignes.append(
+            f'<div class="nouvelle"><b>{t["maj_disponible"]} : <span class="mono">{escape(cible)}</span></b>'
+            f'<ul>{notes}</ul>'
+            f'<form method="post"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<input type="hidden" name="op" value="update">'
+            f'<button>{t["maj_installer"]}</button></form></div>')
+    elif not en_cours:
+        lignes.append(f'<p class="aide">{t["up_to_date"]}</p>')
+    if precedente and not en_cours:
+        lignes.append(
+            f'<form method="post" class="actions gauche"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<input type="hidden" name="op" value="retour">'
+            f'<button class="second">{t["maj_revenir"]} ({escape(precedente)})</button></form>')
+    return "\n".join(lignes)
+
+
+def bloc_affichage(t):
+    r = affichage.reglages_affichage(CONFIG)
+
+    def heures(nom, choisie):
+        return f'<select name="{nom}" class="heure">' + "".join(
+            f'<option value="{h}"{" selected" if h == choisie else ""}>{h}</option>'
+            for h in range(24)) + "</select>"
+
+    textes = {k[len("theme_"):]: v for k, v in t.items() if k.startswith("theme_")}
+    profils = {k[len("profil_"):]: v for k, v in t.items() if k.startswith("profil_")}
+    nuits = {k[len("nuit_"):]: v for k, v in t.items() if k in ("nuit_auto", "nuit_jamais", "nuit_toujours")}
+    coche = " checked" if r["protection"] else ""
+    contenu = f"""
+  <input type="hidden" name="csrf" value="{csrf_token()}">
+  <input type="hidden" name="op" value="affichage">
+  <fieldset><legend>{t['disp_theme']}</legend>
+  {choix('ecran_theme', affichage.THEMES, r['theme'], textes, 'themes')}</fieldset>
+  <fieldset><legend>{t['disp_profil']}</legend>
+  {choix('ecran_profil', affichage.PROFILS, r['profil'], profils)}</fieldset>
+  <fieldset><legend>{libelle(t['disp_nuit'])[0]}</legend>
+  {choix('ecran_nuit', affichage.MODES_NUIT, r['nuit'], nuits, 'choix court')}
+  <p class="heures">{t['nuit_de']} {heures('nuit_debut', r['nuit_debut'])} {t['nuit_a']}
+    {heures('nuit_fin', r['nuit_fin'])} {t['nuit_h']}</p></fieldset>
+  <label class="interrupteur"><input type="checkbox" name="ecran_protection" value="1"{coche}>
+    <span>{t['disp_protection']}</span></label>
+  <div class="actions"><button type="submit">{t['disp_save']}</button></div>"""
+    return ('<form method="post" action="/config">'
+            + groupe("01", t["disp_title"], t["disp_intro"], contenu) + "</form>")
+
+
+def bloc_capture(t):
+    """Section « Capture de l'état » de /config."""
+    noms = {s: t.get("sit_" + s, s.capitalize() if s != "dsd" else "DSD") for s in SITUATIONS}
+    options = "".join(f'<option value="{s}">{escape(noms[s])}</option>' for s in SITUATIONS)
+    captures = liste_captures()
+    liste = ""
+    if captures:
+        liens = "".join(f'<li><a class="mono" href="/captures/{escape(n)}">{escape(n)}</a></li>'
+                        for n in captures[:12])
+        liste = f'<p class="sous-titre">{t["captures_list"]}</p><ul class="captures">{liens}</ul>'
+    contenu = f"""
+  <form method="post" action="/config">
+    <input type="hidden" name="csrf" value="{csrf_token()}">
+    <input type="hidden" name="op" value="capture">
+    <label for="situation">{t['capture_situation']}</label>
+    <div class="row">
+      <select name="situation" id="situation">{options}</select>
+      <button type="submit" class="second">{t['capture_btn']}</button>
+    </div>
+  </form>
+  {liste}"""
+    return groupe("06", t["capture_title"], t["capture_intro"], contenu)
+
+
+@app.route("/captures/<nom>")
+def telecharger_capture(nom):
+    if not logged_in():
+        return redirect("/login")
+    if not CAPTURE_NOM_RE.fullmatch(nom) or not os.path.isfile(os.path.join(CAPTURES_DIR, nom)):
+        return Response(status=404)
+    return send_from_directory(CAPTURES_DIR, nom, as_attachment=True, mimetype="application/json")
 
 
 @app.route("/api/control/<action>", methods=["POST"])
 def api_control(action):
-    # Le pilotage sur le réseau local n'ajoute aucune exposition: l'Eversolo
-    # lui-même accepte déjà ces commandes sans mot de passe sur le port 9529.
-    # L'en-tete personnalise bloque les requetes forgees depuis un site web.
+    # L'en-tête personnalisé bloque les requêtes forgées depuis un site web.
     if request.headers.get("X-Requested-With") != "eversolo":
         return jsonify({"error": "forbidden"}), 403
+    # Réservé à l'administrateur : aucune page ne s'en sert, il reste ouvert
+    # aux intégrations (domotique) qui ouvrent une session.
+    if not logged_in():
+        return jsonify({"error": "unauthorized"}), 401
     if action not in ACTIONS and action not in ("mute", "info"):
         return jsonify({"error": "unknown action"}), 404
     return jsonify({"ok": do_action(action)})
@@ -1633,7 +2287,7 @@ def api_control(action):
 
 @app.route("/internal/ir", methods=["POST"])
 def internal_ir():
-    if request.remote_addr not in ("127.0.0.1", "::1"):
+    if not requete_locale():
         return jsonify({"error": "forbidden"}), 403
     if request.headers.get("X-Requested-With") != "eversolo":
         return jsonify({"error": "forbidden"}), 403
@@ -1711,7 +2365,7 @@ def remote_page():
 <style>
 .rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
 .rname{{font-size:15px}}
-.rcode{{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
+.rcode{{display:block;font-family:"Geist Mono",monospace;font-size:11px;color:var(--muted);margin-top:4px}}
 .rbtns{{display:flex;gap:8px;align-items:center}}
 .pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
 .hw{{margin-top:28px;padding-top:22px;border-top:1px solid var(--line)}}
@@ -1723,11 +2377,11 @@ def remote_page():
 .hwstat{{font-size:12px;color:var(--muted)}}
 .hwtab{{width:100%;border-collapse:collapse;font-size:13px}}
 .hwtab th{{text-align:left;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;padding-bottom:8px}}
-.hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"IBM Plex Mono",monospace;color:var(--ivory)}}
+.hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"Geist Mono",monospace;color:var(--ivory)}}
 .hwtab td:last-child{{text-align:right;color:var(--tube)}}
 .gp{{color:var(--muted);font-size:11px}}
 .hwnote{{font-size:12px;line-height:1.5;color:var(--muted);margin-top:14px}}
-.hwres{{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}}
+.hwres{{margin-top:10px;font-family:"Geist Mono",monospace;font-size:12px;color:var(--muted)}}
 .hwres.ok{{color:var(--tube)}}
 .hwres.ko{{color:#c65a4a}}
 </style>
@@ -1813,14 +2467,19 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
 }});
 </script>
 """
-    return page(t["remote_title"], body, lang)
+    return page(t["remote_title"], body, lang, nav="remote")
 
 
 @app.route("/api/blast/<name>", methods=["POST"])
 def api_blast(name):
     if request.headers.get("X-Requested-With") != "eversolo":
         return jsonify({"error": "forbidden"}), 403
-    if not NAME_RE.match(name):
+    # Rejouer un code IR allume ou éteint la TV, l'ampli : pas pour les invités.
+    if not logged_in():
+        return jsonify({"error": "unauthorized"}), 401
+    if not csrf_entete_ok():
+        return jsonify({"error": "forbidden"}), 403
+    if not NAME_RE.fullmatch(name):
         return jsonify({"error": "bad name"}), 400
     path = os.path.join(IR_CODES_DIR, name + ".ir")
     if not os.path.exists(path):
@@ -1845,7 +2504,7 @@ def blaster_page():
         else:
             op = request.form.get("op", "")
             name = request.form.get("name", "").strip()
-            if not NAME_RE.match(name):
+            if not NAME_RE.fullmatch(name):
                 error = t["bad_name"]
             elif op == "learn":
                 # capture synchrone: la page attend la pression de touche
@@ -1882,7 +2541,7 @@ def blaster_page():
     body = f'''
 <style>
 .rrow{{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:14px 0}}
-.rname{{font-family:"IBM Plex Mono",monospace;font-size:14px}}
+.rname{{font-family:"Geist Mono",monospace;font-size:14px}}
 .rbtns{{display:flex;gap:8px;align-items:center}}
 .pairbtn{{width:auto;margin:0;padding:10px 16px;font-size:13px}}
 </style>
@@ -1912,7 +2571,7 @@ document.querySelectorAll('.sendbtn').forEach(function(btn) {{
     btn.disabled = true;
     try {{
       await fetch('/api/blast/' + btn.dataset.name, {{
-        method: 'POST', headers: {{'X-Requested-With': 'eversolo'}}
+        method: 'POST', headers: {{'X-Requested-With': 'eversolo', 'X-CSRF-Token': {json.dumps(csrf_token())}}}
       }});
     }} catch (e) {{}}
     setTimeout(() => btn.disabled = false, 500);
@@ -1920,7 +2579,7 @@ document.querySelectorAll('.sendbtn').forEach(function(btn) {{
 }});
 </script>
 '''
-    return page(t["blaster_title"], body, lang)
+    return page(t["blaster_title"], body, lang, nav="blaster")
 
 
 @app.route("/api/ir/status")
@@ -1949,10 +2608,30 @@ def api_ir_status():
 
 @app.route("/api/detect")
 def api_detect():
-    # Autorise pendant la première configuration, puis reserve a l'admin.
-    if load_auth() is not None and not logged_in():
-        return jsonify({"error": "unauthorized"}), 401
-    return jsonify({"found": scan_network()})
+    # Pendant la première configuration : le kiosque, ou qui connaît le code
+    # affiché sur la TV. Ensuite : l'administrateur seulement.
+    if load_auth() is not None:
+        if not logged_in():
+            return jsonify({"error": "unauthorized"}), 401
+    elif not requete_locale() and not verifier_code(request.headers.get("X-Code-Installation"),
+                                                    request.remote_addr):
+        return jsonify({"error": "code"}), 403
+    # Un balayage du réseau à la fois : 254 adresses, c'est lourd pour un Pi 3.
+    if not SCAN_VERROU.acquire(blocking=False):
+        return jsonify({"error": "busy"}), 429
+    try:
+        return jsonify({"found": scan_network()})
+    finally:
+        SCAN_VERROU.release()
+
+
+@app.route("/api/setup/etat")
+def api_setup_etat():
+    """Pour l'écran d'installation de la TV : code courant, fin de l'installation."""
+    if not requete_locale():
+        return jsonify({"error": "forbidden"}), 403
+    fait = load_auth() is not None
+    return jsonify({"configure": fait, "code": None if fait else code_installation()})
 
 
 # ----------------------------------------------------------- données lecture
@@ -2039,14 +2718,19 @@ def absolute_url(path):
 
 def normalize(state):
     play_type = state.get("playType")
+    etat = affichage.etat_lecture(state)
+    lang = CONFIG.get("language", "fr")
     info = {
         "connected": True,
-        "playing": int(state.get("state", -1)) == 3,
+        "playing": etat == "lecture",
+        "etat": etat,
         "title": None, "artist": None, "album": None, "cover": None,
         "position": (state.get("position") or 0) / 1000,
         "duration": (state.get("duration") or 0) / 1000,
         "quality": find_quality(state),
-        "lang": CONFIG.get("language", "fr"),
+        "signal": affichage.signal_audio(state, lang),
+        "volume": affichage.lire_volume(state),
+        "lang": lang,
         "model": device_model(),
         "server_time": time.time(),
     }
@@ -2083,15 +2767,105 @@ def normalize(state):
     info["cover"] = (icon or art or by_id) if app_first else (art or by_id or icon)
 
     # Flux en direct (web radio): pas de durée exploitable
-    info["live"] = bool(info["title"]) and info["duration"] <= 0
+    # (à l'arrêt, la durée vaut aussi 0 : ce n'est pas une radio)
+    info["live"] = bool(info["title"]) and info["duration"] <= 0 and etat == "lecture"
 
-    if info["cover"]:
-        info["cover"] = "/api/cover?u=" + requests.utils.quote(info["cover"], safe="")
+    info["cover"] = cover_ref(info["cover"])
     return info
 
 
 STATE_CACHE = {"info": None, "failures": 0, "down_since": None}
 PREFETCH = {"artist": None}
+
+# Entrée et sortie actives : relevées en fond, au plus toutes les 30 s.
+IO_CACHE = {"ts": 0.0, "sortie": None, "entree": None}
+IO_VERROU = threading.Lock()
+IO_DUREE = 30
+# Plage suivante : cherchée une fois par plage, dans ses dernières secondes.
+FILE_CACHE = {"etat": (None, None)}  # (plage, suivante), remplacé d'un bloc
+FILE_VERROU = threading.Lock()
+SUIVANT_AVANT_FIN = 30
+
+
+def rafraichir_entrees_sorties():
+    if not IO_VERROU.acquire(blocking=False):
+        return
+    try:
+        r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getInputAndOutputList", timeout=3)
+        donnees = r.json()
+        IO_CACHE.update(sortie=affichage.sortie_active(donnees),
+                        entree=affichage.entree_active(donnees))
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[diagnostic] entrées/sorties illisibles : {type(exc).__name__}", flush=True)
+    finally:
+        IO_CACHE["ts"] = time.time()
+        IO_VERROU.release()
+
+
+def chercher_suivant(cle, index, titre):
+    if not FILE_VERROU.acquire(blocking=False):
+        return
+    try:
+        r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getPlayQueue",
+                     params={"start": index, "count": 2}, timeout=3)
+        suivant = affichage.suivant_dans_file(r.json(), index, titre)
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[diagnostic] file de lecture illisible : {type(exc).__name__}", flush=True)
+        suivant = None
+    finally:
+        FILE_VERROU.release()
+    # Une recherche tardive ne doit pas écraser celle d'une plage plus récente.
+    if FILE_CACHE["etat"][0] == cle:
+        FILE_CACHE["etat"] = (cle, suivant)
+
+
+def _en_fond(cible, *args):
+    threading.Thread(target=cible, args=args, daemon=True).start()
+
+
+def _depuis_cache(cache, cle):
+    entree = cache.get(cle)
+    return entree[1] if entree else None
+
+
+def infos_ecran(brut, info):
+    """Ce que l'écran ajoute à l'état : sortie, plage suivante, découvertes,
+    réglages. Ne lit que des caches ; les relevés partent en fond."""
+    if time.time() - IO_CACHE["ts"] > IO_DUREE:
+        IO_CACHE["ts"] = time.time()
+        _en_fond(rafraichir_entrees_sorties)
+
+    titre, artiste, album = info.get("title"), info.get("artist"), info.get("album")
+    index = brut.get("trackIndex")
+    cle_file = (titre, index)
+    reste = info["duration"] - info["position"]
+    if (info["etat"] == "lecture" and not info["live"] and 0 < reste < SUIVANT_AVANT_FIN
+            and isinstance(index, int) and index >= 0 and FILE_CACHE["etat"][0] != cle_file):
+        FILE_CACHE["etat"] = (cle_file, None)
+        _en_fond(chercher_suivant, cle_file, index, titre)
+    cle_connue, suivant = FILE_CACHE["etat"]
+    ensuite = suivant if cle_connue == cle_file else None
+
+    lang = info["lang"]
+    fiche_album = fiche_art = None
+    plage = []
+    if artiste:
+        a, al = artiste.lower(), (album or "").lower()
+        fiche_album = _depuis_cache(ALBUM_CACHE, (a, al, lang)) if album else None
+        bio = _depuis_cache(ARTIST_CACHE, (a, al, lang))
+        if bio:
+            fiche_art = {"name": bio.get("artist"), "facts": bio.get("facts") or [],
+                         "text": bio.get("text")}
+        if titre:
+            plage = _depuis_cache(TRACK_CACHE, (a, titre.lower(), lang)) or []
+    return {
+        "sortie": IO_CACHE["sortie"],
+        "entree": IO_CACHE["entree"],
+        "ensuite": ensuite,
+        "decouvertes": affichage.decouvertes(titre, fiche_album, fiche_art, plage,
+                                             info["signal"], IO_CACHE["sortie"], lang),
+        "display": affichage.reglages_affichage(CONFIG),
+    }
 
 
 @app.route("/favicon.ico")
@@ -2106,8 +2880,11 @@ def api_state():
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
-        info = normalize(r.json())
+        brut = r.json()
+        info = normalize(brut)
         info["rev"] = LOCAL_REV
+        info.update(infos_ecran(brut, info))
+        info["maj"] = maj_en_cours() if requete_locale() else None
         artiste = info.get("artist")
         cle_pf = (artiste, info.get("album"), info.get("title"))
         if artiste and cle_pf != PREFETCH["artist"]:
@@ -2149,51 +2926,149 @@ def api_state():
         })
 
 
+def adresse_privee(texte):
+    try:
+        addr = ipaddress.ip_address(texte)
+    except ValueError:
+        return True
+    return (addr.is_private or addr.is_loopback or addr.is_link_local
+            or addr.is_reserved or addr.is_multicast or addr.is_unspecified)
+
+
 def host_is_private(hostname):
     """Vrai si l'hote resout vers une adresse privee, locale ou reservee."""
     try:
         infos = socket.getaddrinfo(hostname, None)
     except Exception:
         return True
-    for info in infos:
-        try:
-            addr = ipaddress.ip_address(info[4][0])
-        except ValueError:
-            return True
-        if (addr.is_private or addr.is_loopback or addr.is_link_local
-                or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
-            return True
-    return False
+    return any(adresse_privee(info[4][0]) for info in infos)
+
+
+def ip_du_pair(reponse):
+    """Adresse réellement jointe par la connexion, quand urllib3 la donne."""
+    try:
+        return reponse.raw._connection.sock.getpeername()[0]
+    except Exception:
+        return None
+
+
+# Le proxy ne sert que les images que le serveur a lui-même désignées (état de
+# lecture, photos d'artistes) : plus d'URL libre, donc plus de relais ouvert.
+COVERS = OrderedDict()
+COVERS_VERROU = threading.Lock()
+COVERS_MAX = 512
+
+
+def cover_ref(url):
+    """Chemin local d'une image distante, par identifiant stable."""
+    if not url:
+        return None
+    if url.startswith("/api/cover?"):
+        # Fiches mises en cache par les versions précédentes (?u=URL).
+        url = (parse_qs(urlparse(url).query).get("u") or [""])[0]
+        if not url:
+            return None
+    ident = hashlib.sha256(url.encode("utf-8")).hexdigest()[:32]
+    with COVERS_VERROU:
+        COVERS[ident] = url
+        COVERS.move_to_end(ident)
+        while len(COVERS) > COVERS_MAX:
+            COVERS.popitem(last=False)
+    return "/api/cover?id=" + ident
+
+
+COVER_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"}
+COVER_MAX_OCTETS = 5 * 1024 * 1024
+COVER_MAX_REDIRECTIONS = 3
+
+
+CHEMINS_IMAGES_STREAMER = re.compile(
+    r"/ZidooMusicControl/v2/getImage|/SystemSettings/getItemSettingIcon"
+    r"|/[A-Za-z0-9_./%-]*\.(?:jpe?g|png|webp|gif|bmp)", re.IGNORECASE)
+
+
+def image_du_streamer(chemin):
+    return bool(CHEMINS_IMAGES_STREAMER.fullmatch(chemin or ""))
+
+
+def _cover_refus():
+    # Même réponse pour tous les refus et échecs: le proxy ne doit pas servir
+    # à sonder quels ports ou machines répondent sur le réseau local.
+    return Response(status=502)
 
 
 @app.route("/api/cover")
 def api_cover():
-    url = unquote(request.args.get("u", ""))
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https") or not parsed.hostname:
-        return Response(status=403)
+    with COVERS_VERROU:
+        url = COVERS.get(request.args.get("id", ""))
+    if not url:
+        return Response(status=404)
     streamer = {
         f"{CONFIG['eversolo_ip']}:{CONFIG['eversolo_port']}",
         CONFIG["eversolo_ip"],
     }
-    # Anti SSRF: le streamer configure est toujours autorise; tout autre hote
-    # doit être public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
-    # CDN externes) et repondre avec une image. Le réseau prive reste interdit.
-    if parsed.netloc not in streamer and host_is_private(parsed.hostname):
-        return Response(status=403)
+    # Anti SSRF, en plus de la liste des images désignées : le streamer
+    # configuré est toujours autorisé ; tout autre hôte doit être public (les pochettes Tidal/Qobuz/Spotify/radios viennent de
+    # CDN externes). Les redirections sont suivies à la main pour revalider
+    # chaque destination: un hôte public ne peut pas renvoyer vers le LAN.
     try:
-        r = http.get(url, timeout=5)
-        r.raise_for_status()
-        ctype = r.headers.get("Content-Type", "image/jpeg")
-        if parsed.netloc not in streamer and not ctype.lower().startswith("image/"):
-            return Response(status=403)
-        resp = Response(r.content, content_type=ctype)
+        for saut in range(COVER_MAX_REDIRECTIONS + 1):
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.hostname:
+                return _cover_refus()
+            # Le streamer a des commandes en GET (muet, suivant…) : seules ses
+            # adresses d'images sont lues, et jamais au bout d'une redirection.
+            du_streamer = parsed.netloc in streamer
+            if du_streamer and (saut or not image_du_streamer(parsed.path)):
+                return _cover_refus()
+            if not du_streamer and host_is_private(parsed.hostname):
+                return _cover_refus()
+            r = http.get(url, timeout=5, stream=True, allow_redirects=False)
+            pair = ip_du_pair(r)
+            if not du_streamer and pair and adresse_privee(pair):
+                # Le nom a changé d'adresse entre la vérification et la
+                # connexion (rebinding DNS) : on ne lit rien.
+                r.close()
+                return _cover_refus()
+            if r.is_redirect:
+                url = requests.compat.urljoin(url, r.headers.get("Location", ""))
+                r.close()
+                continue
+            break
+        else:
+            return _cover_refus()
+        with r:
+            r.raise_for_status()
+            ctype = r.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if ctype not in COVER_TYPES:
+                # SVG, HTML ou XML refusés: ils peuvent contenir du script
+                # exécuté sous l'origine du Pi. Le streamer, qui ne type pas
+                # toujours ses images, est servi en JPEG neutre.
+                if not du_streamer:
+                    return _cover_refus()
+                ctype = "image/jpeg"
+            longueur = r.headers.get("Content-Length")
+            if longueur and longueur.isdigit() and int(longueur) > COVER_MAX_OCTETS:
+                return _cover_refus()
+            contenu = bytearray()
+            for morceau in r.iter_content(64 * 1024):
+                contenu.extend(morceau)
+                if len(contenu) > COVER_MAX_OCTETS:
+                    return _cover_refus()
+        resp = Response(bytes(contenu), content_type=ctype)
         resp.headers["Cache-Control"] = "max-age=86400"
+        resp.headers["Content-Security-Policy"] = "default-src 'none'; sandbox"
         return resp
     except Exception:
-        return Response(status=502)
+        return _cover_refus()
+
+
+if load_auth() is None:
+    # Tiré dès le démarrage : le journal le donne sans attendre un premier essai.
+    code_installation()
 
 
 if __name__ == "__main__":
     from waitress import serve
+    valider_au_demarrage(CONFIG["listen_port"])
     serve(app, host="0.0.0.0", port=CONFIG["listen_port"], threads=8)

@@ -1,0 +1,105 @@
+/* Console : façade d'appareil hifi, afficheur fluorescent (VFD).
+   Phosphore cyan sur verre fumé, monospace, compartiments au trait,
+   barres en segments, angles droits. Le rouge ne sert qu'aux alertes. */
+body[data-theme="console"] {
+  --f-titre: "Archivo", system-ui, sans-serif;
+  --f-texte: "Geist Mono", ui-monospace, monospace;
+  --f-mono: "Geist Mono", ui-monospace, monospace;
+  --fond: #0b0d0d;
+  --texte: #9af3e0;
+  --texte-2: #6cc9b7;
+  --texte-3: #4f9688;
+  --accent: #9af3e0;
+  --trait: #1f3330;
+  --piste: #152623;
+  --barre: #9af3e0;
+  --surface: #0f1413;
+  --voile: rgba(4, 6, 6, 0.7);
+  --pictogramme: #9af3e0;
+  --alerte: #ff4b3a;
+  --alerte-texte: #120403;
+  text-transform: uppercase;
+}
+body[data-theme="console"].nuit { --texte: #5fae9e; --texte-2: #4a8a7d; --texte-3: #386b61; --barre: #5fae9e; --accent: #5fae9e; }
+
+/* Verre de l'afficheur : lignes de balayage fixes, aucune animation */
+body[data-theme="console"]::after {
+  content: ""; position: fixed; inset: 0; z-index: 8; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0, 0, 0, 0.18) 2px 3px);
+}
+
+[data-theme="console"] .faceplate { border-bottom: 1px solid var(--trait); letter-spacing: 0.12em; }
+[data-theme="console"] .brand b { color: var(--texte); }
+/* Volume en segments, comme un bargraphe de façade */
+[data-theme="console"] .volbarre { width: calc(var(--u) * 14); height: calc(var(--u) * 1.4); }
+/* Segments : un peigne fixe à la couleur du fond, posé sur la barre. Aucun
+   masque : la barre reste un simple calque qui glisse. */
+[data-theme="console"] .volbarre::after,
+[data-theme="console"] .filament::before,
+[data-theme="console"] #osd .jauge::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(var(--u) * 0.9), var(--peigne, var(--fond)) calc(var(--u) * 0.9) calc(var(--u) * 1.3));
+}
+[data-theme="console"] #osd .jauge { position: relative; --peigne: var(--surface); }
+[data-theme="console"] .muet-badge { letter-spacing: 0.2em; }
+
+[data-theme="console"] .now { gap: 0; align-items: stretch; padding: calc(var(--u) * 3) 0; }
+[data-theme="console"] .cover-mount {
+  --marge: calc(var(--u) * 1.4);
+  height: auto; width: auto; max-height: none; max-width: 40vw; align-self: stretch;
+  border: 1px solid var(--trait);
+}
+[data-theme="console"] .cover-mount .cover,
+[data-theme="console"] .cover-mount .placeholder {
+  inset: var(--marge); width: calc(100% - 2 * var(--marge)); height: calc(100% - 2 * var(--marge));
+}
+/* Pochette teintée phosphore (filtre fixe, calculé une fois) */
+[data-theme="console"] .cover { filter: grayscale(1) sepia(1) hue-rotate(118deg) saturate(1.5) contrast(1.1) brightness(0.8); }
+[data-theme="console"] .cover-mount::after { content: ""; position: absolute; inset: var(--marge); background: rgba(11, 13, 13, 0.18); }
+[data-theme="console"] .placeholder { background: transparent; color: var(--texte-2); font-family: var(--f-mono); font-weight: 500; }
+[data-theme="console"] .stage.pause .cover { filter: grayscale(1) sepia(1) hue-rotate(118deg) saturate(1.2) brightness(0.32); }
+
+[data-theme="console"] .meta {
+  border: 1px solid var(--trait); border-left: 0;
+  padding: calc(var(--u) * 3) calc(var(--u) * 4);
+  display: flex; flex-direction: column; justify-content: center;
+}
+[data-theme="console"] .eyebrow { letter-spacing: 0.16em; color: var(--texte); }
+[data-theme="console"] .eq { display: none; }
+[data-theme="console"] #status::before { content: "\25B6\00A0\00A0"; }
+[data-theme="console"] .stage.pause #status::before { content: "\2016\00A0\00A0"; }
+[data-theme="console"] .stage.arret #status::before { content: "\25A0\00A0\00A0"; }
+[data-theme="console"] .source { margin-left: auto; color: var(--texte-2); }
+[data-theme="console"] .source::before { content: "[ "; }
+[data-theme="console"] .source::after { content: " ]"; }
+[data-theme="console"] .title {
+  font-weight: 800; font-stretch: 78%;
+  font-size: calc(var(--u) * 8.2); line-height: 0.96; letter-spacing: -0.01em;
+}
+[data-theme="console"] .artist { font-family: var(--f-mono); font-size: calc(var(--u) * 4); letter-spacing: 0.04em; margin-top: calc(var(--u) * 1.6); }
+[data-theme="console"] .album { letter-spacing: 0.06em; }
+[data-theme="console"] .signal { border-top: 1px solid var(--trait); padding-top: calc(var(--u) * 2); }
+[data-theme="console"] .classe { color: var(--fond); background: var(--texte); padding: 0 0.5em; font-weight: 600; }
+[data-theme="console"] .classe.cd { background: transparent; color: var(--texte-2); }
+[data-theme="console"] .classe.cd::before { content: "[ "; }
+[data-theme="console"] .classe.cd::after { content: " ]"; }
+[data-theme="console"] .decouverte .dk { letter-spacing: 0.16em; color: var(--texte-3); }
+[data-theme="console"] .decouverte .dk::before { content: "> "; color: var(--texte-2); }
+[data-theme="console"] .decouverte .dv { text-transform: none; }
+
+[data-theme="console"] .transport { border-top: 1px solid var(--trait); padding-top: calc(var(--u) * 2); }
+[data-theme="console"] .filament { height: calc(var(--u) * 1.6); }
+[data-theme="console"] #reste { font-size: calc(var(--u) * 5); }
+[data-theme="console"] .ensuite b { color: var(--texte); }
+
+[data-theme="console"] #osd { border: 1px solid var(--texte-3); }
+[data-theme="console"] #osd .ok { letter-spacing: 0.24em; }
+[data-theme="console"] #osd .val { font-family: var(--f-mono); font-weight: 500; }
+[data-theme="console"] #osd .jauge { height: calc(var(--u) * 2.4); }
+[data-theme="console"] #panel { border-left: 1px solid var(--texte-3); text-transform: none; }
+[data-theme="console"] #panel .pname { font-weight: 800; font-stretch: 80%; text-transform: uppercase; }
+[data-theme="console"] #panel .pseclabel { letter-spacing: 0.16em; text-transform: uppercase; }
+
+[data-theme="console"] #idle .grande-heure { font-family: var(--f-mono); font-weight: 400; letter-spacing: 0.02em; }
+[data-theme="console"] #idle .grande-heure span { color: var(--texte-3); }
+[data-theme="console"] #idle .sub { letter-spacing: 0.2em; }

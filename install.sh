@@ -5,6 +5,12 @@
 #   ./install.sh --kiosk    serveur + plein écran automatique sur le HDMI du Pi
 set -e
 
+if [ "$(id -u)" -eq 0 ]; then
+    echo "Lancez ce script avec votre compte habituel, sans sudo : il demandera sudo lui-même."
+    echo "(En root, le serveur tournerait avec tous les droits.)"
+    exit 1
+fi
+
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURRENT_USER="$(whoami)"
 KIOSK=""
@@ -23,7 +29,7 @@ done
 echo "== Installation eversolo-screen =="
 
 sudo apt-get update
-sudo apt-get install -y python3-venv curl
+sudo apt-get install -y python3-venv curl git
 if [ "$KIOSK" = "--kiosk" ]; then
     sudo apt-get install -y cage
     sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
@@ -34,11 +40,32 @@ if [ ! -f "$APP_DIR/config.json" ]; then
     cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
 fi
 
-if [ ! -d "$APP_DIR/venv" ]; then
-    python3 -m venv "$APP_DIR/venv"
+# Clé autorisée à signer les versions : épinglée sur ce Pi au premier passage,
+# jamais remplacée ensuite par une mise à jour.
+# Rangée hors du dépôt git : un « git pull » ne peut pas la remplacer.
+CONF="$HOME/.config/eversolo-screen"
+mkdir -p "$CONF"
+if [ ! -f "$CONF/signataires" ]; then
+    cp "$APP_DIR/tools/signataires" "$CONF/signataires"
+    chmod 0444 "$CONF/signataires"
 fi
-"$APP_DIR/venv/bin/pip" install --quiet --upgrade pip
-"$APP_DIR/venv/bin/pip" install --quiet -r "$APP_DIR/requirements.txt"
+# Garde de démarrage (retour arrière) : remplacé ensuite seulement par la
+# copie d'une version qui a bien démarré.
+[ -f "$CONF/garde.py" ] || install -m 0644 "$APP_DIR/versions.py" "$CONF/garde.py"
+
+# Une version par dossier dans ~/eversolo-versions : la dernière version
+# signée si elle se vérifie. À la toute première installation seulement, à
+# défaut, la copie actuelle de ce dépôt (c'est le code qui exécute déjà ce
+# script : l'installer n'ajoute aucune confiance). Ensuite, une signature qui
+# ne se vérifie pas laisse la version en service en place.
+if ! python3 "$APP_DIR/versions.py" installer; then
+    if [ -L "$HOME/eversolo-versions/courante" ]; then
+        echo "Aucune nouvelle version signée vérifiable : la version en service est conservée."
+    else
+        echo "Aucune version signée vérifiable : installation de la copie actuelle de ce dépôt."
+        python3 "$APP_DIR/versions.py" installer --local
+    fi
+fi
 
 sudo cp "$APP_DIR/eversolo-screen.service" /etc/systemd/system/eversolo-screen@.service
 sudo systemctl daemon-reload
@@ -48,10 +75,13 @@ sudo systemctl restart "eversolo-screen@$CURRENT_USER"
 if [ "$KIOSK" = "--kiosk" ]; then
     sudo cp "$APP_DIR/eversolo-kiosk.service" /etc/systemd/system/eversolo-kiosk@.service
     sudo systemctl daemon-reload
-    sudo systemctl disable getty@tty1.service || true
+    sudo systemctl disable --now getty@tty1.service || true
     sudo systemctl set-default graphical.target || true
     sudo systemctl enable "eversolo-kiosk@$CURRENT_USER"
-    sudo systemctl restart "eversolo-kiosk@$CURRENT_USER"
+    # Le premier départ peut perdre la console au profit de getty : systemd
+    # relance le kiosque tout seul, la suite de l'installation continue.
+    sudo systemctl restart "eversolo-kiosk@$CURRENT_USER" || \
+        echo "Kiosque : premier départ manqué, systemd le relance."
 fi
 
 # 6. Récepteur infrarouge (optionnel)
@@ -89,7 +119,7 @@ if [ "$RAM" = "--ram" ]; then
     sudo systemctl restart systemd-journald || true
     if ! findmnt -t tmpfs /tmp > /dev/null 2>&1; then
         grep -q "# eversolo-ram" /etc/fstab || \
-            echo "tmpfs /tmp tmpfs defaults,noatime,size=128m 0 0 # eversolo-ram" | sudo tee -a /etc/fstab > /dev/null
+            echo "tmpfs /tmp tmpfs defaults,noatime,nosuid,nodev,size=128m 0 0 # eversolo-ram" | sudo tee -a /etc/fstab > /dev/null
     fi
     if systemctl list-unit-files 2>/dev/null | grep -q "^dphys-swapfile"; then
         sudo systemctl disable --now dphys-swapfile || true
@@ -100,6 +130,7 @@ fi
 PI_IP="$(hostname -I | awk '{print $1}')"
 echo ""
 echo "== Termine =="
-echo "Ouvrez http://$PI_IP:8080 : l'assistant de première configuration se lance"
+echo "Ouvrez http://$PI_IP:8080 et saisissez le code affiché sur la TV : l'assistant de première configuration se lance"
+echo "(sans écran : journalctl -u eversolo-screen@$CURRENT_USER | grep code)"
 echo "(mot de passe administrateur, détection automatique du DMP-A6, langue)."
 echo "Logs : journalctl -u eversolo-screen@$CURRENT_USER -f"

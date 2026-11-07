@@ -1,0 +1,95 @@
+/* Plein cadre : la pochette occupe toute la hauteur, collée au bord droit,
+   comme une affiche de cinéma. Le texte se pose à gauche sur un aplat de la
+   teinte du disque, qui se fond dans l'image. Titre en Archivo élargi.
+   Dégradés fixes seulement (ni flou ni animation de fond) : le Pi 3 suit. */
+body[data-theme="cadre"] {
+  --f-titre: "Archivo", system-ui, sans-serif;
+  --f-texte: "Geist", system-ui, sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, monospace;
+  --fond: hsl(var(--h) calc(var(--s) * 0.38%) 8%);
+  --texte: hsl(var(--h) 10% 96%);
+  --texte-2: hsl(var(--h) 9% 80%);
+  --texte-3: hsl(var(--h) 7% 64%);
+  --accent: hsl(var(--h) calc(min(var(--s), 75) * 1%) 72%);
+  --piste: hsl(0 0% 100% / 0.2);
+  --barre: hsl(var(--h) 12% 96%);
+  --surface: hsl(var(--h) calc(var(--s) * 0.38%) 11%);
+  --voile: hsl(var(--h) 30% 3% / 0.6);
+  --pictogramme: hsl(0 0% 100%);
+  --alerte: #ff7a59;
+  --alerte-texte: #1b0d07;
+}
+body[data-theme="cadre"].nuit {
+  --fond: hsl(var(--h) calc(var(--s) * 0.3%) 5%);
+  --texte: hsl(var(--h) 8% 78%);
+  --texte-2: hsl(var(--h) 6% 64%);
+  --barre: hsl(var(--h) 8% 70%);
+}
+
+/* La pochette sort du flux : carré pleine hauteur, bord droit */
+[data-theme="cadre"] .now { padding: 0; gap: 0; }
+[data-theme="cadre"] .cover-mount {
+  position: fixed; z-index: 0; top: 0; right: 0;
+  height: 100vh; max-height: none; width: 100vh; aspect-ratio: auto;
+}
+/* Fondu vers l'aplat à gauche, assise sombre en bas pour la progression */
+[data-theme="cadre"] .cover-mount::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--fond) 0%, hsl(var(--h) calc(var(--s) * 0.38%) 8% / 0.82) 14%, transparent 46%),
+    linear-gradient(0deg, hsl(var(--h) calc(var(--s) * 0.38%) 6% / 0.92) 0%, transparent 24%),
+    linear-gradient(180deg, hsl(var(--h) calc(var(--s) * 0.38%) 6% / 0.6) 0%, transparent 16%);
+}
+[data-theme="cadre"] .cover { transform: scale(1.03); }
+[data-theme="cadre"] .cover.on { transform: none; }
+[data-theme="cadre"] .placeholder {
+  background: hsl(var(--h) calc(var(--s) * 0.5%) 20%);
+  color: hsl(var(--h) 20% 70%);
+  font-weight: 800; font-stretch: 125%; font-size: calc(var(--u) * 30);
+}
+[data-theme="cadre"] .pause-glyph { z-index: 2; }
+[data-theme="cadre"] .stage.pause .cover { filter: saturate(0.3) brightness(0.45); }
+[data-theme="cadre"].nuit .cover { filter: brightness(0.7); }
+
+/* La scène ne crée pas de calque : la pochette passe derrière tout le reste */
+[data-theme="cadre"] .now { position: static; }
+[data-theme="cadre"] .faceplate,
+[data-theme="cadre"] .meta,
+[data-theme="cadre"] .transport { position: relative; z-index: 1; }
+[data-theme="cadre"] .brand b { color: var(--texte); }
+[data-theme="cadre"] .clock { color: var(--texte); }
+
+/* Colonne de texte : déborde un peu sur l'image, là où le fondu la porte */
+[data-theme="cadre"] .meta { flex: 0 1 auto; max-width: min(60vw, calc(100vw - 100vh + 22vh)); }
+[data-theme="cadre"] .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: calc(var(--u) * 2.6); font-weight: 600; }
+[data-theme="cadre"] .source { color: var(--accent); }
+[data-theme="cadre"] .title {
+  font-weight: 760; font-stretch: 116%;
+  font-size: calc(var(--u) * 8.2); line-height: 0.98; letter-spacing: -0.035em;
+  -webkit-line-clamp: 3;
+}
+[data-theme="cadre"] .artist { font-size: calc(var(--u) * 4.4); font-weight: 500; margin-top: calc(var(--u) * 2.2); }
+[data-theme="cadre"] .album { font-style: normal; color: var(--texte-2); }
+[data-theme="cadre"] .signal { gap: 0.6em; }
+[data-theme="cadre"] .classe {
+  font-family: var(--f-texte); font-size: 0.78em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent); border: 2px solid currentColor; padding: 0.04em 0.5em;
+}
+[data-theme="cadre"] .classe.cd { color: var(--texte-2); }
+[data-theme="cadre"] .decouverte .dk { text-transform: uppercase; letter-spacing: 0.12em; }
+
+/* Progression pleine largeur, posée sur l'assise sombre de l'image */
+[data-theme="cadre"] .filament { height: calc(var(--u) * 0.5); }
+[data-theme="cadre"] #reste { font-family: var(--f-titre); font-weight: 700; font-stretch: 112%; }
+
+[data-theme="cadre"] #osd { box-shadow: 0 40px 120px hsl(var(--h) 40% 3% / 0.7); }
+[data-theme="cadre"] #osd .val { font-weight: 800; font-stretch: 120%; letter-spacing: -0.04em; }
+[data-theme="cadre"] #panel .pname { font-weight: 800; font-stretch: 116%; letter-spacing: -0.02em; }
+[data-theme="cadre"] #idle .grande-heure { font-weight: 800; font-stretch: 125%; letter-spacing: -0.04em; }
+
+/* Écran vertical ou petit : retour à la composition empilée */
+@media (max-aspect-ratio: 1/1) {
+  [data-theme="cadre"] .cover-mount { position: relative; width: auto; height: min(42vh, 78vw); aspect-ratio: 1; }
+  [data-theme="cadre"] .cover-mount::after { display: none; }
+  [data-theme="cadre"] .meta { max-width: none; }
+}

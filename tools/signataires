@@ -1,0 +1,4 @@
+# Clés autorisées à signer les versions (format allowed_signers de ssh-keygen).
+# Copiée sur le Pi à la première installation, puis jamais remplacée par une
+# mise à jour : une version publiée ne peut pas changer qui la signe.
+julien@giraud.biz namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB4UcnBcJrpjA3mk1tQ8vRyA9ZFzx8cintK9Whwe2+OV

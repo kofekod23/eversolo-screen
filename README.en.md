@@ -4,7 +4,14 @@ Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi +
 
 [Français](README.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![Now playing screen](docs/screen-now-playing.png)
+![Full frame interface: the cover fills the full height of the screen](docs/interface-plein-cadre.jpg)
+
+Four interfaces to choose from in `/config`:
+
+| Cover | Console | Poster |
+|---|---|---|
+| ![Cover interface: the screen takes the colour of the record](docs/interface-pochette.jpg) | ![Console interface: device front panel, fluorescent display](docs/interface-console.jpg) | ![Poster interface: large type, paper and ink](docs/interface-affiche.jpg) |
+| The screen takes the colour of the record | Device front panel, fluorescent display | Large type, paper and ink |
 
 | Artist page | Album page | Production page |
 |---|---|---|
@@ -20,6 +27,7 @@ Now playing display for Eversolo streamers (DMP-A6, A8, A10) on a Raspberry Pi +
 - Learning infrared remote: 7 actions pairable with any remote you own
 - Optional infrared blaster: the Pi learns and replays commands to your TV or amp
 - Kiosk mode at boot, password-protected admin pages
+- 4 interfaces to choose from (Full frame, Cover, Console, Poster), readable from 3-4 m, night mode and screen protection
 - 4 languages: French, English, Spanish, German
 - One-click update from the interface
 
@@ -48,7 +56,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Boot the Pi. After 10 to 15 minutes, open `http://PI_IP:8080`: the assistant detects the Eversolo and creates the admin password.
+3. Boot the Pi. After 10 to 15 minutes, open `http://PI_IP:8080` and enter the code shown on the TV: the assistant detects the Eversolo and creates the admin password.
 
 ### Manual (SSH)
 
@@ -73,11 +81,22 @@ Stackable options: `--kiosk` (TV display), `--ir` (remote receiver), `--ir-tx` (
 | Biographies | TheAudioDB, Last.fm, Wikipedia via Wikidata |
 | Tracks, credits, studios | MusicBrainz, Discogs, Genius (current track) |
 
-Everything works without any key. Optional keys on `/config` widen coverage: Last.fm (free), Discogs (free personal token, credits of recent releases), TheAudioDB.
+Everything works without any key. The keys below are free; pasted into `/config`, they add biographies and credits.
+
+| Service | What it adds | Where to get the key |
+|---|---|---|
+| Last.fm | Artist biographies, album descriptions | [Create an API account](https://www.last.fm/api/account/create) (any name and description, empty callback URL). Your existing keys: [last.fm/api/accounts](https://www.last.fm/api/accounts). Copy the "API key", not the "Shared secret". |
+| Discogs | Detailed credits: production, mixing, studios | [Settings > Developers](https://www.discogs.com/settings/developers), "Generate new token" button. |
+| Genius | Credits of the current track, useful for recent releases | [genius.com/api-clients](https://genius.com/api-clients): "New API Client" (any name and website), then "Generate Access Token". Copy the "Client Access Token". |
+| TheAudioDB | Biographies and photos | Free key `123` used by default. A personal key (Premium subscription) is on your profile; see [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Update
 
-Button on `/config` when a new version is published, or over SSH: `./update.sh`. Configuration and password preserved.
+When a version is published, `/config` shows what is new and a button to install it (not during playback). Over SSH, `./update.sh` does the same.
+
+Each version installs in its own folder (`~/eversolo-versions`) and only if its signature matches the key recorded on the Pi at installation. If the new version fails to start, the Pi goes back to the previous one by itself; a `/config` button also lets you go back. Settings and password stay in `~/eversolo-screen`.
+
+To publish a signed version: `tools/publier-version.sh v1.2.0 "change" "another change"`.
 
 ## License
 

@@ -4,7 +4,14 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 
 [English](README.en.md) · [Español](README.es.md) · [Deutsch](README.de.md)
 
-![Écran de lecture](docs/screen-now-playing.png)
+![Interface Plein cadre : la pochette occupe toute la hauteur de l'écran](docs/interface-plein-cadre.jpg)
+
+Quatre interfaces au choix dans `/config` :
+
+| Pochette | Console | Affiche |
+|---|---|---|
+| ![Interface Pochette : l'écran prend la couleur du disque](docs/interface-pochette.jpg) | ![Interface Console : façade d'appareil, afficheur fluorescent](docs/interface-console.jpg) | ![Interface Affiche : grande typographie, papier et encre](docs/interface-affiche.jpg) |
+| L'écran prend la couleur du disque | Façade d'appareil, afficheur fluorescent | Grande typographie, papier et encre |
 
 | Page artiste | Page album | Page production |
 |---|---|---|
@@ -20,6 +27,7 @@ Affichage « now playing » pour streamers Eversolo (DMP-A6, A8, A10) sur Raspbe
 - Télécommande infrarouge par apprentissage : 7 actions appairables avec n'importe quelle télécommande
 - Émetteur infrarouge optionnel : le Pi apprend et réémet des commandes vers TV ou ampli
 - Kiosque automatique au démarrage, interface d'administration protégée par mot de passe
+- 4 interfaces au choix (Plein cadre, Pochette, Console, Affiche), lisibles à 3-4 m, mode nuit et protection d'écran
 - 4 langues : français, anglais, espagnol, allemand
 - Mise à jour en un clic depuis l'interface
 
@@ -57,7 +65,7 @@ curl -O https://raw.githubusercontent.com/kofekod23/eversolo-screen/main/tools/p
 bash prepare-sd.sh
 ```
 
-3. Démarrer le Pi. Après 10 à 15 minutes, ouvrir `http://IP_DU_PI:8080` : l'assistant détecte l'Eversolo et crée le mot de passe administrateur.
+3. Démarrer le Pi. Après 10 à 15 minutes, ouvrir `http://IP_DU_PI:8080` et saisir le code affiché sur la TV : l'assistant détecte l'Eversolo et crée le mot de passe administrateur.
 
 ### Manuelle (SSH)
 
@@ -82,11 +90,22 @@ Options cumulables : `--kiosk` (affichage TV), `--ir` (récepteur télécommande
 | Biographies | TheAudioDB, Last.fm, Wikipédia via Wikidata |
 | Plages, crédits, studios | MusicBrainz, Discogs, Genius (plage en cours) |
 
-Sans aucune clé, tout fonctionne. Clés optionnelles sur `/config` pour élargir la couverture : Last.fm (gratuite), Discogs (jeton personnel gratuit, Genius crédits des sorties récentes), TheAudioDB.
+Tout fonctionne sans clé. Les clés ci-dessous sont gratuites ; collées dans `/config`, elles ajoutent des biographies et des crédits.
+
+| Service | Ce qu'il apporte | Où trouver la clé |
+|---|---|---|
+| Last.fm | Biographies d'artistes, descriptions d'albums | [Créer un compte API](https://www.last.fm/api/account/create) (nom et description au choix, URL de rappel vide). Vos clés existantes : [last.fm/api/accounts](https://www.last.fm/api/accounts). Copiez « API key », pas « Shared secret ». |
+| Discogs | Crédits détaillés : production, mixage, studios | [Settings > Developers](https://www.discogs.com/settings/developers), bouton « Generate new token ». |
+| Genius | Crédits de la plage en cours, utiles pour les sorties récentes | [genius.com/api-clients](https://genius.com/api-clients) : « New API Client » (nom et adresse de site au choix), puis « Generate Access Token ». Copiez le « Client Access Token ». |
+| TheAudioDB | Biographies et photos | Clé gratuite `123` utilisée par défaut. Une clé personnelle (abonnement Premium) figure sur votre profil ; détails sur [theaudiodb.com/free_music_api](https://www.theaudiodb.com/free_music_api). |
 
 ## Mise à jour
 
-Bouton sur `/config` quand une nouvelle version est publiée, ou en SSH : `./update.sh`. Configuration et mot de passe préservés.
+Quand une version est publiée, `/config` affiche ses nouveautés et un bouton pour l'installer (pas pendant la lecture). En SSH, `./update.sh` fait la même chose.
+
+Chaque version s'installe dans son propre dossier (`~/eversolo-versions`) et seulement si sa signature correspond à la clé enregistrée sur le Pi à l'installation. Si la nouvelle version ne démarre pas, le Pi revient tout seul à la précédente ; un bouton de `/config` permet aussi d'y revenir. Réglages et mot de passe restent dans `~/eversolo-screen`.
+
+Pour publier une version signée : `tools/publier-version.sh v1.2.0 "nouveauté" "autre nouveauté"`.
 
 ## Licence
 

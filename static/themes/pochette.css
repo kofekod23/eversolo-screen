@@ -1,0 +1,85 @@
+/* Pochette : l'écran prend la couleur du disque en cours.
+   Fond en aplat dérivé de la teinte de la pochette (--h, --s), texte clair,
+   un seul accent de la même famille. Aucun flou, aucune lueur. */
+body[data-theme="pochette"] {
+  --f-titre: "Geist", system-ui, sans-serif;
+  --f-texte: "Geist", system-ui, sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, monospace;
+  --fond: hsl(var(--h) calc(var(--s) * 0.42%) 10%);
+  --fond-haut: hsl(var(--h) calc(var(--s) * 0.5%) 17%);
+  --texte: hsl(var(--h) 12% 95%);
+  --texte-2: hsl(var(--h) 10% 78%);
+  --texte-3: hsl(var(--h) 8% 62%);
+  --accent: hsl(var(--h) calc(min(var(--s), 70) * 1%) 70%);
+  --piste: hsl(var(--h) 10% 100% / 0.16);
+  --barre: hsl(var(--h) 14% 94%);
+  --surface: hsl(var(--h) calc(var(--s) * 0.4%) 13%);
+  --voile: hsl(var(--h) 30% 4% / 0.55);
+  --pictogramme: hsl(var(--h) 12% 96%);
+  --alerte: #ff7a59;
+  --alerte-texte: #1b0d07;
+  background: linear-gradient(180deg, var(--fond-haut) 0%, var(--fond) 62%);
+}
+body[data-theme="pochette"].nuit {
+  --fond: hsl(var(--h) calc(var(--s) * 0.3%) 6%);
+  --fond-haut: hsl(var(--h) calc(var(--s) * 0.3%) 9%);
+  --texte: hsl(var(--h) 8% 78%);
+  --texte-2: hsl(var(--h) 6% 64%);
+  --barre: hsl(var(--h) 8% 70%);
+}
+
+[data-theme="pochette"] .brand { letter-spacing: 0.02em; }
+[data-theme="pochette"] .brand b { font-weight: 650; }
+[data-theme="pochette"] .volbarre { border-radius: 99px; }
+[data-theme="pochette"] .volbarre i { border-radius: 99px; }
+[data-theme="pochette"] .muet-badge { border-radius: 99px; padding: 0.15em 0.75em; }
+
+[data-theme="pochette"] .cover,
+[data-theme="pochette"] .placeholder {
+  border-radius: 10px;
+  box-shadow: 0 40px 90px -30px hsl(var(--h) 40% 3% / 0.9);
+}
+[data-theme="pochette"] .placeholder {
+  background: hsl(var(--h) calc(var(--s) * 0.6%) 24%);
+  color: hsl(var(--h) 20% 82%);
+  font-weight: 300; letter-spacing: -0.04em;
+}
+[data-theme="pochette"] .pause-glyph i::before,
+[data-theme="pochette"] .pause-glyph i::after { border-radius: 0.8vh; }
+[data-theme="pochette"].nuit .cover { filter: brightness(0.75); }
+[data-theme="pochette"].nuit .stage.pause .cover { filter: saturate(0.25) brightness(0.32); }
+
+[data-theme="pochette"] .eyebrow { font-weight: 500; }
+[data-theme="pochette"] .source {
+  color: var(--texte); font-weight: 600;
+  padding-left: 0.7em; border-left: 1px solid var(--texte-3);
+}
+[data-theme="pochette"] .title { font-weight: 640; letter-spacing: -0.025em; }
+[data-theme="pochette"] .artist { font-weight: 400; letter-spacing: -0.01em; }
+[data-theme="pochette"] .classe {
+  font-family: var(--f-texte); font-size: 0.8em; font-weight: 600;
+  color: hsl(var(--h) 30% 10%); background: var(--accent);
+  padding: 0.12em 0.6em; border-radius: 99px;
+}
+[data-theme="pochette"] .classe.cd { background: var(--texte-2); }
+
+[data-theme="pochette"] .filament,
+[data-theme="pochette"] .filament .glow { border-radius: 99px; }
+[data-theme="pochette"] .filament .tip {
+  display: block; position: absolute; left: 0; top: 50%;
+  width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8);
+  border-radius: 50%; background: var(--barre);
+  transform: translate(-50%, -50%);
+}
+[data-theme="pochette"] .stage.pause .tip,
+[data-theme="pochette"] .stage.arret .tip { background: var(--texte-3); }
+
+[data-theme="pochette"] #osd { border-radius: 22px; box-shadow: 0 40px 120px hsl(var(--h) 40% 3% / 0.7); }
+[data-theme="pochette"] #osd .val { font-weight: 300; letter-spacing: -0.04em; }
+[data-theme="pochette"] #osd .jauge, [data-theme="pochette"] #osd .jauge i { border-radius: 99px; }
+[data-theme="pochette"] #panel { box-shadow: -40px 0 100px hsl(var(--h) 40% 3% / 0.6); }
+[data-theme="pochette"] #p_img { border-radius: 8px; }
+[data-theme="pochette"] #panel .pname { font-weight: 640; letter-spacing: -0.02em; }
+
+[data-theme="pochette"] #idle { background: linear-gradient(180deg, var(--fond-haut) 0%, var(--fond) 70%); }
+[data-theme="pochette"] #idle .grande-heure { font-weight: 200; letter-spacing: -0.05em; }

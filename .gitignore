@@ -5,3 +5,9 @@ auth.json
 ir_codes/
 config.json
 cache_fiches.json
+captures/
+/maj.json
+/maj.verrou
+/signataires
+.coverage
+.pytest_cache/

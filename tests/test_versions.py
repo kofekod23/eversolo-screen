@@ -39,9 +39,13 @@ def monde(tmp_path, monkeypatch):
     cles.mkdir()
     bonne, autre = cle(str(cles), "bonne"), cle(str(cles), "autre")
 
-    def publier(version, contenu="print('ok')\n", signer=bonne):
+    def publier(version, contenu="print('ok')\n", signer=bonne, verrou=True):
         (auteur / "server.py").write_text(contenu)
         (auteur / "requirements.txt").write_text("")
+        if verrou:
+            (auteur / "requirements.lock").write_text("")
+        elif (auteur / "requirements.lock").exists():
+            (auteur / "requirements.lock").unlink()
         sh("git", *IDENTITE, "add", "-A", cwd=auteur)
         sh("git", *IDENTITE, "commit", "-q", "--allow-empty", "-m", version, cwd=auteur)
         if signer:
@@ -62,12 +66,12 @@ def monde(tmp_path, monkeypatch):
     return dispo, publier, autre
 
 
-def test_versions_triees_et_plus_recente():
+def test_versions_triees_et_candidates():
     sortie = "a\trefs/tags/v1.2.0\nb\trefs/tags/v1.2.0^{}\nc\trefs/tags/v1.10.0\nd\trefs/tags/essai\n"
     assert v.tags_de_ls_remote(sortie) == ["v1.2.0", "v1.10.0"]
-    assert v.plus_recente(["v1.2.0", "v1.10.0"], "v1.9.9") == "v1.10.0"
-    assert v.plus_recente(["v1.2.0"], "v1.2.0") is None
-    assert v.plus_recente(["v1.2.0"], "local-abc1234") == "v1.2.0"
+    assert v.candidates(["v1.2.0", "v1.10.0"], "v1.9.9") == ["v1.10.0"]
+    assert v.candidates(["v1.2.0"], "v1.2.0") == []
+    assert v.candidates(["v1.2.0", "v1.10.0"], "local-abc1234") == ["v1.10.0", "v1.2.0"]
 
 
 def test_disposition_reconnue_depuis_le_dossier_de_version(tmp_path):
@@ -232,3 +236,21 @@ def test_noms_de_version_stricts():
     assert v.cle_version("v1.2.3\n") is None
     assert v.cle_version("v١.2.3") is None  # chiffres non ASCII
     assert v.cle_version("v" + "9" * 5000 + ".0.0") is None
+
+
+def test_tag_non_signe_plus_haut_ne_bloque_pas_les_mises_a_jour(monde):
+    dispo, publier, _ = monde
+    v.installer(dispo)
+    publier("v1.1.0")
+    publier("v9.0.0", signer=None)  # poussé par un tiers, sans signature
+    assert v.installer(dispo) == "v1.1.0"
+    assert v.version_de_lien(dispo.courante) == "v1.1.0"
+
+
+def test_sans_verrou_des_dependances_rien_ne_s_installe(monde):
+    dispo, publier, _ = monde
+    v.installer(dispo)
+    publier("v1.1.0", verrou=False)
+    with pytest.raises(v.ErreurMaj, match="requirements.lock"):
+        v.installer(dispo, "v1.1.0")
+    assert v.version_de_lien(dispo.courante) == "v1.0.0"

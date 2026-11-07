@@ -122,16 +122,6 @@ def tags_de_ls_remote(sortie):
     return sorted(tags, key=cle_version)
 
 
-def plus_recente(tags, actuelle=None):
-    """Plus haute version strictement plus récente que `actuelle`, ou None."""
-    valides = [t for t in tags if cle_version(t)]
-    if not valides:
-        return None
-    meilleure = max(valides, key=cle_version)
-    base = cle_version(actuelle or "")
-    return meilleure if base is None or cle_version(meilleure) > base else None
-
-
 def version_de_lien(lien):
     try:
         return os.path.basename(os.path.realpath(lien)) if os.path.islink(lien) else None
@@ -226,23 +216,35 @@ def git(dispo, *args, duree=DUREE_GIT):
     return executer(["git", "-C", dispo.depot, *args], duree=duree)
 
 
-def tags_distants(dispo):
-    return tags_de_ls_remote(git(dispo, "ls-remote", "--tags", "origin"))
+def candidates(tags, actuelle):
+    """Versions plus récentes que celle en service, de la plus haute à la plus
+    basse. Depuis une copie locale (local-<sha>), toutes : la signature
+    vérifiera qu'elles prolongent le code en service."""
+    valides = sorted((t for t in tags if cle_version(t)), key=cle_version, reverse=True)
+    base = cle_version(actuelle or "")
+    return [t for t in valides if base is None or cle_version(t) > base]
 
 
 def proposable(dispo, tags, actuelle):
-    """Version à proposer. Depuis une copie locale (local-<sha>), seulement
-    un tag qui n'est pas un ancêtre du code en service (pas de retour en
-    arrière déguisé en mise à jour)."""
-    if not LOCAL_RE.fullmatch(actuelle or ""):
-        return plus_recente(tags, actuelle)
-    sha = actuelle.removeprefix("local-")
-    for tag in sorted((t for t in tags if cle_version(t)), key=cle_version, reverse=True):
+    """Plus haute version dont la signature tient et qui prolonge la version
+    en service, ou None. Les tags doivent être présents localement (fetch).
+    Un tag non signé plus haut (v999.0.0 poussé par un tiers) est ignoré au
+    lieu de bloquer toutes les mises à jour suivantes."""
+    for tag in candidates(tags, actuelle):
+        if LOCAL_RE.fullmatch(actuelle or ""):
+            sha = actuelle.removeprefix("local-")
+            try:
+                commit = git(dispo, "rev-parse", "--verify", f"refs/tags/{tag}^{{commit}}").strip()
+            except ErreurMaj:
+                continue
+            if commit.startswith(sha):
+                return None  # le code en service est déjà cette version
         try:
-            git(dispo, "merge-base", "--is-ancestor", f"refs/tags/{tag}^{{commit}}", sha)
-        except ErreurMaj:
-            return tag  # pas un ancêtre : plus récent ou parallèle
-        return None  # le plus haut tag est déjà contenu dans le code local
+            verifier_signature(dispo, tag, actuelle)
+        except ErreurMaj as exc:
+            print(f"[maj] {tag} ignorée : {exc}", file=sys.stderr)
+            continue
+        return tag
     return None
 
 
@@ -298,11 +300,9 @@ def preparer_dossier(dispo, version, reference):
     executer([_python_systeme(), "-m", "venv", os.path.join(dossier, "venv")], duree=300)
     pip = os.path.join(dossier, "venv", "bin", "pip")
     verrou = os.path.join(dossier, "requirements.lock")
-    if os.path.isfile(verrou):
-        executer([pip, "install", "--quiet", "--require-hashes", "-r", verrou], duree=DUREE_PIP)
-    else:
-        executer([pip, "install", "--quiet", "-r", os.path.join(dossier, "requirements.txt")],
-                 duree=DUREE_PIP)
+    if not os.path.isfile(verrou):
+        raise ErreurMaj("requirements.lock absent : dépendances non vérifiables")
+    executer([pip, "install", "--quiet", "--require-hashes", "-r", verrou], duree=DUREE_PIP)
     # contrôle à froid : le code se compile et ses dépendances s'importent
     py = os.path.join(dossier, "venv", "bin", "python")
     executer([py, "-m", "py_compile", os.path.join(dossier, "server.py")], duree=120)
@@ -338,11 +338,16 @@ def _installer(dispo, version, local):
             if version == precedente:
                 return version
         else:
+            if not os.path.isfile(dispo.signataires):
+                raise ErreurMaj("aucune clé de signature enregistrée sur ce Pi")
             ecrire_etat(dispo, etape="telechargement", version=version, erreur=None)
             git(dispo, "fetch", "--quiet", "--tags", "origin", duree=300)
-            version = version or plus_recente(tags_de_ls_remote(git(dispo, "ls-remote", "--tags", ".")))
             if not version:
-                raise ErreurMaj("aucune version publiée")
+                locaux = tags_de_ls_remote(git(dispo, "ls-remote", "--tags", "."))
+                version = proposable(dispo, locaux, precedente) or (
+                    precedente if precedente in locaux else None)
+            if not version:
+                raise ErreurMaj("aucune version signée publiée")
             ecrire_etat(dispo, etape="verification", version=version)
             commit = verifier_signature(dispo, version, None if version == precedente else precedente)
             if version == precedente:

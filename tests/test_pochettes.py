@@ -87,3 +87,44 @@ def test_refus_si_la_connexion_aboutit_sur_le_reseau_local(srv, distant, monkeyp
     monkeypatch.setattr(srv, "ip_du_pair", lambda r: "192.168.1.1")
     chemin = srv.cover_ref("https://img.example/rebond.jpg")
     assert distant.get(chemin).status_code == 502
+
+
+class Redirection(FausseReponse):
+    def __init__(self, cible):
+        super().__init__()
+        self.is_redirect = True
+        self.headers = {"Location": cible}
+
+
+def test_pochette_du_streamer_servie(srv, distant, monkeypatch):
+    srv.CONFIG.update({"eversolo_ip": "192.168.1.42", "eversolo_port": 9529})
+    appels = []
+    monkeypatch.setattr(srv.http, "get", lambda url, **k: appels.append(url) or FausseReponse())
+    chemin = srv.cover_ref("http://192.168.1.42:9529/ZidooMusicControl/v2/getImage?id=7&target=16")
+    assert distant.get(chemin).status_code == 200
+    assert len(appels) == 1
+
+
+def test_commande_du_streamer_jamais_appelee(srv, distant, monkeypatch):
+    """Une « pochette » qui désigne une commande (muet, suivant) n'est pas lue."""
+    srv.CONFIG.update({"eversolo_ip": "192.168.1.42", "eversolo_port": 9529})
+    appels = []
+    monkeypatch.setattr(srv.http, "get", lambda url, **k: appels.append(url) or FausseReponse())
+    chemin = srv.cover_ref("http://192.168.1.42:9529/ZidooMusicControl/v2/setMuteVolume?isMute=1")
+    assert distant.get(chemin).status_code == 502
+    assert appels == []
+
+
+def test_redirection_vers_le_streamer_refusee(srv, distant, monkeypatch):
+    srv.CONFIG.update({"eversolo_ip": "192.168.1.42", "eversolo_port": 9529})
+    monkeypatch.setattr(srv, "host_is_private", lambda h: h.startswith("192.168."))
+    monkeypatch.setattr(srv, "ip_du_pair", lambda r: None)
+    appels = []
+
+    def faux_get(url, **k):
+        appels.append(url)
+        return Redirection("http://192.168.1.42:9529/ZidooMusicControl/v2/getImage?id=1")
+    monkeypatch.setattr(srv.http, "get", faux_get)
+    chemin = srv.cover_ref("https://img.example/piege.jpg")
+    assert distant.get(chemin).status_code == 502
+    assert appels == ["https://img.example/piege.jpg"]

@@ -90,7 +90,7 @@ T = {
         "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
-        "update_avail": "Nouvelle version disponible", "update_btn": "Mettre à jour maintenant", "update_started": "Mise à jour lancée. Le serveur redémarre, l'écran se rechargera tout seul dans une minute.", "up_to_date": "Application à jour",
+        "maj_ancienne": "Mises à jour : lancez ./update.sh une fois sur le Pi pour passer aux versions signées", "up_to_date": "Application à jour",
         "genius_token_lbl": "Jeton Genius (crédits de la plage en cours, optionnel)",
         "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
@@ -132,7 +132,7 @@ T = {
         "tadb_key": "TheAudioDB key (biography fallback, test key by default)", "lastfm_key": "Last.fm API key (biography fallback, optional)",
         "searching": "Looking up artist and record information...",
         "discogs_token": "Discogs token (detailed production credits, optional)",
-        "update_avail": "New version available", "update_btn": "Update now", "update_started": "Update started. The server restarts, the display will reload by itself within a minute.", "up_to_date": "Application up to date",
+        "maj_ancienne": "Updates: run ./update.sh once on the Pi to switch to signed versions", "up_to_date": "Application up to date",
         "genius_token_lbl": "Genius token (credits of the current track, optional)",
         "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
@@ -174,7 +174,7 @@ T = {
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
         "searching": "Buscando información del artista y del disco...",
         "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
-        "update_avail": "Nueva versión disponible", "update_btn": "Actualizar ahora", "update_started": "Actualización iniciada. El servidor se reinicia, la pantalla se recargará sola en un minuto.", "up_to_date": "Aplicación al día",
+        "maj_ancienne": "Actualizaciones: ejecute ./update.sh una vez en la Pi para pasar a las versiones firmadas", "up_to_date": "Aplicación al día",
         "genius_token_lbl": "Token Genius (créditos de la pista en curso, opcional)",
         "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
@@ -216,7 +216,7 @@ T = {
         "tadb_key": "TheAudioDB-Schlüssel (Biografie-Ausweichquelle, Testschlüssel als Standard)", "lastfm_key": "Last.fm-API-Schlüssel (Biografie-Ausweichquelle, optional)",
         "searching": "Informationen zu Künstler und Album werden gesucht...",
         "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
-        "update_avail": "Neue Version verfügbar", "update_btn": "Jetzt aktualisieren", "update_started": "Aktualisierung gestartet. Der Server startet neu, der Bildschirm lädt sich in einer Minute selbst neu.", "up_to_date": "Anwendung aktuell",
+        "maj_ancienne": "Aktualisierungen: führen Sie einmal ./update.sh auf dem Pi aus, um auf signierte Versionen umzustellen", "up_to_date": "Anwendung aktuell",
         "genius_token_lbl": "Genius-Token (Credits des laufenden Titels, optional)",
         "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
@@ -401,7 +401,7 @@ def do_action(action):
 
 
 IR_CODES_DIR = os.path.join(DATA_DIR, "ir_codes")
-NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
+NAME_RE = re.compile(r"[A-Za-z0-9_-]{1,32}")
 
 
 def lirc_devices():
@@ -1275,7 +1275,6 @@ LOCAL_REV = _rev_locale()
 # Nom lisible de la version en service : « v1.2.0 » avec les versions, le
 # commit sinon (installation d'avant le lot 0 bis).
 VERSION_LOCALE = os.path.basename(os.path.realpath(BASE_DIR)) if DISPO else LOCAL_REV
-VERSION_DISTANTE = {"ts": 0.0, "sha": "", "message": ""}
 MAJ_DISPONIBLE = {"ts": 0.0, "version": None, "notes": [], "en_cours": False}
 MAJ_VERROU = threading.Lock()
 MAJ_RECHERCHE_S = 600
@@ -1295,13 +1294,12 @@ def chercher_mise_a_jour():
     def travail():
         try:
             with versions.verrou(DISPO):  # jamais pendant une installation
-                cible = versions.proposable(DISPO, versions.tags_distants(DISPO), VERSION_LOCALE)
-                notes = []
-                if cible:
-                    versions.git(DISPO, "fetch", "--quiet", "--tags", "origin", duree=300)
-                    # rien n'est montré d'une version dont la signature ne tient pas
-                    versions.verifier_signature(DISPO, cible, VERSION_LOCALE)
-                    notes = versions.notes(DISPO, cible)
+                versions.git(DISPO, "fetch", "--quiet", "--tags", "origin", duree=300)
+                # seule une version dont la signature tient est proposée
+                locaux = versions.tags_de_ls_remote(
+                    versions.git(DISPO, "ls-remote", "--tags", "."))
+                cible = versions.proposable(DISPO, locaux, VERSION_LOCALE)
+                notes = versions.notes(DISPO, cible) if cible else []
             MAJ_DISPONIBLE.update(version=cible, notes=notes)
         except (versions.ErreurMaj, versions.Occupe, OSError, subprocess.TimeoutExpired) as exc:
             MAJ_DISPONIBLE.update(version=None, notes=[])
@@ -1365,56 +1363,31 @@ def valider_au_demarrage(port):
     threading.Thread(target=travail, daemon=True).start()
 
 
-def derniere_version():
-    """Dernier commit publié sur GitHub, vérifié au plus toutes les 10 minutes."""
-    if time.time() - VERSION_DISTANTE["ts"] < 600:
-        return VERSION_DISTANTE
-    VERSION_DISTANTE["ts"] = time.time()
-    try:
-        r = http.get(
-            "https://api.github.com/repos/kofekod23/eversolo-screen/commits/main",
-            headers=_entetes_api(), timeout=5,
-        )
-        j = r.json()
-        VERSION_DISTANTE["sha"] = (j.get("sha") or "")[:7]
-        VERSION_DISTANTE["message"] = (j.get("commit", {}).get("message") or "").split("\n")[0]
-    except Exception:
-        pass
-    return VERSION_DISTANTE
-
-
-def lancer_mise_a_jour():
-    """Met à jour depuis GitHub puis laisse systemd relancer le serveur."""
-    def travail():
-        time.sleep(1.0)
-        try:
-            subprocess.run(["git", "fetch", "origin"], cwd=BASE_DIR, timeout=60)
-            subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=BASE_DIR, timeout=30)
-            subprocess.run(
-                [os.path.join(BASE_DIR, "venv", "bin", "pip"), "install",
-                 "--quiet", "-r", os.path.join(BASE_DIR, "requirements.txt")],
-                cwd=BASE_DIR, timeout=300,
-            )
-        except Exception:
-            pass
-        os._exit(1)  # systemd (Restart=on-failure) relance avec le nouveau code
-    threading.Thread(target=travail, daemon=True).start()
-
-
 FAILED = {}
 MAX_ATTEMPTS = 5
 LOCK_WINDOW = 15 * 60
 
 
+ECHECS_CONNEXION = []
+MAX_ECHECS_CONNEXION = 30  # toutes adresses confondues : changer d'IP ne suffit plus
+
+
 def is_locked(ip):
     now = time.time()
     attempts = [t for t in FAILED.get(ip, []) if now - t < LOCK_WINDOW]
-    FAILED[ip] = attempts
-    return len(attempts) >= MAX_ATTEMPTS
+    if attempts:
+        FAILED[ip] = attempts
+    else:
+        FAILED.pop(ip, None)
+    ECHECS_CONNEXION[:] = [t for t in ECHECS_CONNEXION if now - t < LOCK_WINDOW]
+    return len(attempts) >= MAX_ATTEMPTS or len(ECHECS_CONNEXION) >= MAX_ECHECS_CONNEXION
 
 
 def record_failure(ip):
+    if len(FAILED) > 1000:
+        FAILED.clear()  # borne la mémoire ; le compteur global reste
     FAILED.setdefault(ip, []).append(time.time())
+    ECHECS_CONNEXION.append(time.time())
 
 
 # ------------------------------------------------------------------- helpers
@@ -1433,8 +1406,22 @@ def is_configured():
     return load_auth() is not None and CONFIG.get("eversolo_ip")
 
 
+def empreinte_auth():
+    """Empreinte du mot de passe en vigueur : une session ouverte avant un
+    changement de mot de passe cesse d'être valable."""
+    stored = (load_auth() or {}).get("password_hash", "")
+    return hashlib.sha256(stored.encode()).hexdigest()[:32] if stored else ""
+
+
+def ouvrir_session():
+    session.clear()
+    session["auth"] = empreinte_auth()
+    session.permanent = True
+
+
 def logged_in():
-    return session.get("auth") is True
+    attendu, recu = empreinte_auth(), session.get("auth")
+    return bool(attendu) and isinstance(recu, str) and secrets.compare_digest(recu, attendu)
 
 
 def csrf_token():
@@ -1864,9 +1851,7 @@ def setup():
                 oublier_code()
                 CONFIG.update({"eversolo_ip": ip, "language": lang})
                 save_config(CONFIG)
-                session.clear()
-                session["auth"] = True
-                session.permanent = True
+                ouvrir_session()
                 return redirect("/")
 
     champ_code = "" if locale else f"""
@@ -1939,9 +1924,7 @@ def login():
         else:
             if password_ok(request.form.get("password", "")):
                 FAILED.pop(ip, None)
-                session.clear()
-                session["auth"] = True
-                session.permanent = True
+                ouvrir_session()
                 return redirect("/config")
             record_failure(ip)
             error = t["locked"] if is_locked(ip) else t["bad_password"]
@@ -1996,9 +1979,6 @@ def config_page():
                 message = t["maj_retour_lance"]
             except (versions.ErreurMaj, versions.Occupe, OSError) as exc:
                 error = str(exc)
-        elif request.form.get("op") == "update":
-            lancer_mise_a_jour()
-            message = t["update_started"]
         elif request.form.get("op") == "affichage":
             CONFIG.update(affichage.reglages_depuis_formulaire(request.form))
             save_config(CONFIG)
@@ -2032,6 +2012,8 @@ def config_page():
             else:
                 if new_pw:
                     save_auth(generate_password_hash(new_pw, method="scrypt"))
+                    # les autres sessions (cookie volé, autre appareil) tombent
+                    session["auth"] = empreinte_auth()
                 CONFIG.update({
                     "eversolo_ip": ip,
                     "language": new_lang if new_lang in LANGS else lang,
@@ -2094,23 +2076,12 @@ document.getElementById('scan').onclick = async function() {{
 }};
 </script>
 """
-    distante = {"sha": ""} if DISPO else derniere_version()
     if DISPO:
         version_html = bloc_mise_a_jour(t)
-    elif distante["sha"] and LOCAL_REV and distante["sha"] != LOCAL_REV:
-        version_html = (
-            '<div class="msg" style="display:flex;justify-content:space-between;'
-            'align-items:center;gap:12px;flex-wrap:wrap"><span>'
-            + t["update_avail"] + " : <span style=\'font-family:monospace\'>"
-            + str(escape(distante["sha"])) + "</span> — " + str(escape(distante["message"][:70]))
-            + '</span><form method="post" style="margin:0">'
-            + '<input type="hidden" name="csrf" value="' + csrf_token() + '">'
-            + '<input type="hidden" name="op" value="update">'
-            + '<button style="margin:0;width:auto;padding:10px 16px">'
-            + t["update_btn"] + "</button></form></div>"
-        )
     else:
-        version_html = ('<p class="intro" style="opacity:.6">' + t["up_to_date"]
+        # ancienne installation (sans dossiers de version) : la mise à jour
+        # passe par update.sh, qui migre vers les versions signées
+        version_html = ('<p class="intro" style="opacity:.7">' + t["maj_ancienne"]
                         + ' · <span style="font-family:monospace">' + LOCAL_REV + "</span></p>")
     body = body.replace("__VERSION_HTML__", version_html)
     body = body.replace("__AFFICHAGE_HTML__", bloc_affichage(t))
@@ -2435,7 +2406,7 @@ def api_blast(name):
         return jsonify({"error": "unauthorized"}), 401
     if not csrf_entete_ok():
         return jsonify({"error": "forbidden"}), 403
-    if not NAME_RE.match(name):
+    if not NAME_RE.fullmatch(name):
         return jsonify({"error": "bad name"}), 400
     path = os.path.join(IR_CODES_DIR, name + ".ir")
     if not os.path.exists(path):
@@ -2460,7 +2431,7 @@ def blaster_page():
         else:
             op = request.form.get("op", "")
             name = request.form.get("name", "").strip()
-            if not NAME_RE.match(name):
+            if not NAME_RE.fullmatch(name):
                 error = t["bad_name"]
             elif op == "learn":
                 # capture synchrone: la page attend la pression de touche
@@ -2938,6 +2909,15 @@ COVER_MAX_OCTETS = 5 * 1024 * 1024
 COVER_MAX_REDIRECTIONS = 3
 
 
+CHEMINS_IMAGES_STREAMER = re.compile(
+    r"/ZidooMusicControl/v2/getImage|/SystemSettings/getItemSettingIcon"
+    r"|/[A-Za-z0-9_./%-]*\.(?:jpe?g|png|webp|gif|bmp)", re.IGNORECASE)
+
+
+def image_du_streamer(chemin):
+    return bool(CHEMINS_IMAGES_STREAMER.fullmatch(chemin or ""))
+
+
 def _cover_refus():
     # Même réponse pour tous les refus et échecs: le proxy ne doit pas servir
     # à sonder quels ports ou machines répondent sur le réseau local.
@@ -2959,11 +2939,15 @@ def api_cover():
     # CDN externes). Les redirections sont suivies à la main pour revalider
     # chaque destination: un hôte public ne peut pas renvoyer vers le LAN.
     try:
-        for _ in range(COVER_MAX_REDIRECTIONS + 1):
+        for saut in range(COVER_MAX_REDIRECTIONS + 1):
             parsed = urlparse(url)
             if parsed.scheme not in ("http", "https") or not parsed.hostname:
                 return _cover_refus()
+            # Le streamer a des commandes en GET (muet, suivant…) : seules ses
+            # adresses d'images sont lues, et jamais au bout d'une redirection.
             du_streamer = parsed.netloc in streamer
+            if du_streamer and (saut or not image_du_streamer(parsed.path)):
+                return _cover_refus()
             if not du_streamer and host_is_private(parsed.hostname):
                 return _cover_refus()
             r = http.get(url, timeout=5, stream=True, allow_redirects=False)

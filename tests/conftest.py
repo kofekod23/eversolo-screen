@@ -45,7 +45,6 @@ def local(srv):
 @pytest.fixture
 def configure(srv, monkeypatch):
     """Pi déjà configuré : mot de passe et adresse du streamer enregistrés."""
-    monkeypatch.setattr(srv, "derniere_version", lambda: {"ts": 0.0, "sha": "", "message": ""})
     from werkzeug.security import generate_password_hash
     srv.save_auth(generate_password_hash("motdepasse-solide", method="scrypt"))
     srv.CONFIG.update({"eversolo_ip": "192.168.1.42"})
@@ -54,8 +53,9 @@ def configure(srv, monkeypatch):
 
 
 def connecter(client, csrf="jeton-test"):
+    empreinte = sys.modules["server"].empreinte_auth()
     with client.session_transaction() as s:
-        s["auth"] = True
+        s["auth"] = empreinte
         s["csrf"] = csrf
     return csrf
 

@@ -5,6 +5,12 @@
 #   ./install.sh --kiosk    serveur + plein écran automatique sur le HDMI du Pi
 set -e
 
+if [ "$(id -u)" -eq 0 ]; then
+    echo "Lancez ce script avec votre compte habituel, sans sudo : il demandera sudo lui-même."
+    echo "(En root, le serveur tournerait avec tous les droits.)"
+    exit 1
+fi
+
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURRENT_USER="$(whoami)"
 KIOSK=""
@@ -48,12 +54,17 @@ fi
 [ -f "$CONF/garde.py" ] || install -m 0644 "$APP_DIR/versions.py" "$CONF/garde.py"
 
 # Une version par dossier dans ~/eversolo-versions : la dernière version
-# signée si elle se vérifie, sinon la copie actuelle de ce dépôt.
-# (La copie actuelle est le code qui exécute déjà ce script : l'installer
-# n'ajoute aucune confiance ; c'est le cas tant qu'aucune version n'est signée.)
+# signée si elle se vérifie. À la toute première installation seulement, à
+# défaut, la copie actuelle de ce dépôt (c'est le code qui exécute déjà ce
+# script : l'installer n'ajoute aucune confiance). Ensuite, une signature qui
+# ne se vérifie pas laisse la version en service en place.
 if ! python3 "$APP_DIR/versions.py" installer; then
-    echo "Aucune version signée vérifiable : installation de la copie actuelle de ce dépôt."
-    python3 "$APP_DIR/versions.py" installer --local
+    if [ -L "$HOME/eversolo-versions/courante" ]; then
+        echo "Aucune nouvelle version signée vérifiable : la version en service est conservée."
+    else
+        echo "Aucune version signée vérifiable : installation de la copie actuelle de ce dépôt."
+        python3 "$APP_DIR/versions.py" installer --local
+    fi
 fi
 
 sudo cp "$APP_DIR/eversolo-screen.service" /etc/systemd/system/eversolo-screen@.service
@@ -105,7 +116,7 @@ if [ "$RAM" = "--ram" ]; then
     sudo systemctl restart systemd-journald || true
     if ! findmnt -t tmpfs /tmp > /dev/null 2>&1; then
         grep -q "# eversolo-ram" /etc/fstab || \
-            echo "tmpfs /tmp tmpfs defaults,noatime,size=128m 0 0 # eversolo-ram" | sudo tee -a /etc/fstab > /dev/null
+            echo "tmpfs /tmp tmpfs defaults,noatime,nosuid,nodev,size=128m 0 0 # eversolo-ram" | sudo tee -a /etc/fstab > /dev/null
     fi
     if systemctl list-unit-files 2>/dev/null | grep -q "^dphys-swapfile"; then
         sudo systemctl disable --now dphys-swapfile || true

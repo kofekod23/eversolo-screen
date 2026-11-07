@@ -93,10 +93,10 @@ body.pointer { cursor: default; }
 .pause-glyph i { display: flex; gap: 22%; width: 32%; height: 32%; justify-content: center; }
 .pause-glyph i::before, .pause-glyph i::after { content: ""; width: 30%; height: 100%; background: var(--pictogramme); }
 .stage.pause .pause-glyph { opacity: 1; transform: none; }
+/* À l'arrêt, « Arrêté » est écrit à côté du titre : la pochette s'assombrit
+   seulement, sans pictogramme (un carré plein se lisait comme une panne). */
+.stage.arret .pause-glyph { opacity: 0; }
 .stage.pause .cover, .stage.pause .placeholder { filter: saturate(0.25) brightness(0.42); }
-.stage.arret .pause-glyph i { gap: 0; width: 28%; height: 28%; }
-.stage.arret .pause-glyph i::after { display: none; }
-.stage.arret .pause-glyph i::before { width: 100%; }
 
 .meta { flex: 1; min-width: 0; }
 .eyebrow { display: flex; align-items: center; gap: 0.7em; font-size: calc(var(--u) * 2.7); color: var(--texte-2); margin-bottom: calc(var(--u) * 2.2); }

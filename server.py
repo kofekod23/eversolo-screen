@@ -228,6 +228,28 @@ T = {
     },
 }
 
+TEXTES_REGLAGES = {
+    "fr": {"sec_streamer": "Streamer", "sec_streamer_intro": "Adresse de l'Eversolo sur le réseau local et langue des textes.",
+           "sec_sources": "Sources d'informations", "sec_sources_intro": "Biographies, crédits et studios. Tout fonctionne sans clé ; ces clés gratuites ajoutent des fiches.",
+           "sec_compte": "Mot de passe", "sec_compte_intro": "Laissez vide pour garder le mot de passe actuel. Le changer déconnecte les autres appareils.",
+           "sec_maj": "Mise à jour", "get_key": "Obtenir une clé", "back_display": "Retour à l'affichage"},
+    "en": {"sec_streamer": "Streamer", "sec_streamer_intro": "Address of the Eversolo on the local network and language of the texts.",
+           "sec_sources": "Information sources", "sec_sources_intro": "Biographies, credits and studios. Everything works without keys; these free keys add more.",
+           "sec_compte": "Password", "sec_compte_intro": "Leave empty to keep the current password. Changing it signs out other devices.",
+           "sec_maj": "Update", "get_key": "Get a key"},
+    "es": {"sec_streamer": "Streamer", "sec_streamer_intro": "Dirección del Eversolo en la red local e idioma de los textos.",
+           "sec_sources": "Fuentes de información", "sec_sources_intro": "Biografías, créditos y estudios. Todo funciona sin claves; estas claves gratuitas añaden fichas.",
+           "sec_compte": "Contraseña", "sec_compte_intro": "Déjelo vacío para conservar la contraseña actual. Cambiarla cierra la sesión en los demás aparatos.",
+           "sec_maj": "Actualización", "get_key": "Obtener una clave"},
+    "de": {"sec_streamer": "Streamer", "sec_streamer_intro": "Adresse des Eversolo im lokalen Netz und Sprache der Texte.",
+           "sec_sources": "Informationsquellen", "sec_sources_intro": "Biografien, Credits und Studios. Alles funktioniert ohne Schlüssel; diese kostenlosen Schlüssel ergänzen Einträge.",
+           "sec_compte": "Passwort", "sec_compte_intro": "Leer lassen, um das aktuelle Passwort zu behalten. Eine Änderung meldet andere Geräte ab.",
+           "sec_maj": "Aktualisierung", "get_key": "Schlüssel erhalten"},
+}
+for _langue, _textes in TEXTES_REGLAGES.items():
+    T[_langue].update(_textes)
+
+
 # ------------------------------------------------------------- configuration
 
 
@@ -1737,48 +1759,49 @@ def liste_captures():
 # ------------------------------------------------------------------ templates
 
 PAGE = """
-<!DOCTYPE html><html lang="{{ lang }}"><head>
+<!DOCTYPE html><html lang="{{ lang }}" class="{{ classe }}"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google" content="notranslate">
+<meta name="color-scheme" content="light dark">
 <title>Eversolo · {{ title }}</title>
 <link href="/static/fonts/fonts.css" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  <link rel="icon" type="image/png" href="/static/favicon.png">
-  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-<style>
-:root{--chassis:#0d0b08;--panel:#16130e;--line:#2a251c;--ivory:#ece6d8;--muted:#918a79;--tube:#e8a33d}
-*{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;background:var(--chassis);color:var(--ivory);font-family:"Geist",system-ui,sans-serif;display:grid;place-items:center;padding:24px}
-.card{width:min(440px,100%);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:36px 32px;box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
-.brand{font-size:11px;font-weight:600;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px;margin-bottom:26px}
-.brand b{color:var(--ivory)}
-.lamp{width:7px;height:7px;border-radius:50%;background:var(--tube);box-shadow:0 0 10px 2px rgba(232,163,61,.55)}
-h1{font-family:"Geist",system-ui,sans-serif;font-weight:620;letter-spacing:-.01em;font-size:27px;margin-bottom:8px}
-.intro{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:26px}
-label{display:block;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
-input,select{width:100%;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--ivory);font-family:"Geist Mono",monospace;font-size:15px;padding:12px 14px;outline:none}
-input:focus,select:focus{border-color:var(--tube)}
-button{width:100%;margin-top:26px;background:var(--tube);border:none;border-radius:4px;color:#1a1206;font-family:"Geist";font-weight:600;font-size:15px;letter-spacing:.04em;padding:14px;cursor:pointer}
-button:hover{filter:brightness(1.08)}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);margin-top:12px;font-weight:500}
-.msg{border-left:2px solid var(--tube);padding:10px 14px;font-size:13px;color:var(--ivory);background:rgba(232,163,61,.07);margin-bottom:18px;border-radius:0 4px 4px 0}
-.msg.err{border-color:#c65a4a;background:rgba(198,90,74,.09)}
-.row{display:flex;gap:10px}.row input{flex:1}
-.row button{width:auto;margin-top:0;padding:0 16px;font-size:13px}
-.foot{margin-top:24px;text-align:center}
-.foot a{color:var(--muted);font-size:12px;letter-spacing:.08em;text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:2px}
-.foot a:hover{color:var(--ivory)}
-</style></head><body>
-<div class="card">
-  <div class="brand"><span class="lamp"></span><span><b>Eversolo</b></span></div>
+<link href="/static/reglages.css" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="icon" type="image/png" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+</head><body>
+{{ nav }}
+{% if large %}<main class="reglages">{{ body }}</main>
+{% else %}<main class="card">
+  {% if not nav %}<div class="brand"><span class="marque"></span><b>Eversolo</b></div>{% endif %}
   {{ body }}
-</div>
+</main>{% endif %}
 </body></html>
 """
 
 
-def page(title, body, lang):
-    return render_template_string(PAGE, title=title, body=Markup(body), lang=lang)
+def barre_navigation(courant):
+    """Bandeau des pages réservées : où l'on est, où aller, se déconnecter."""
+    t = tr()
+    liens = (("config", "/config", t["config_title"]), ("remote", "/remote", t["remote_title"]),
+             ("blaster", "/blaster", t["blaster_title"]))
+    actif = ' aria-current="page"'
+    items = "".join(
+        f'<a href="{href}"{actif if cle == courant else ""}>{escape(nom)}</a>'
+        for cle, href, nom in liens)
+    modele = escape(MODEL_CACHE.get("name") or "")
+    return Markup(f"""<header class="entete"><div class="entete-in">
+  <a class="brand" href="/"><span class="marque"></span><b>Eversolo</b><span class="modele">{modele}</span></a>
+  <nav>{items}<a href="/" class="vers-ecran">{escape(t['back_display'])}</a>
+    <form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}">
+    <button class="lien">{escape(t['logout'])}</button></form></nav>
+</div></header>""")
+
+
+def page(title, body, lang, large=False, nav=None, sombre=False):
+    return render_template_string(
+        PAGE, title=title, body=Markup(body), lang=lang, large=large,
+        nav=barre_navigation(nav) if nav else "", classe="sombre" if sombre else "")
 
 
 # --------------------------------------------------------------------- routes
@@ -1821,7 +1844,7 @@ setInterval(async function() {{
 }}, 3000);
 </script>
 """
-    return page(t["setup_title"], body, lang)
+    return page(t["setup_title"], body, lang, sombre=True)
 
 
 @app.route("/setup", methods=["GET", "POST"])
@@ -2036,66 +2059,121 @@ def config_page():
                 lang = CONFIG["language"]
                 message = t["saved"]
 
+    choix_langue = "".join(
+        f'<option value="{code}"{" selected" if lang == code else ""}>{nom}</option>'
+        for code, nom in (("fr", "Français"), ("en", "English"), ("es", "Español"), ("de", "Deutsch")))
+    section_streamer = groupe("02", t["sec_streamer"], t["sec_streamer_intro"], f"""
+    <label for="ip">{t['device_ip']}</label>
+    <div class="row">
+      <input type="text" name="device_ip" id="ip" class="mono" value="{escape(CONFIG['eversolo_ip'])}" required inputmode="decimal">
+      <button type="button" class="second" id="scan">{t['detect']}</button>
+    </div>
+    <p class="aide" id="scanEtat" role="status"></p>
+    <label for="langue">{t['language']}</label>
+    <select name="language" id="langue">{choix_langue}</select>""")
+    section_sources = groupe("03", t["sec_sources"], t["sec_sources_intro"], "".join((
+        champ_cle(t, "lastfm_key", t["lastfm_key"], CONFIG.get("lastfm_api_key", ""), LIENS_CLES["lastfm"]),
+        champ_cle(t, "discogs_token", t["discogs_token"], CONFIG.get("discogs_token", ""), LIENS_CLES["discogs"]),
+        champ_cle(t, "genius_token", t["genius_token_lbl"], CONFIG.get("genius_token", ""), LIENS_CLES["genius"]),
+        champ_cle(t, "tadb_key", t["tadb_key"], cle_theaudiodb(), LIENS_CLES["theaudiodb"]))))
+    section_compte = groupe("04", t["sec_compte"], t["sec_compte_intro"], f"""
+    <div class="deux">
+      <div><label for="npw">{libelle(t['new_password'])[0]}</label>
+      <input type="password" name="new_password" id="npw" autocomplete="new-password"></div>
+      <div><label for="cpw">{t['current_password']}</label>
+      <input type="password" name="current_password" id="cpw" autocomplete="current-password"></div>
+    </div>
+    <div class="actions"><button type="submit">{t['save']}</button></div>""")
+    messages = (f'<div class="msg">{message}</div>' if message else "") + (
+        f'<div class="msg err">{error}</div>' if error else "")
     body = f"""
-<h1>{t['config_title']}</h1>
-__VERSION_HTML__
-{f'<div class="msg">{message}</div>' if message else ''}
-{f'<div class="msg err">{error}</div>' if error else ''}
-<form method="post" action="/config">
+<div class="titre-page"><h1>{t['config_title']}</h1>{messages}</div>
+{bloc_affichage(t)}
+<form method="post" action="/config" class="formulaire">
   <input type="hidden" name="csrf" value="{csrf_token()}">
-  <label>{t['device_ip']}</label>
-  <div class="row">
-    <input type="text" name="device_ip" id="ip" value="{CONFIG['eversolo_ip']}" required>
-    <button type="button" id="scan">{t['detect']}</button>
-  </div>
-  <label>{t['language']}</label>
-  <select name="language">
-    <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
-    <option value="en" {'selected' if lang=='en' else ''}>English</option>
-    <option value="es" {'selected' if lang=='es' else ''}>Español</option>
-    <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
-  </select>
-  <label>{t['tadb_key']}</label>
-  <input type="text" name="tadb_key" value="{escape(cle_theaudiodb())}" autocomplete="off">
-  <label>{t['lastfm_key']}</label>
-  <input type="text" name="lastfm_key" value="{escape(CONFIG.get('lastfm_api_key', ''))}" autocomplete="off">
-  <label>{t['discogs_token']}</label>
-  <input type="text" name="discogs_token" value="{escape(CONFIG.get('discogs_token', ''))}" autocomplete="off">
-  <label>{t['genius_token_lbl']}</label>
-  <input type="text" name="genius_token" value="{escape(CONFIG.get('genius_token', ''))}" autocomplete="off">
-  <label>{t['new_password']}</label>
-  <input type="password" name="new_password" autocomplete="new-password">
-  <label>{t['current_password']}</label>
-  <input type="password" name="current_password" autocomplete="current-password">
-  <button type="submit">{t['save']}</button>
+  {section_streamer}
+  {section_sources}
+  {section_compte}
 </form>
-__AFFICHAGE_HTML__
-__CAPTURE_HTML__
-<form method="post" action="/logout"><input type="hidden" name="csrf" value="{csrf_token()}"><button class="ghost">{t['logout']}</button></form>
-<div class="foot"><a href="/remote">{t['remote_link']}</a> &nbsp;·&nbsp; <a href="/">{t['back_display']}</a></div>
+__VERSION_HTML__
+{bloc_capture(t)}
 <script>
 document.getElementById('scan').onclick = async function() {{
-  this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
+  const etat = document.getElementById('scanEtat');
+  this.textContent = {json.dumps(t['detecting'])}; this.disabled = true; etat.textContent = '';
   try {{
     const r = await fetch('/api/detect'); const d = await r.json();
     if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
-    else alert({json.dumps(t['detect_none'])});
-  }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
+    else etat.textContent = {json.dumps(t['detect_none'])};
+  }} catch (e) {{ etat.textContent = {json.dumps(t['detect_none'])}; }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
 }};
 </script>
 """
     if DISPO:
-        version_html = bloc_mise_a_jour(t)
+        version_html = groupe("05", t["sec_maj"], "", bloc_mise_a_jour(t))
     else:
         # ancienne installation (sans dossiers de version) : la mise à jour
         # passe par update.sh, qui migre vers les versions signées
-        version_html = ('<p class="intro" style="opacity:.7">' + t["maj_ancienne"]
-                        + ' · <span style="font-family:monospace">' + LOCAL_REV + "</span></p>")
+        version_html = groupe("05", t["sec_maj"], "",
+                              f'<p class="intro">{t["maj_ancienne"]}</p>'
+                              f'<p class="aide mono">{escape(LOCAL_REV)}</p>')
     body = body.replace("__VERSION_HTML__", version_html)
-    body = body.replace("__AFFICHAGE_HTML__", bloc_affichage(t))
-    body = body.replace("__CAPTURE_HTML__", bloc_capture(t))
-    return page(t["config_title"], body, lang)
+    return page(t["config_title"], body, lang, large=True, nav="config")
+
+
+LIENS_CLES = {
+    "lastfm": "https://www.last.fm/api/account/create",
+    "discogs": "https://www.discogs.com/settings/developers",
+    "genius": "https://genius.com/api-clients",
+    "theaudiodb": "https://www.theaudiodb.com/free_music_api",
+}
+
+
+def libelle(texte):
+    """« Clé Last.fm (repli biographies) » → ("Clé Last.fm", "repli biographies")."""
+    m = re.fullmatch(r"(.+?)\s*\((.+)\)", texte)
+    return (m.group(1), m.group(2)) if m else (texte, "")
+
+
+def nom_et_detail(texte):
+    """« Salon : TV lue à 3-4 m » → ("Salon", "TV lue à 3-4 m")."""
+    m = re.match(r"(.+?)\s?:\s(.+)", texte)
+    return (m.group(1), m.group(2)) if m else (texte, "")
+
+
+def groupe(numero, titre, intro, contenu):
+    """Une section de réglages : explication à gauche, champs à droite."""
+    intro_html = f'<p class="intro">{intro}</p>' if intro else ""
+    return f"""<section class="groupe">
+  <header><span class="num">{numero}</span><h2>{titre}</h2>{intro_html}</header>
+  <div class="champs">{contenu}</div>
+</section>"""
+
+
+def champ_cle(t, nom, texte, valeur, lien):
+    titre, aide = libelle(texte)
+    return f"""<div class="cle">
+  <div class="cle-tete"><label for="{nom}">{escape(titre)}</label>
+  <a href="{lien}" target="_blank" rel="noopener noreferrer">{t['get_key']}</a></div>
+  <input type="text" name="{nom}" id="{nom}" class="mono" value="{escape(valeur)}" autocomplete="off" spellcheck="false">
+  {f'<p class="aide">{escape(aide)}</p>' if aide else ''}
+</div>"""
+
+
+def choix(nom, valeurs, choisie, textes, classe="choix"):
+    """Boutons radio présentés en cartes."""
+    cartes = []
+    for v in valeurs:
+        titre, detail = nom_et_detail(textes[v])
+        mini = (f'<span class="mini {v}"><i class="c"></i><i class="t"></i><i class="a"></i><i class="b"></i></span>'
+                if classe == "themes" else "")
+        cartes.append(
+            f'<label class="option"><input type="radio" name="{nom}" value="{v}"'
+            f'{" checked" if v == choisie else ""}><span class="carte">{mini}'
+            f'<span class="nom">{escape(titre)}</span>'
+            f'{f"<span class=detail>{escape(detail)}</span>" if detail else ""}</span></label>')
+    return f'<div class="{classe}">{"".join(cartes)}</div>'
 
 
 def bloc_mise_a_jour(t):
@@ -2104,7 +2182,7 @@ def bloc_mise_a_jour(t):
     etat = versions.lire_etat(DISPO)
     precedente = versions.version_de_lien(DISPO.precedente)
     jeton = csrf_token()
-    lignes = [f'<p class="intro">{t["maj_installee"]} : <b>{escape(VERSION_LOCALE)}</b></p>']
+    lignes = [f'<p class="version"><span>{t["maj_installee"]}</span> <b class="mono">{escape(VERSION_LOCALE)}</b></p>']
     if etat.get("etape") in ("echec", "retour") and etat.get("erreur"):
         lignes.append(f'<div class="msg err">{escape(etat["erreur"])}</div>')
     en_cours = maj_en_cours()
@@ -2115,58 +2193,49 @@ def bloc_mise_a_jour(t):
     if cible and not en_cours:
         notes = "".join(f"<li>{escape(n)}</li>" for n in MAJ_DISPONIBLE.get("notes") or [])
         lignes.append(
-            f'<div class="msg"><b>{t["maj_disponible"]} : {escape(cible)}</b>'
-            f'<ul style="margin:8px 0 0 18px">{notes}</ul>'
-            f'<form method="post" style="margin:0"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<div class="nouvelle"><b>{t["maj_disponible"]} : <span class="mono">{escape(cible)}</span></b>'
+            f'<ul>{notes}</ul>'
+            f'<form method="post"><input type="hidden" name="csrf" value="{jeton}">'
             f'<input type="hidden" name="op" value="update">'
-            f'<button style="margin-top:12px">{t["maj_installer"]}</button></form></div>')
+            f'<button>{t["maj_installer"]}</button></form></div>')
     elif not en_cours:
-        lignes.append(f'<p class="intro" style="opacity:.7">{t["up_to_date"]}</p>')
+        lignes.append(f'<p class="aide">{t["up_to_date"]}</p>')
     if precedente and not en_cours:
         lignes.append(
-            f'<form method="post"><input type="hidden" name="csrf" value="{jeton}">'
+            f'<form method="post" class="actions gauche"><input type="hidden" name="csrf" value="{jeton}">'
             f'<input type="hidden" name="op" value="retour">'
-            f'<button class="ghost">{t["maj_revenir"]} ({escape(precedente)})</button></form>')
+            f'<button class="second">{t["maj_revenir"]} ({escape(precedente)})</button></form>')
     return "\n".join(lignes)
 
 
 def bloc_affichage(t):
     r = affichage.reglages_affichage(CONFIG)
 
-    def options(valeurs, choisie, prefixe):
-        return "".join(
-            f'<option value="{v}"{" selected" if v == choisie else ""}>{t[prefixe + v]}</option>'
-            for v in valeurs)
-
     def heures(nom, choisie):
-        return f'<select name="{nom}" style="width:auto">' + "".join(
+        return f'<select name="{nom}" class="heure">' + "".join(
             f'<option value="{h}"{" selected" if h == choisie else ""}>{h}</option>'
             for h in range(24)) + "</select>"
 
+    textes = {k[len("theme_"):]: v for k, v in t.items() if k.startswith("theme_")}
+    profils = {k[len("profil_"):]: v for k, v in t.items() if k.startswith("profil_")}
+    nuits = {k[len("nuit_"):]: v for k, v in t.items() if k in ("nuit_auto", "nuit_jamais", "nuit_toujours")}
     coche = " checked" if r["protection"] else ""
-    return f"""
-<h2 style="margin-top:32px">{t['disp_title']}</h2>
-<p class="intro">{t['disp_intro']}</p>
-<form method="post" action="/config">
+    contenu = f"""
   <input type="hidden" name="csrf" value="{csrf_token()}">
   <input type="hidden" name="op" value="affichage">
-  <label>{t['disp_theme']}</label>
-  <select name="ecran_theme">{options(affichage.THEMES, r['theme'], 'theme_')}</select>
-  <label>{t['disp_profil']}</label>
-  <select name="ecran_profil">{options(affichage.PROFILS, r['profil'], 'profil_')}</select>
-  <label>{t['disp_nuit']}</label>
-  <select name="ecran_nuit">{options(affichage.MODES_NUIT, r['nuit'], 'nuit_')}</select>
-  <div class="row" style="align-items:center;gap:8px;margin-top:10px">
-    {t['nuit_de']} {heures('nuit_debut', r['nuit_debut'])} {t['nuit_a']}
-    {heures('nuit_fin', r['nuit_fin'])} {t['nuit_h']}
-  </div>
-  <label style="display:flex;gap:10px;align-items:flex-start;margin-top:16px">
-    <input type="checkbox" name="ecran_protection" value="1"{coche} style="width:auto;margin-top:3px">
-    <span>{t['disp_protection']}</span>
-  </label>
-  <button type="submit">{t['disp_save']}</button>
-</form>
-"""
+  <fieldset><legend>{t['disp_theme']}</legend>
+  {choix('ecran_theme', affichage.THEMES, r['theme'], textes, 'themes')}</fieldset>
+  <fieldset><legend>{t['disp_profil']}</legend>
+  {choix('ecran_profil', affichage.PROFILS, r['profil'], profils)}</fieldset>
+  <fieldset><legend>{libelle(t['disp_nuit'])[0]}</legend>
+  {choix('ecran_nuit', affichage.MODES_NUIT, r['nuit'], nuits, 'choix court')}
+  <p class="heures">{t['nuit_de']} {heures('nuit_debut', r['nuit_debut'])} {t['nuit_a']}
+    {heures('nuit_fin', r['nuit_fin'])} {t['nuit_h']}</p></fieldset>
+  <label class="interrupteur"><input type="checkbox" name="ecran_protection" value="1"{coche}>
+    <span>{t['disp_protection']}</span></label>
+  <div class="actions"><button type="submit">{t['disp_save']}</button></div>"""
+    return ('<form method="post" action="/config">'
+            + groupe("01", t["disp_title"], t["disp_intro"], contenu) + "</form>")
 
 
 def bloc_capture(t):
@@ -2176,26 +2245,21 @@ def bloc_capture(t):
     captures = liste_captures()
     liste = ""
     if captures:
-        liens = "".join(
-            f'<div style="margin-top:8px"><a href="/captures/{escape(n)}">{escape(n)}</a></div>'
-            for n in captures[:12])
-        liste = (f'<label>{t["captures_list"]}</label>'
-                 f'<div style="font-family:monospace;font-size:13px">{liens}</div>')
-    return f"""
-<div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--line)">
-  <h2 style="font-family:Geist,system-ui,sans-serif;font-weight:620;font-size:21px;margin-bottom:8px">{t['capture_title']}</h2>
-  <p class="intro" style="margin-bottom:6px">{t['capture_intro']}</p>
+        liens = "".join(f'<li><a class="mono" href="/captures/{escape(n)}">{escape(n)}</a></li>'
+                        for n in captures[:12])
+        liste = f'<p class="sous-titre">{t["captures_list"]}</p><ul class="captures">{liens}</ul>'
+    contenu = f"""
   <form method="post" action="/config">
     <input type="hidden" name="csrf" value="{csrf_token()}">
     <input type="hidden" name="op" value="capture">
     <label for="situation">{t['capture_situation']}</label>
     <div class="row">
-      <select name="situation" id="situation" style="flex:1">{options}</select>
-      <button type="submit">{t['capture_btn']}</button>
+      <select name="situation" id="situation">{options}</select>
+      <button type="submit" class="second">{t['capture_btn']}</button>
     </div>
   </form>
-  {liste}
-</div>"""
+  {liste}"""
+    return groupe("06", t["capture_title"], t["capture_intro"], contenu)
 
 
 @app.route("/captures/<nom>")
@@ -2403,7 +2467,7 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
 }});
 </script>
 """
-    return page(t["remote_title"], body, lang)
+    return page(t["remote_title"], body, lang, nav="remote")
 
 
 @app.route("/api/blast/<name>", methods=["POST"])
@@ -2515,7 +2579,7 @@ document.querySelectorAll('.sendbtn').forEach(function(btn) {{
 }});
 </script>
 '''
-    return page(t["blaster_title"], body, lang)
+    return page(t["blaster_title"], body, lang, nav="blaster")
 
 
 @app.route("/api/ir/status")

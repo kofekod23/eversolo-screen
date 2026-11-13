@@ -113,6 +113,9 @@ def main():
                         continue
                     last_code, last_time = value, now
                     forward(port, value)
+            # lecture courte : le périphérique a disparu ; sans pause la boucle
+            # le rouvrirait en continu et occuperait un cœur
+            time.sleep(1)
         except PermissionError:
             print("accès refusé au périphérique : le compte du service doit appartenir au groupe input", flush=True)
             time.sleep(30)

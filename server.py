@@ -17,6 +17,7 @@ import os
 import secrets
 import socket
 import time
+import traceback
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import parse_qs, urlparse
@@ -346,23 +347,29 @@ app.config.update(
 http = requests.Session()
 http.headers.update({"User-Agent": "eversolo-screen/1.0 (Raspberry Pi; affichage hifi local)"})
 
-MODEL_CACHE = {"ip": None, "name": ""}
+MODEL_CACHE = {"ip": None, "name": "", "quand": 0.0}
+MODELE_NOUVEL_ESSAI = 60  # secondes avant de redemander un modèle resté sans réponse
 
 
 def device_model(ip=None, port=None):
-    """Nom du modèle (DMP-A6, A8, A10...), mis en cache par adresse."""
+    """Nom du modèle (DMP-A6, A8, A10...), mis en cache par adresse.
+    Un échec est gardé une minute : sans cela chaque relevé de l'écran
+    referait la demande et attendrait son délai."""
     ip = ip or CONFIG.get("eversolo_ip")
     port = port or CONFIG.get("eversolo_port", 9529)
     if not ip:
         return ""
-    if MODEL_CACHE["ip"] == ip and MODEL_CACHE["name"]:
-        return MODEL_CACHE["name"]
+    if MODEL_CACHE["ip"] == ip:
+        if MODEL_CACHE["name"]:
+            return MODEL_CACHE["name"]
+        if time.time() - MODEL_CACHE["quand"] < MODELE_NOUVEL_ESSAI:
+            return ""
     try:
         r = http.get(f"http://{ip}:{port}/ControlCenter/getModel", timeout=2)
         name = r.json().get("model", "") if r.ok else ""
     except Exception:
         name = ""
-    MODEL_CACHE.update({"ip": ip, "name": name})
+    MODEL_CACHE.update({"ip": ip, "name": name, "quand": time.time()})
     return name
 
 # ------------------------------------------------------------ anti force brute
@@ -1089,8 +1096,13 @@ def enrichir_album(album_info, artist, titre, lang):
     """Si le disque n'a pas de crédits, ceux de la plage en cours (Genius)."""
     if album_info is None or album_info.get("credits") or not titre:
         return album_info
-    plage = fetch_track_credits(artist, titre, lang)
-    if not plage:
+    return avec_credits_de_plage(album_info, titre, fetch_track_credits(artist, titre, lang))
+
+
+def avec_credits_de_plage(album_info, titre, plage):
+    """Copie du disque complétée par les crédits déjà obtenus d'une plage.
+    Aucun appel réseau : utilisable pendant une retouche du volet."""
+    if album_info is None or album_info.get("credits") or not titre or not plage:
         return album_info
     album_info = dict(album_info)
     album_info["credits"] = _grouper_credits(plage)
@@ -1101,42 +1113,56 @@ def enrichir_album(album_info, artist, titre, lang):
 
 
 FICHIER_FICHES = os.path.join(DATA_DIR, "cache_fiches.json")
-_SAUVEGARDE = {"minuteur": None, "verrou": threading.Lock()}
+_SAUVEGARDE = {"minuteur": None, "verrou": threading.Lock(), "empreinte": None}
+DELAI_SAUVEGARDE = 60.0  # secondes : artiste, disque et plage partent dans la même écriture
+VERROU_ELAGAGE = threading.Lock()
 RG_CACHE = {}
 
 
 def _elaguer(cache, maxi=500):
-    """Garde le cache borné en retirant la moitié la plus ancienne."""
-    if len(cache) > maxi:
-        for k in sorted(cache, key=lambda c: cache[c][0])[:len(cache) // 2]:
-            cache.pop(k, None)
+    """Garde le cache borné en retirant la moitié la plus ancienne.
+    Travaille sur une copie : un autre fil peut retirer une clé entre-temps."""
+    if len(cache) <= maxi:
+        return
+    with VERROU_ELAGAGE:
+        entrees = sorted(list(cache.items()), key=lambda e: e[1][0])
+        for cle, _ in entrees[:len(entrees) // 2]:
+            cache.pop(cle, None)
 
 
 def sauver_fiches():
     """Écrit les fiches réussies sur disque: le savoir survit aux redémarrages.
-    Écriture atomique, débit négligeable (quelques Ko par album, une fois)."""
+    Écriture atomique, et seulement si le contenu a changé : la carte SD
+    n'est pas réécrite pour rien."""
     try:
         contenu = {}
         for nom, cache in (("artistes", ARTIST_CACHE), ("albums", ALBUM_CACHE),
                            ("plages", TRACK_CACHE)):
             contenu[nom] = [[list(k), ts, v] for k, (ts, v) in list(cache.items()) if v]
+        texte = json.dumps(contenu, ensure_ascii=False)
+        empreinte = hashlib.sha256(texte.encode("utf-8")).hexdigest()
+        if empreinte == _SAUVEGARDE["empreinte"]:
+            return
         temporaire = FICHIER_FICHES + ".tmp"
         with open(temporaire, "w", encoding="utf-8") as f:
-            json.dump(contenu, f, ensure_ascii=False)
+            f.write(texte)
+            f.flush()
+            os.fsync(f.fileno())
         os.replace(temporaire, FICHIER_FICHES)
-    except Exception:
-        pass
+        _SAUVEGARDE["empreinte"] = empreinte
+    except Exception as exc:
+        print(f"[diagnostic] fiches non enregistrées : {type(exc).__name__}", flush=True)
 
 
 def planifier_sauvegarde():
-    """Sauvegarde au plus une fois toutes les 5 secondes, en arrière-plan."""
+    """Sauvegarde au plus une fois par minute, en arrière-plan."""
     with _SAUVEGARDE["verrou"]:
         if _SAUVEGARDE["minuteur"] is None:
             def _faire():
                 with _SAUVEGARDE["verrou"]:
                     _SAUVEGARDE["minuteur"] = None
                 sauver_fiches()
-            _SAUVEGARDE["minuteur"] = threading.Timer(5.0, _faire)
+            _SAUVEGARDE["minuteur"] = threading.Timer(DELAI_SAUVEGARDE, _faire)
             _SAUVEGARDE["minuteur"].daemon = True
             _SAUVEGARDE["minuteur"].start()
 
@@ -1152,8 +1178,9 @@ def charger_fiches():
                     cache[tuple(k)] = (ts, v)
     except FileNotFoundError:
         pass
-    except Exception:
-        pass
+    except Exception as exc:
+        # fichier abîmé : on repart sans, les fiches se referont à l'écoute
+        print(f"[diagnostic] fiches illisibles, ignorées : {type(exc).__name__}", flush=True)
 
 
 charger_fiches()
@@ -1202,11 +1229,43 @@ def noter_longueur_volet(valeur):
     ARTIST_PANEL["scroll"] = min(ARTIST_PANEL["scroll"], int(valeur))
 
 
+VERROU_VOLET = threading.Lock()
+
+
+def ouvrir_volet(donnees, duree):
+    """Publie un nouveau volet et rend son jeton : les recherches lancées pour
+    lui ne retoucheront que lui."""
+    with VERROU_VOLET:
+        jeton = ARTIST_PANEL.get("token", 0) + 1
+        ARTIST_PANEL.update({"until": time.time() + duree, "data": donnees, "scroll": 0,
+                             "scroll_max": None, "page": "artist", "token": jeton})
+    return jeton
+
+
+def publier_volet(jeton, mutateur, prolonger=True):
+    """Retouche le volet s'il est encore ouvert et que c'est bien le même.
+    Le mutateur reçoit une copie et ne fait aucun appel réseau : deux fils qui
+    publient en même temps ne s'écrasent pas, et une fermeture n'est pas défaite."""
+    with VERROU_VOLET:
+        donnees = ARTIST_PANEL["data"]
+        if (not donnees or ARTIST_PANEL.get("token") != jeton
+                or ARTIST_PANEL["until"] <= time.time()):
+            return False
+        retouche = dict(donnees)
+        mutateur(retouche)
+        ARTIST_PANEL["data"] = retouche
+        if prolonger:
+            ARTIST_PANEL["until"] = time.time() + 60
+        return True
+
+
 def toggle_artist_panel():
     """Affiche la bio de l'artiste en cours, ou la masque si déjà visible."""
-    if ARTIST_PANEL["until"] > time.time():
-        ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0, "scroll_max": None, "page": "artist"})
-        return True
+    with VERROU_VOLET:
+        if ARTIST_PANEL["until"] > time.time():
+            ARTIST_PANEL.update({"until": 0.0, "data": None, "scroll": 0,
+                                 "scroll_max": None, "page": "artist"})
+            return True
     try:
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         etat = normalize(r.json())
@@ -1233,43 +1292,31 @@ def toggle_artist_panel():
         # Les credits de plage (Genius) arrivent en arriere-plan, jamais en bloquant.
         alb = fetch_album_info(artist, album_titre, lang)
         data, duree = assembler(fetch_artist_info(artist, lang, album_titre), alb)
-        jeton = ARTIST_PANEL.get("token", 0) + 1
-        ARTIST_PANEL.update({"until": time.time() + duree, "data": data,
-                             "scroll": 0, "scroll_max": None, "page": "artist", "token": jeton})
+        jeton = ouvrir_volet(data, duree)
         if alb is not None and not alb.get("credits"):
             def _enrichir_fond():
                 enrichi = enrichir_album(alb, artist, titre_courant, lang)
-                if (enrichi is not alb and ARTIST_PANEL.get("token") == jeton
-                        and ARTIST_PANEL["until"] > time.time()):
-                    d2 = dict(ARTIST_PANEL["data"])
-                    d2["album"] = enrichi
-                    ARTIST_PANEL["data"] = d2
+                if enrichi is not alb:
+                    publier_volet(jeton, lambda d: d.__setitem__("album", enrichi),
+                                  prolonger=False)
             threading.Thread(target=_enrichir_fond, daemon=True).start()
         return True
 
     # cache froid: panneau "recherche" immediat, trois fils paralleles derriere.
     # La touche ne doit JAMAIS attendre les sources externes, et chaque page
     # se remplit des que SA source repond, sans attendre les autres.
-    jeton = ARTIST_PANEL.get("token", 0) + 1
     attente = T.get(lang, T["fr"])["searching"]
     album_provisoire = None
     if album_titre:
         album_provisoire = {"title": album_titre, "facts": [], "text": attente,
                             "tracks": [], "credits": [], "prod_facts": [],
                             "source": "", "loading": True}
-    ARTIST_PANEL.update({
-        "until": time.time() + 30, "scroll": 0, "scroll_max": None, "page": "artist", "token": jeton,
-        "data": {"artist": {"name": artist, "text": attente,
-                            "image": None, "facts": [], "source": ""},
-                 "album": album_provisoire},
-    })
+    jeton = ouvrir_volet({"artist": {"name": artist, "text": attente,
+                                     "image": None, "facts": [], "source": ""},
+                          "album": album_provisoire}, 30)
 
     def publier(mutateur):
-        if ARTIST_PANEL.get("token") == jeton and ARTIST_PANEL["until"] > time.time():
-            d2 = dict(ARTIST_PANEL["data"])
-            mutateur(d2)
-            ARTIST_PANEL["data"] = d2
-            ARTIST_PANEL["until"] = time.time() + 60
+        publier_volet(jeton, mutateur)
 
     def fil_artiste():
         try:
@@ -1289,13 +1336,16 @@ def toggle_artist_panel():
 
     def fil_plage():
         try:
-            fetch_track_credits(artist, titre_courant, lang)
+            plage = fetch_track_credits(artist, titre_courant, lang)
         except Exception:
             return
+        if not plage:
+            return
+
         def fusion(d):
             alb = d.get("album")
-            if alb and not alb.get("loading") and not alb.get("credits"):
-                d["album"] = enrichir_album(alb, artist, titre_courant, lang)
+            if alb and not alb.get("loading"):
+                d["album"] = avec_credits_de_plage(alb, titre_courant, plage)
         publier(fusion)
 
     for fil in (fil_artiste, fil_album, fil_plage):
@@ -2750,7 +2800,7 @@ def normalize(state):
     # - apps de streaming (Spotify Connect, AirPlay) et Bluetooth -> everSoloPlayInfo
     # - lecteur interne (Tidal, Qobuz, fichiers, web radios) -> playingMusic
     # Fusion avec repli croise pour rester robuste face àux playType inconnus.
-    audio = state.get("everSoloPlayInfo", {}).get("everSoloPlayAudioInfo", {}) or {}
+    audio = (state.get("everSoloPlayInfo") or {}).get("everSoloPlayAudioInfo") or {}
     music = state.get("playingMusic") or {}
 
     def pick(*values):
@@ -2770,7 +2820,7 @@ def normalize(state):
     m_album = pick(music.get("album"), music.get("albumName"))
     info["album"] = pick(a_album, m_album) if app_first else pick(m_album, a_album)
 
-    icon = absolute_url(pick(state.get("everSoloPlayInfo", {}).get("icon")))
+    icon = absolute_url(pick((state.get("everSoloPlayInfo") or {}).get("icon")))
     art = absolute_url(pick(music.get("albumArt"), music.get("albumArtUrl"), music.get("icon")))
     by_id = None
     if music.get("id") is not None:
@@ -2884,6 +2934,59 @@ def favicon():
     return app.send_static_file("favicon.ico")
 
 
+ETAT_INEXPLOITABLE = {"quand": 0.0}
+
+
+def etat_de_repli(panne_reseau):
+    """Un raté isolé (Wi-Fi, streamer occupé) ne doit pas faire clignoter
+    « introuvable » : on ressert le dernier état connu quelques secondes."""
+    STATE_CACHE["failures"] += 1
+    if panne_reseau and STATE_CACHE["failures"] >= 3 and not STATE_CACHE["down_since"]:
+        STATE_CACHE["down_since"] = time.time()
+        print(f"[diagnostic] Eversolo injoignable ({CONFIG.get('eversolo_ip')})", flush=True)
+    if STATE_CACHE["info"] and STATE_CACHE["failures"] < 3:
+        stale = dict(STATE_CACHE["info"])
+        stale["server_time"] = time.time()
+        return jsonify(stale)
+    return jsonify({
+        "connected": False,
+        "lang": CONFIG.get("language", "fr"),
+        "server_time": time.time(),
+    })
+
+
+def noter_etat_inexploitable(exc):
+    """Le streamer a répondu mais sa réponse n'a pas pu être mise en forme :
+    une ligne au journal, une par minute au plus, avec l'endroit de l'erreur."""
+    if time.time() - ETAT_INEXPLOITABLE["quand"] < 60:
+        return
+    ETAT_INEXPLOITABLE["quand"] = time.time()
+    lieu = ""
+    pile = traceback.extract_tb(exc.__traceback__)
+    if pile:
+        lieu = f" ({pile[-1].name}:{pile[-1].lineno})"
+    print(f"[diagnostic] réponse du streamer inexploitable : {type(exc).__name__}{lieu}",
+          flush=True)
+
+
+def precharger_fiches(info):
+    """Trois recherches indépendantes, lancées de front à chaque nouvelle plage :
+    chacune arrive à son rythme, aucune n'attend les autres."""
+    artiste = info.get("artist")
+    cle_pf = (artiste, info.get("album"), info.get("title"))
+    if not artiste or cle_pf == PREFETCH["artist"]:
+        return
+    PREFETCH["artist"] = cle_pf
+    lg = CONFIG.get("language", "fr")
+    al, ti = info.get("album"), info.get("title")
+    for cible in (
+        lambda: fetch_artist_info(artiste, lg, al),
+        lambda: fetch_album_info(artiste, al, lg),
+        lambda: fetch_track_credits(artiste, ti, lg),
+    ):
+        threading.Thread(target=cible, daemon=True).start()
+
+
 @app.route("/api/state")
 def api_state():
     if not is_configured():
@@ -2892,50 +2995,28 @@ def api_state():
         r = http.get(f"{eversolo_base()}/ZidooMusicControl/v2/getState", timeout=3)
         r.raise_for_status()
         brut = r.json()
+    except Exception:
+        return etat_de_repli(panne_reseau=True)
+    try:
         info = normalize(brut)
         info["rev"] = LOCAL_REV
         info.update(infos_ecran(brut, info))
         info["maj"] = maj_en_cours() if requete_locale() else None
-        artiste = info.get("artist")
-        cle_pf = (artiste, info.get("album"), info.get("title"))
-        if artiste and cle_pf != PREFETCH["artist"]:
-            PREFETCH["artist"] = cle_pf
-            # trois recherches independantes, lancees de front: chacune arrive
-            # a son rythme, aucune n'attend les autres
-            lg = CONFIG.get("language", "fr")
-            al, ti = info.get("album"), info.get("title")
-            for cible in (
-                lambda a=artiste: fetch_artist_info(a, lg, al),
-                lambda a=artiste: fetch_album_info(a, al, lg),
-                lambda a=artiste: fetch_track_credits(a, ti, lg),
-            ):
-                threading.Thread(target=cible, daemon=True).start()
-        if STATE_CACHE["down_since"]:
-            durée = int(time.time() - STATE_CACHE["down_since"])
-            print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilite", flush=True)
-        STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
-        if ARTIST_PANEL["until"] > time.time():
-            noter_longueur_volet(request.args.get("volet_pas", ""))
-            info["panel"] = dict(ARTIST_PANEL["data"])
-            info["panel"]["scroll"] = ARTIST_PANEL["scroll"]
-            info["panel"]["page"] = ARTIST_PANEL["page"]
-        return jsonify(info)
-    except Exception:
-        # Un rate isole (Wi-Fi, streamer occupe) ne doit pas faire clignoter
-        # "introuvable": on ressert le dernier etat connu quelques secondes.
-        STATE_CACHE["failures"] += 1
-        if STATE_CACHE["failures"] == 3 and not STATE_CACHE["down_since"]:
-            STATE_CACHE["down_since"] = time.time()
-            print(f"[diagnostic] Eversolo injoignable ({CONFIG.get('eversolo_ip')})", flush=True)
-        if STATE_CACHE["info"] and STATE_CACHE["failures"] < 3:
-            stale = dict(STATE_CACHE["info"])
-            stale["server_time"] = time.time()
-            return jsonify(stale)
-        return jsonify({
-            "connected": False,
-            "lang": CONFIG.get("language", "fr"),
-            "server_time": time.time(),
-        })
+        precharger_fiches(info)
+    except Exception as exc:
+        noter_etat_inexploitable(exc)
+        return etat_de_repli(panne_reseau=False)
+    if STATE_CACHE["down_since"]:
+        durée = int(time.time() - STATE_CACHE["down_since"])
+        print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilité", flush=True)
+    STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
+    # une seule lecture : le volet peut être fermé par une touche pendant le relevé
+    volet = ARTIST_PANEL["data"]
+    if volet and ARTIST_PANEL["until"] > time.time():
+        noter_longueur_volet(request.args.get("volet_pas", ""))
+        info = {**info, "panel": {**volet, "scroll": ARTIST_PANEL["scroll"],
+                                  "page": ARTIST_PANEL["page"]}}
+    return jsonify(info)
 
 
 def adresse_privee(texte):

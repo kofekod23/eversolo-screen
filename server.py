@@ -93,7 +93,7 @@ T = {
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
         "maj_ancienne": "Mises à jour : lancez ./update.sh une fois sur le Pi pour passer aux versions signées", "up_to_date": "Application à jour",
         "genius_token_lbl": "Jeton Genius (crédits de la plage en cours, optionnel)",
-        "remote_title": "Télécommande", "remote_intro": "Cliquez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
+        "remote_title": "Télécommande", "remote_intro": "Appuyez sur Associer puis pressez la touche voulue sur votre télécommande.", "pair": "Associer", "press_key": "Pressez une touche...", "pair_timeout": "Aucun signal reçu. Pointez la télécommande vers le capteur du Pi et réessayez.", "clear": "Retirer", "not_paired": "Non associée", "act_play_pause": "Lecture / Pause", "act_next": "Suivant", "act_previous": "Précédent", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Infos artiste", "act_mute": "Muet", "remote_link": "Télécommande infrarouge",
         "session_expired": "Session expirée, reconnectez-vous.",
         "code_label": "Code affiché sur la TV", "code_bad": "Code incorrect. Recopiez le code affiché sur la TV.", "code_first": "Saisissez d'abord le code affiché sur la TV.",
         "tv_setup_intro": "Sur votre téléphone ou votre ordinateur, ouvrez", "tv_setup_code": "puis saisissez ce code", "tv_setup_here": "Configurer depuis cet écran",
@@ -135,7 +135,7 @@ T = {
         "discogs_token": "Discogs token (detailed production credits, optional)",
         "maj_ancienne": "Updates: run ./update.sh once on the Pi to switch to signed versions", "up_to_date": "Application up to date",
         "genius_token_lbl": "Genius token (credits of the current track, optional)",
-        "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
+        "remote_title": "Remote control", "remote_intro": "Click Pair then press the desired button on your remote.", "pair": "Pair", "press_key": "Press a button...", "pair_timeout": "No signal received. Point the remote at the Pi's sensor and try again.", "clear": "Remove", "not_paired": "Not paired", "act_play_pause": "Play / Pause", "act_next": "Next", "act_previous": "Previous", "act_vol_up": "Volume +", "act_vol_down": "Volume -", "act_info": "Artist info", "act_mute": "Mute", "remote_link": "Infrared remote",
         "session_expired": "Session expired, sign in again.",
         "code_label": "Code shown on the TV", "code_bad": "Wrong code. Copy the code shown on the TV.", "code_first": "Enter the code shown on the TV first.",
         "tv_setup_intro": "On your phone or computer, open", "tv_setup_code": "then enter this code", "tv_setup_here": "Set up from this screen",
@@ -148,7 +148,7 @@ T = {
         "setup_intro": "Elija una contraseña de administrador e indique su streamer.",
         "password": "Contraseña de administrador",
         "password_confirm": "Confirmar contraseña",
-        "password_short": "Minimo 8 caractères.",
+        "password_short": "Mínimo 8 caracteres.",
         "password_mismatch": "Las contraseñas no coinciden.",
         "device_ip": "Dirección IP del streamer",
         "detect": "Detectar en la red",
@@ -177,7 +177,7 @@ T = {
         "discogs_token": "Token de Discogs (créditos de producción detallados, opcional)",
         "maj_ancienne": "Actualizaciones: ejecute ./update.sh una vez en la Pi para pasar a las versiones firmadas", "up_to_date": "Aplicación al día",
         "genius_token_lbl": "Token Genius (créditos de la pista en curso, opcional)",
-        "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
+        "remote_title": "Mando a distancia", "remote_intro": "Pulse Asociar y luego la tecla deseada en su mando.", "pair": "Asociar", "press_key": "Pulse una tecla...", "pair_timeout": "Ninguna señal recibida. Apunte el mando hacia el sensor de la Pi y vuelva a intentarlo.", "clear": "Quitar", "not_paired": "Sin asociar", "act_play_pause": "Reproducir / Pausa", "act_next": "Siguiente", "act_previous": "Anterior", "act_vol_up": "Volumen +", "act_vol_down": "Volumen -", "act_info": "Info del artista", "act_mute": "Silencio", "remote_link": "Mando infrarrojo",
         "session_expired": "Sesión caducada, inicie sesión de nuevo.",
         "code_label": "Código mostrado en la TV", "code_bad": "Código incorrecto. Copie el código mostrado en la TV.", "code_first": "Introduzca primero el código mostrado en la TV.",
         "tv_setup_intro": "En su teléfono u ordenador, abra", "tv_setup_code": "e introduzca este código", "tv_setup_here": "Configurar desde esta pantalla",
@@ -219,7 +219,7 @@ T = {
         "discogs_token": "Discogs-Token (detaillierte Produktions-Credits, optional)",
         "maj_ancienne": "Aktualisierungen: führen Sie einmal ./update.sh auf dem Pi aus, um auf signierte Versionen umzustellen", "up_to_date": "Anwendung aktuell",
         "genius_token_lbl": "Genius-Token (Credits des laufenden Titels, optional)",
-        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
+        "remote_title": "Fernbedienung", "remote_intro": "Auf Anlernen klicken und dann die gewünschte Taste drücken.", "pair": "Anlernen", "press_key": "Taste drücken...", "pair_timeout": "Kein Signal empfangen. Fernbedienung auf den Sensor des Pi richten und erneut versuchen.", "clear": "Entfernen", "not_paired": "Nicht angelernt", "act_play_pause": "Wiedergabe / Pause", "act_next": "Weiter", "act_previous": "Zurück", "act_vol_up": "Lauter", "act_vol_down": "Leiser", "act_info": "Künstler-Info", "act_mute": "Stumm", "remote_link": "Infrarot-Fernbedienung",
         "session_expired": "Sitzung abgelaufen, bitte erneut anmelden.",
         "code_label": "Am Fernseher angezeigter Code", "code_bad": "Falscher Code. Übernehmen Sie den am Fernseher angezeigten Code.", "code_first": "Geben Sie zuerst den am Fernseher angezeigten Code ein.",
         "tv_setup_intro": "Öffnen Sie auf Ihrem Telefon oder Computer", "tv_setup_code": "und geben Sie diesen Code ein", "tv_setup_here": "Auf diesem Bildschirm einrichten",
@@ -2372,9 +2372,10 @@ def internal_ir():
 def api_ir_last():
     if not logged_in():
         return jsonify({"error": "unauthorized"}), 401
+    # « at » distingue deux appuis sur la même touche
     if LAST_IR["code"] and time.time() - LAST_IR["time"] < 15:
-        return jsonify({"code": LAST_IR["code"]})
-    return jsonify({"code": None})
+        return jsonify({"code": LAST_IR["code"], "at": LAST_IR["time"]})
+    return jsonify({"code": None, "at": 0})
 
 
 @app.route("/remote", methods=["GET", "POST"])
@@ -2456,6 +2457,7 @@ def remote_page():
 {f'<div class="msg">{message}</div>' if message else ''}
 {f'<div class="msg err">{error}</div>' if error else ''}
 {''.join(rows)}
+<p class="hwres ko" id="pairres" role="status"></p>
 <form method="post" id="pairform" style="display:none">
   <input type="hidden" name="csrf" value="{csrf_token()}">
   <input type="hidden" name="action" id="pf_action">
@@ -2490,14 +2492,14 @@ document.getElementById('testbtn').onclick = async function() {{
   const btn = this, res = document.getElementById('testres');
   const original = btn.textContent;
   btn.textContent = {json.dumps(t['hw_test_wait'])}; btn.disabled = true; res.textContent = '';
-  let seen = null;
-  try {{ seen = (await (await fetch('/api/ir/last')).json()).code; }} catch (e) {{}}
+  let seen = 0;
+  try {{ seen = (await (await fetch('/api/ir/last')).json()).at; }} catch (e) {{}}
   const started = Date.now();
   while (Date.now() - started < 15000) {{
     await new Promise(r => setTimeout(r, 500));
     try {{
       const d = await (await fetch('/api/ir/last')).json();
-      if (d.code && d.code !== seen) {{
+      if (d.code && d.at !== seen) {{
         res.textContent = {json.dumps(t['hw_test_ok'])} + ' (code ' + d.code + ')';
         res.className = 'hwres ok';
         btn.textContent = original; btn.disabled = false;
@@ -2513,14 +2515,16 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
     const original = btn.textContent;
     btn.textContent = {json.dumps(t['press_key'])}; btn.disabled = true;
     const started = Date.now();
-    let seen = null;
-    try {{ const r0 = await fetch('/api/ir/last'); seen = (await r0.json()).code; }} catch (e) {{}}
+    const res = document.getElementById('pairres');
+    res.textContent = '';
+    let seen = 0;
+    try {{ const r0 = await fetch('/api/ir/last'); seen = (await r0.json()).at; }} catch (e) {{}}
     while (Date.now() - started < 20000) {{
       await new Promise(res => setTimeout(res, 500));
       try {{
         const r = await fetch('/api/ir/last');
         const d = await r.json();
-        if (d.code && d.code !== seen) {{
+        if (d.code && d.at !== seen) {{
           document.getElementById('pf_action').value = btn.dataset.action;
           document.getElementById('pf_code').value = d.code;
           document.getElementById('pairform').submit();
@@ -2529,6 +2533,7 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
       }} catch (e) {{}}
     }}
     btn.textContent = original; btn.disabled = false;
+    res.textContent = {json.dumps(t['pair_timeout'])};
   }};
 }});
 </script>

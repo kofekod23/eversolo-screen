@@ -73,7 +73,7 @@ T = {
         "language": "Langue",
         "save": "Enregistrer", "maj_deja": "Une mise à jour est déjà en cours.",
         "maj_installee": "Version en service", "maj_disponible": "Nouvelle version", "maj_installer": "Installer cette version", "maj_revenir": "Revenir à la version précédente", "maj_pendant_lecture": "Mettez la lecture en pause avant de mettre à jour.", "maj_rien": "Aucune nouvelle version à installer.", "maj_lancee": "Installation lancée : téléchargement, vérification de la signature, puis redémarrage. L'écran se rechargera tout seul.", "maj_retour_lance": "Retour à la version précédente : le serveur redémarre.", "maj_etape_telechargement": "Téléchargement en cours", "maj_etape_verification": "Vérification de la signature", "maj_etape_installation": "Installation en cours", "maj_tv": "Mise à jour",
-        "disp_title": "Affichage", "disp_intro": "Réglez l'écran selon la distance de lecture.", "disp_theme": "Interface", "theme_pochette": "Pochette : l'écran prend la couleur du disque", "theme_console": "Console : façade d'appareil, afficheur fluorescent", "theme_affiche": "Affiche : grande typographie, papier et encre", "theme_cadre": "Plein cadre : la pochette occupe tout un côté de l'écran", "disp_profil": "Type d'écran", "profil_salon": "Salon : TV lue à 3-4 m", "profil_bureau": "Bureau : écran proche", "profil_petit": "Petit écran 7 à 10 pouces", "disp_nuit": "Mode nuit (luminosité réduite)", "nuit_auto": "Selon l'heure", "nuit_jamais": "Jamais", "nuit_toujours": "Toujours", "nuit_de": "Nuit de", "nuit_a": "heures à", "nuit_h": "heures", "disp_protection": "Protéger l'écran : léger décalage, atténuation après 10 min de pause, noir après 30 min", "disp_save": "Enregistrer l'affichage",
+        "disp_title": "Affichage", "disp_intro": "Réglez l'écran selon la distance de lecture.", "disp_theme": "Interface", "theme_pochette": "Pochette : l'écran prend la couleur du disque", "theme_console": "Console : façade d'appareil, afficheur fluorescent", "theme_affiche": "Affiche : grande typographie, papier et encre", "theme_cadre": "Plein cadre : la pochette occupe tout un côté de l'écran", "disp_profil": "Type d'écran", "profil_salon": "Salon : TV lue à 3-4 m", "profil_bureau": "Bureau : écran proche", "profil_petit": "Petit écran 7 à 10 pouces", "disp_nuit": "Mode nuit (luminosité réduite)", "nuit_auto": "Selon l'heure", "nuit_jamais": "Jamais", "nuit_toujours": "Toujours", "save_all": "Enregistrer les sections 02 à 04", "nuit_debut_lbl": "Début de la nuit", "nuit_fin_lbl": "Fin de la nuit", "nuit_de": "Nuit de", "nuit_a": "heures à", "nuit_h": "heures", "disp_protection": "Protéger l'écran : léger décalage, atténuation après 10 min de pause, noir après 30 min", "disp_save": "Enregistrer l'affichage",
         "login_title": "Connexion",
         "login": "Se connecter",
         "logout": "Se déconnecter",
@@ -85,10 +85,10 @@ T = {
         "saved": "Enregistré.",
         "back_display": "Retour à l'affichage",
         "invalid_ip": "Adresse IP invalide.",
-        "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex: tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche à apprendre, face au capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien reçu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installée et redémarrage fait ?).", "bad_name": "Nom invalide: lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
-        "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas : OUT à gauche, GND au milieu, VCC à droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté: vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installé (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal reçu, capteur fonctionnel.", "hw_test_ko": "Aucun signal reçu en 15 s.",
+        "blaster_title": "Émetteur infrarouge", "blaster_intro": "Enregistrez des touches de vos télécommandes, le Pi pourra les réémettre (TV, ampli...).", "new_name": "Nom de la commande (ex. : tv_power)", "learn": "Apprendre", "send_cmd": "Envoyer", "delete_cmd": "Supprimer", "learn_hint": "Pressez maintenant la touche à apprendre, face au capteur...", "learned": "Commande enregistrée.", "learn_failed": "Rien reçu. Vérifiez le capteur et réessayez.", "no_tx": "Émetteur introuvable (option --ir-tx installée et redémarrage fait ?).", "bad_name": "Nom invalide : lettres, chiffres, tiret, 32 caractères max.", "blaster_link": "Émetteur infrarouge",
+        "hw_title": "Matériel infrarouge", "hw_pin": "Broche du Raspberry", "hw_leg": "Patte du capteur", "hw_signal": "Signal (OUT / S)", "hw_gnd": "Masse (GND / -)", "hw_vcc": "Alimentation (VCC / +)", "hw_note": "Capteur VS1838B ou TSOP38238, face bombée vers vous, pattes en bas : OUT à gauche, GND au milieu, VCC à droite. Fiez-vous aux étiquettes si votre capteur est sur un module.", "hw_rx_ok": "Récepteur détecté", "hw_rx_ko": "Récepteur non détecté : vérifiez le câblage, puis ./install.sh --ir et un redémarrage.", "hw_tx_ok": "Émetteur détecté", "hw_tx_ko": "Émetteur non installé (optionnel).", "hw_test": "Tester le capteur", "hw_test_wait": "Pressez une touche...", "hw_test_ok": "Signal reçu, capteur fonctionnel.", "hw_test_ko": "Aucun signal reçu en 15 s.",
         "no_bio": "Aucune biographie trouvée pour cet artiste dans les sources consultées.",
-        "tadb_key": "Clé TheAudioDB (repli biographies, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (repli biographies, optionnelle)",
+        "tadb_key": "Clé TheAudioDB (biographies de secours, clé d’essai par défaut)", "lastfm_key": "Clé API Last.fm (biographies de secours, optionnelle)",
         "searching": "Recherche des informations sur l'artiste et le disque...",
         "discogs_token": "Jeton Discogs (crédits de production détaillés, optionnel)",
         "maj_ancienne": "Mises à jour : lancez ./update.sh une fois sur le Pi pour passer aux versions signées", "up_to_date": "Application à jour",
@@ -115,7 +115,7 @@ T = {
         "language": "Language",
         "save": "Save", "maj_deja": "An update is already running.",
         "maj_installee": "Running version", "maj_disponible": "New version", "maj_installer": "Install this version", "maj_revenir": "Go back to the previous version", "maj_pendant_lecture": "Pause playback before updating.", "maj_rien": "No new version to install.", "maj_lancee": "Installation started: download, signature check, then restart. The screen will reload by itself.", "maj_retour_lance": "Going back to the previous version: the server restarts.", "maj_etape_telechargement": "Downloading", "maj_etape_verification": "Checking the signature", "maj_etape_installation": "Installing", "maj_tv": "Update",
-        "disp_title": "Display", "disp_intro": "Adjust the screen to your viewing distance.", "disp_theme": "Interface", "theme_pochette": "Cover: the screen takes the colour of the record", "theme_console": "Console: device front panel, fluorescent display", "theme_affiche": "Poster: large type, paper and ink", "theme_cadre": "Full frame: the cover fills one side of the screen", "disp_profil": "Screen type", "profil_salon": "Living room: TV read from 3-4 m", "profil_bureau": "Desk: close screen", "profil_petit": "Small 7 to 10 inch screen", "disp_nuit": "Night mode (reduced brightness)", "nuit_auto": "By time of day", "nuit_jamais": "Never", "nuit_toujours": "Always", "nuit_de": "Night from", "nuit_a": "h to", "nuit_h": "h", "disp_protection": "Protect the screen: slight shift, dimming after 10 min of pause, black after 30 min", "disp_save": "Save display",
+        "disp_title": "Display", "disp_intro": "Adjust the screen to your viewing distance.", "disp_theme": "Interface", "theme_pochette": "Cover: the screen takes the colour of the record", "theme_console": "Console: device front panel, fluorescent display", "theme_affiche": "Poster: large type, paper and ink", "theme_cadre": "Full frame: the cover fills one side of the screen", "disp_profil": "Screen type", "profil_salon": "Living room: TV read from 3-4 m", "profil_bureau": "Desk: close screen", "profil_petit": "Small 7 to 10 inch screen", "disp_nuit": "Night mode (reduced brightness)", "nuit_auto": "By time of day", "nuit_jamais": "Never", "nuit_toujours": "Always", "save_all": "Save sections 02 to 04", "nuit_debut_lbl": "Night starts", "nuit_fin_lbl": "Night ends", "nuit_de": "Night from", "nuit_a": "h to", "nuit_h": "h", "disp_protection": "Protect the screen: slight shift, dimming after 10 min of pause, black after 30 min", "disp_save": "Save display",
         "login_title": "Sign in",
         "login": "Sign in",
         "logout": "Sign out",
@@ -157,7 +157,7 @@ T = {
         "language": "Idioma",
         "save": "Guardar", "maj_deja": "Ya hay una actualización en curso.",
         "maj_installee": "Versión en servicio", "maj_disponible": "Nueva versión", "maj_installer": "Instalar esta versión", "maj_revenir": "Volver a la versión anterior", "maj_pendant_lecture": "Pause la reproducción antes de actualizar.", "maj_rien": "No hay ninguna versión nueva.", "maj_lancee": "Instalación iniciada: descarga, verificación de la firma y reinicio. La pantalla se recargará sola.", "maj_retour_lance": "Volviendo a la versión anterior: el servidor se reinicia.", "maj_etape_telechargement": "Descargando", "maj_etape_verification": "Verificando la firma", "maj_etape_installation": "Instalando", "maj_tv": "Actualización",
-        "disp_title": "Pantalla", "disp_intro": "Ajuste la pantalla a la distancia de lectura.", "disp_theme": "Interfaz", "theme_pochette": "Portada: la pantalla toma el color del disco", "theme_console": "Consola: frontal de aparato, pantalla fluorescente", "theme_affiche": "Cartel: tipografía grande, papel y tinta", "theme_cadre": "Pantalla completa: la portada ocupa un lado entero", "disp_profil": "Tipo de pantalla", "profil_salon": "Salón: TV leída a 3-4 m", "profil_bureau": "Escritorio: pantalla cercana", "profil_petit": "Pantalla pequeña de 7 a 10 pulgadas", "disp_nuit": "Modo noche (brillo reducido)", "nuit_auto": "Según la hora", "nuit_jamais": "Nunca", "nuit_toujours": "Siempre", "nuit_de": "Noche de las", "nuit_a": "h a las", "nuit_h": "h", "disp_protection": "Proteger la pantalla: ligero desplazamiento, atenuación tras 10 min de pausa, negro tras 30 min", "disp_save": "Guardar la pantalla",
+        "disp_title": "Pantalla", "disp_intro": "Ajuste la pantalla a la distancia de lectura.", "disp_theme": "Interfaz", "theme_pochette": "Portada: la pantalla toma el color del disco", "theme_console": "Consola: frontal de aparato, pantalla fluorescente", "theme_affiche": "Cartel: tipografía grande, papel y tinta", "theme_cadre": "Pantalla completa: la portada ocupa un lado entero", "disp_profil": "Tipo de pantalla", "profil_salon": "Salón: TV leída a 3-4 m", "profil_bureau": "Escritorio: pantalla cercana", "profil_petit": "Pantalla pequeña de 7 a 10 pulgadas", "disp_nuit": "Modo noche (brillo reducido)", "nuit_auto": "Según la hora", "nuit_jamais": "Nunca", "nuit_toujours": "Siempre", "save_all": "Guardar las secciones 02 a 04", "nuit_debut_lbl": "Inicio de la noche", "nuit_fin_lbl": "Fin de la noche", "nuit_de": "Noche de las", "nuit_a": "h a las", "nuit_h": "h", "disp_protection": "Proteger la pantalla: ligero desplazamiento, atenuación tras 10 min de pausa, negro tras 30 min", "disp_save": "Guardar la pantalla",
         "login_title": "Iniciar sesión",
         "login": "Iniciar sesión",
         "logout": "Cerrar sesión",
@@ -169,7 +169,7 @@ T = {
         "saved": "Guardado.",
         "back_display": "Volver a la pantalla",
         "invalid_ip": "Dirección IP no valida.",
-        "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibió nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opción --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no valido: letras, cifras, guion, 32 caractères max.", "blaster_link": "Emisor infrarrojo",
+        "blaster_title": "Emisor infrarrojo", "blaster_intro": "Grabe teclas de sus mandos, la Pi podra reemitirlas (TV, ampli...).", "new_name": "Nombre del comando (ej: tv_power)", "learn": "Aprender", "send_cmd": "Enviar", "delete_cmd": "Eliminar", "learn_hint": "Pulse ahora la tecla a aprender, frente al sensor...", "learned": "Comando grabado.", "learn_failed": "No se recibió nada. Compruebe el sensor y reintente.", "no_tx": "Emisor no encontrado (opción --ir-tx instalada y reinicio hecho?).", "bad_name": "Nombre no válido: letras, cifras, guion, 32 caracteres máx.", "blaster_link": "Emisor infrarrojo",
         "hw_title": "Hardware infrarrojo", "hw_pin": "Pin de la Raspberry", "hw_leg": "Pata del sensor", "hw_signal": "Señal (OUT / S)", "hw_gnd": "Masa (GND / -)", "hw_vcc": "Alimentacion (VCC / +)", "hw_note": "Sensor VS1838B o TSOP38238, cupula hacia usted, patas abajo: OUT izquierda, GND centro, VCC derecha. Fiese de las etiquetas si el sensor esta en un modulo.", "hw_rx_ok": "Receptor detectado", "hw_rx_ko": "Receptor no detectado: revise el cableado, luego ./install.sh --ir y reinicie.", "hw_tx_ok": "Emisor detectado", "hw_tx_ko": "Emisor no instalado (opcional).", "hw_test": "Probar el sensor", "hw_test_wait": "Pulse una tecla...", "hw_test_ok": "Señal recibida, sensor operativo.", "hw_test_ko": "Ninguna señal en 15 s.",
         "no_bio": "No se encontró ninguna biografía de este artista en las fuentes consultadas.",
         "tadb_key": "Clave TheAudioDB (respaldo de biografías, clave de prueba por defecto)", "lastfm_key": "Clave API Last.fm (respaldo de biografías, opcional)",
@@ -199,7 +199,7 @@ T = {
         "language": "Sprache",
         "save": "Speichern", "maj_deja": "Ein Update läuft bereits.",
         "maj_installee": "Laufende Version", "maj_disponible": "Neue Version", "maj_installer": "Diese Version installieren", "maj_revenir": "Zur vorherigen Version zurück", "maj_pendant_lecture": "Pausieren Sie die Wiedergabe vor dem Update.", "maj_rien": "Keine neue Version verfügbar.", "maj_lancee": "Installation gestartet: Download, Signaturprüfung, dann Neustart. Der Bildschirm lädt sich selbst neu.", "maj_retour_lance": "Zurück zur vorherigen Version: der Server startet neu.", "maj_etape_telechargement": "Wird heruntergeladen", "maj_etape_verification": "Signatur wird geprüft", "maj_etape_installation": "Wird installiert", "maj_tv": "Update",
-        "disp_title": "Anzeige", "disp_intro": "Passen Sie den Bildschirm an den Betrachtungsabstand an.", "disp_theme": "Oberfläche", "theme_pochette": "Cover: der Bildschirm nimmt die Farbe des Albums an", "theme_console": "Konsole: Gerätefront, Fluoreszenzanzeige", "theme_affiche": "Plakat: große Typografie, Papier und Tinte", "theme_cadre": "Vollbild: das Cover füllt eine Bildschirmseite", "disp_profil": "Bildschirmtyp", "profil_salon": "Wohnzimmer: TV aus 3-4 m", "profil_bureau": "Schreibtisch: naher Bildschirm", "profil_petit": "Kleiner Bildschirm 7 bis 10 Zoll", "disp_nuit": "Nachtmodus (reduzierte Helligkeit)", "nuit_auto": "Nach Uhrzeit", "nuit_jamais": "Nie", "nuit_toujours": "Immer", "nuit_de": "Nacht von", "nuit_a": "Uhr bis", "nuit_h": "Uhr", "disp_protection": "Bildschirm schonen: leichte Verschiebung, Abdunkeln nach 10 Min. Pause, schwarz nach 30 Min.", "disp_save": "Anzeige speichern",
+        "disp_title": "Anzeige", "disp_intro": "Passen Sie den Bildschirm an den Betrachtungsabstand an.", "disp_theme": "Oberfläche", "theme_pochette": "Cover: der Bildschirm nimmt die Farbe des Albums an", "theme_console": "Konsole: Gerätefront, Fluoreszenzanzeige", "theme_affiche": "Plakat: große Typografie, Papier und Tinte", "theme_cadre": "Vollbild: das Cover füllt eine Bildschirmseite", "disp_profil": "Bildschirmtyp", "profil_salon": "Wohnzimmer: TV aus 3-4 m", "profil_bureau": "Schreibtisch: naher Bildschirm", "profil_petit": "Kleiner Bildschirm 7 bis 10 Zoll", "disp_nuit": "Nachtmodus (reduzierte Helligkeit)", "nuit_auto": "Nach Uhrzeit", "nuit_jamais": "Nie", "nuit_toujours": "Immer", "save_all": "Abschnitte 02 bis 04 speichern", "nuit_debut_lbl": "Beginn der Nacht", "nuit_fin_lbl": "Ende der Nacht", "nuit_de": "Nacht von", "nuit_a": "Uhr bis", "nuit_h": "Uhr", "disp_protection": "Bildschirm schonen: leichte Verschiebung, Abdunkeln nach 10 Min. Pause, schwarz nach 30 Min.", "disp_save": "Anzeige speichern",
         "login_title": "Anmelden",
         "login": "Anmelden",
         "logout": "Abmelden",
@@ -1958,46 +1958,49 @@ def setup():
     body = f"""
 <h1>{t['setup_title']}</h1>
 <p class="intro">{t['setup_intro']}</p>
-{f'<div class="msg err">{error}</div>' if error else ''}
+{f'<div class="msg err" role="alert">{error}</div>' if error else ''}
 <form method="post" action="/setup?lang={lang}{'&amp;ici=1' if locale else ''}">
   <input type="hidden" name="csrf" value="{csrf_token()}">{champ_code}
-  <label>{t['language']}</label>
-  <select onchange="location='/setup?{'ici=1&' if locale else ''}lang='+this.value">
+  <label for="langue">{t['language']}</label>
+  <select id="langue" onchange="location='/setup?{'ici=1&' if locale else ''}lang='+this.value">
     <option value="fr" {'selected' if lang=='fr' else ''}>Français</option>
     <option value="en" {'selected' if lang=='en' else ''}>English</option>
     <option value="es" {'selected' if lang=='es' else ''}>Español</option>
     <option value="de" {'selected' if lang=='de' else ''}>Deutsch</option>
   </select>
-  <label>{t['password']}</label>
-  <input type="password" name="password" minlength="8" required autocomplete="new-password">
-  <label>{t['password_confirm']}</label>
-  <input type="password" name="password2" minlength="8" required autocomplete="new-password">
-  <label>{t['device_ip']}</label>
+  <label for="mdp">{t['password']}</label>
+  <input type="password" name="password" id="mdp" minlength="8" required autocomplete="new-password">
+  <label for="mdp2">{t['password_confirm']}</label>
+  <input type="password" name="password2" id="mdp2" minlength="8" required autocomplete="new-password">
+  <label for="ip">{t['device_ip']}</label>
   <div class="row">
     <input type="text" name="device_ip" id="ip" placeholder="192.168.1.50" required>
     <button type="button" id="scan">{t['detect']}</button>
   </div>
+  <p class="aide" id="scanEtat" role="status"></p>
   <button type="submit">{t['save']}</button>
 </form>
 <script>
 document.getElementById('scan').onclick = async function() {{
   const champ = document.getElementById('code');
+  const etat = document.getElementById('scanEtat');
   const entetes = {{}};
+  etat.textContent = '';
   if (champ) {{
-    if (!champ.value.trim()) {{ alert({json.dumps(t['code_first'])}); champ.focus(); return; }}
+    if (!champ.value.trim()) {{ etat.textContent = {json.dumps(t['code_first'])}; champ.focus(); return; }}
     entetes['X-Code-Installation'] = champ.value.trim();
   }}
   this.textContent = {json.dumps(t['detecting'])}; this.disabled = true;
   try {{
     const r = await fetch('/api/detect', {{headers: entetes}});
-    if (r.status === 403) alert({json.dumps(t['code_bad'])});
-    else if (r.status === 429) alert({json.dumps(t['detecting'])});
+    if (r.status === 403) etat.textContent = {json.dumps(t['code_bad'])};
+    else if (r.status === 429) etat.textContent = {json.dumps(t['detecting'])};
     else {{
       const d = await r.json();
       if (d.found && d.found.length) document.getElementById('ip').value = d.found[0].ip;
-      else alert({json.dumps(t['detect_none'])});
+      else etat.textContent = {json.dumps(t['detect_none'])};
     }}
-  }} catch (e) {{ alert({json.dumps(t['detect_none'])}); }}
+  }} catch (e) {{ etat.textContent = {json.dumps(t['detect_none'])}; }}
   this.textContent = {json.dumps(t['detect'])}; this.disabled = false;
 }};
 </script>
@@ -2029,11 +2032,11 @@ def login():
 
     body = f"""
 <h1>{t['login_title']}</h1>
-{f'<div class="msg err">{error}</div>' if error else ''}
+{f'<div class="msg err" role="alert">{error}</div>' if error else ''}
 <form method="post" action="/login">
   <input type="hidden" name="csrf" value="{csrf_token()}">
-  <label>{t['password']}</label>
-  <input type="password" name="password" required autofocus autocomplete="current-password">
+  <label for="mdp">{t['password']}</label>
+  <input type="password" name="password" id="mdp" required autofocus autocomplete="current-password">
   <button type="submit">{t['login']}</button>
 </form>
 <div class="foot"><a href="/">{t['back_display']}</a></div>
@@ -2144,14 +2147,14 @@ def config_page():
         champ_cle(t, "tadb_key", t["tadb_key"], cle_theaudiodb(), LIENS_CLES["theaudiodb"]))))
     section_compte = groupe("04", t["sec_compte"], t["sec_compte_intro"], f"""
     <div class="deux">
-      <div><label for="npw">{libelle(t['new_password'])[0]}</label>
-      <input type="password" name="new_password" id="npw" autocomplete="new-password"></div>
       <div><label for="cpw">{t['current_password']}</label>
       <input type="password" name="current_password" id="cpw" autocomplete="current-password"></div>
+      <div><label for="npw">{libelle(t['new_password'])[0]}</label>
+      <input type="password" name="new_password" id="npw" autocomplete="new-password"></div>
     </div>
-    <div class="actions"><button type="submit">{t['save']}</button></div>""")
-    messages = (f'<div class="msg">{message}</div>' if message else "") + (
-        f'<div class="msg err">{error}</div>' if error else "")
+    <div class="actions"><button type="submit">{t['save_all']}</button></div>""")
+    messages = (f'<div class="msg" role="status">{message}</div>' if message else "") + (
+        f'<div class="msg err" role="alert">{error}</div>' if error else "")
     body = f"""
 <div class="titre-page"><h1>{t['config_title']}</h1>{messages}</div>
 {bloc_affichage(t)}
@@ -2250,10 +2253,10 @@ def bloc_mise_a_jour(t):
     jeton = csrf_token()
     lignes = [f'<p class="version"><span>{t["maj_installee"]}</span> <b class="mono">{escape(VERSION_LOCALE)}</b></p>']
     if etat.get("etape") in ("echec", "retour") and etat.get("erreur"):
-        lignes.append(f'<div class="msg err">{escape(etat["erreur"])}</div>')
+        lignes.append(f'<div class="msg err" role="alert">{escape(etat["erreur"])}</div>')
     en_cours = maj_en_cours()
     if en_cours:
-        lignes.append(f'<div class="msg">{t["maj_etape_" + en_cours["etape"]]} '
+        lignes.append(f'<div class="msg" role="status">{t["maj_etape_" + en_cours["etape"]]} '
                       f'({escape(en_cours["version"] or "")})</div>')
     cible = MAJ_DISPONIBLE.get("version")
     if cible and not en_cours:
@@ -2278,7 +2281,7 @@ def bloc_affichage(t):
     r = affichage.reglages_affichage(CONFIG)
 
     def heures(nom, choisie):
-        return f'<select name="{nom}" class="heure">' + "".join(
+        return f'<select name="{nom}" class="heure" aria-label="{escape(t[nom + "_lbl"])}">' + "".join(
             f'<option value="{h}"{" selected" if h == choisie else ""}>{h}</option>'
             for h in range(24)) + "</select>"
 
@@ -2441,21 +2444,21 @@ def remote_page():
 .dot{{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}}
 .dot.ok{{background:var(--tube);box-shadow:0 0 8px 2px rgba(232,163,61,.5)}}
 .dot.ko{{background:#c65a4a}}
-.hwstat{{font-size:12px;color:var(--muted)}}
+.hwstat{{font-size:13px;color:var(--muted)}}
 .hwtab{{width:100%;border-collapse:collapse;font-size:13px}}
-.hwtab th{{text-align:left;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;padding-bottom:8px}}
+.hwtab th{{text-align:left;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:500;padding-bottom:8px}}
 .hwtab td{{padding:7px 0;border-top:1px solid var(--line);font-family:"Geist Mono",monospace;color:var(--ivory)}}
 .hwtab td:last-child{{text-align:right;color:var(--tube)}}
-.gp{{color:var(--muted);font-size:11px}}
-.hwnote{{font-size:12px;line-height:1.5;color:var(--muted);margin-top:14px}}
-.hwres{{margin-top:10px;font-family:"Geist Mono",monospace;font-size:12px;color:var(--muted)}}
+.gp{{color:var(--muted);font-size:12px}}
+.hwnote{{font-size:13px;line-height:1.5;color:var(--muted);margin-top:14px}}
+.hwres{{margin-top:10px;font-family:"Geist Mono",monospace;font-size:13px;color:var(--muted)}}
 .hwres.ok{{color:var(--tube)}}
 .hwres.ko{{color:#c65a4a}}
 </style>
 <h1>{t['remote_title']}</h1>
 <p class="intro">{t['remote_intro']}</p>
-{f'<div class="msg">{message}</div>' if message else ''}
-{f'<div class="msg err">{error}</div>' if error else ''}
+{f'<div class="msg" role="status">{message}</div>' if message else ''}
+{f'<div class="msg err" role="alert">{error}</div>' if error else ''}
 {''.join(rows)}
 <p class="hwres ko" id="pairres" role="status"></p>
 <form method="post" id="pairform" style="display:none">
@@ -2591,7 +2594,7 @@ def blaster_page():
                     pass
 
     _, tx = lirc_devices()
-    warn = "" if tx else f'<div class="msg err">{t["no_tx"]}</div>'
+    warn = "" if tx else f'<div class="msg err" role="alert">{t["no_tx"]}</div>'
     rows = []
     for f in sorted(glob.glob(os.path.join(IR_CODES_DIR, "*.ir"))):
         n = escape(os.path.basename(f)[:-3])
@@ -2619,14 +2622,14 @@ def blaster_page():
 <h1>{t['blaster_title']}</h1>
 <p class="intro">{t['blaster_intro']}</p>
 {warn}
-{f'<div class="msg">{message}</div>' if message else ''}
-{f'<div class="msg err">{error}</div>' if error else ''}
+{f'<div class="msg" role="status">{message}</div>' if message else ''}
+{f'<div class="msg err" role="alert">{error}</div>' if error else ''}
 <form method="post" id="learnform">
   <input type="hidden" name="csrf" value="{csrf_token()}">
   <input type="hidden" name="op" value="learn">
-  <label>{t['new_name']}</label>
+  <label for="nom">{t['new_name']}</label>
   <div class="row">
-    <input type="text" name="name" pattern="[A-Za-z0-9_-]{{1,32}}" required>
+    <input type="text" name="name" id="nom" pattern="[A-Za-z0-9_-]{{1,32}}" required>
     <button type="submit" id="learnbtn">{t['learn']}</button>
   </div>
 </form>

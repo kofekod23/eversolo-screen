@@ -234,3 +234,84 @@ def test_streamer_absent_garde_l_interface_choisie(configure, local, monkeypatch
     assert e["connected"] is False
     assert e["display"]["theme"] == "cadre"
     assert e["rev"] == configure.LOCAL_REV
+
+
+# ------------------------------------------- volet pendant un relevé manqué
+
+def test_volet_ouvert_survit_a_un_releve_manque(configure, local, monkeypatch):
+    """Un raté isolé du streamer ne doit pas refermer le volet à l'écran."""
+    brancher(configure, monkeypatch, REEL["getState"])
+    configure.ouvrir_volet({"artist": {"name": "Nina Simone"}, "album": None}, 60)
+    assert "panel" in local.get("/api/state").get_json()
+
+    def panne(url, *a, **k):
+        raise OSError("réseau coupé")
+    monkeypatch.setattr(configure.http, "get", panne)
+    configure.ARTIST_PANEL["scroll"] = 3
+    e = local.get("/api/state").get_json()
+    assert e["connected"] is True, "dernier état connu resservi"
+    assert e["panel"]["artist"]["name"] == "Nina Simone"
+    assert e["panel"]["scroll"] == 3, "le défilement suit les touches, même pendant le raté"
+
+
+def test_volet_ferme_ne_revient_pas_avec_l_etat_resservi(configure, local, monkeypatch):
+    brancher(configure, monkeypatch, REEL["getState"])
+    configure.ouvrir_volet({"artist": {"name": "Nina Simone"}, "album": None}, 60)
+    local.get("/api/state")
+    configure.ARTIST_PANEL.update({"until": 0.0, "data": None})
+
+    def panne(url, *a, **k):
+        raise OSError("réseau coupé")
+    monkeypatch.setattr(configure.http, "get", panne)
+    assert "panel" not in local.get("/api/state").get_json()
+
+
+class VerrouEspion:
+    """Compte les prises du verrou du volet."""
+    def __init__(self, verrou):
+        self.verrou = verrou
+        self.prises = 0
+
+    def __enter__(self):
+        self.prises += 1
+        return self.verrou.__enter__()
+
+    def __exit__(self, *a):
+        return self.verrou.__exit__(*a)
+
+    def locked(self):
+        return self.verrou.locked()
+
+
+def test_touches_du_volet_passent_par_son_verrou(configure, monkeypatch):
+    """Tourner une page ou défiler ne doit pas pouvoir rouvrir à moitié un volet
+    qu'une autre touche est en train de fermer."""
+    srv = configure
+    espion = VerrouEspion(srv.VERROU_VOLET)
+    monkeypatch.setattr(srv, "VERROU_VOLET", espion)
+    srv.ouvrir_volet({"artist": {"name": "Nina Simone"}, "album": None}, 60)
+    avant = espion.prises
+    assert srv.do_action("next") is True
+    assert srv.ARTIST_PANEL["page"] == "album"
+    assert srv.do_action("vol_down") is True
+    assert srv.ARTIST_PANEL["scroll"] == 1
+    assert espion.prises == avant + 2
+
+
+def test_touche_sur_volet_ferme_ne_prolonge_rien(configure):
+    srv = configure
+    srv.ARTIST_PANEL.update({"until": 0.0, "data": None})
+    assert srv.piloter_volet("next") is False
+    assert srv.ARTIST_PANEL["until"] == 0.0
+
+
+# ------------------------------------------------------------ appairage
+
+def test_appairage_sans_reference_n_accepte_pas_une_touche_ancienne(configure, local):
+    """Si le premier relevé de la dernière touche échoue, la page ne doit pas
+    prendre pour un nouvel appui une touche pressée juste avant."""
+    connecter = __import__("conftest").connecter
+    connecter(local)
+    html = local.get("/remote").get_data(as_text=True)
+    assert "let seen = 0" not in html
+    assert html.count("seen === null") == 2

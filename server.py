@@ -389,23 +389,7 @@ def do_action(action):
     """Envoie une commande de pilotage à l'Eversolo."""
     if not CONFIG.get("eversolo_ip"):
         return False
-    if action in ("next", "previous") and ARTIST_PANEL["until"] > time.time():
-        # volet ouvert: on tourne les pages au lieu de changer de plage
-        ordre = ["artist", "album", "prod"]
-        i = ordre.index(ARTIST_PANEL.get("page", "artist"))
-        i = min(len(ordre) - 1, i + 1) if action == "next" else max(0, i - 1)
-        ARTIST_PANEL["page"] = ordre[i]
-        ARTIST_PANEL["scroll"] = 0
-        ARTIST_PANEL["scroll_max"] = None  # nouvelle page : l'écran redira sa longueur
-        ARTIST_PANEL["until"] = time.time() + 60
-        return True
-    if action in ("vol_up", "vol_down") and ARTIST_PANEL["until"] > time.time():
-        # volet ouvert: les volumes defilent le texte au lieu d'agir sur le son
-        delta = -1 if action == "vol_up" else 1
-        plafond = ARTIST_PANEL.get("scroll_max")
-        nouveau = max(0, ARTIST_PANEL["scroll"] + delta)
-        ARTIST_PANEL["scroll"] = min(nouveau, plafond) if plafond is not None else nouveau
-        ARTIST_PANEL["until"] = time.time() + 60
+    if action in TOUCHES_DU_VOLET and piloter_volet(action):
         return True
     if action == "info":
         return toggle_artist_panel()
@@ -1257,6 +1241,43 @@ def publier_volet(jeton, mutateur, prolonger=True):
         if prolonger:
             ARTIST_PANEL["until"] = time.time() + 60
         return True
+
+
+TOUCHES_DU_VOLET = ("next", "previous", "vol_up", "vol_down")
+PAGES_DU_VOLET = ["artist", "album", "prod"]
+
+
+def piloter_volet(action):
+    """Volet ouvert : suivant et précédent tournent ses pages, les volumes font
+    défiler son texte. Rend False s'il est fermé, la touche garde alors son rôle.
+    Sous le verrou : une touche ne prolonge pas un volet qu'une autre referme."""
+    with VERROU_VOLET:
+        if ARTIST_PANEL["until"] <= time.time():
+            return False
+        if action in ("next", "previous"):
+            i = PAGES_DU_VOLET.index(ARTIST_PANEL.get("page", "artist"))
+            i = min(len(PAGES_DU_VOLET) - 1, i + 1) if action == "next" else max(0, i - 1)
+            ARTIST_PANEL["page"] = PAGES_DU_VOLET[i]
+            ARTIST_PANEL["scroll"] = 0
+            ARTIST_PANEL["scroll_max"] = None  # nouvelle page : l'écran redira sa longueur
+        else:
+            delta = -1 if action == "vol_up" else 1
+            plafond = ARTIST_PANEL.get("scroll_max")
+            nouveau = max(0, ARTIST_PANEL["scroll"] + delta)
+            ARTIST_PANEL["scroll"] = min(nouveau, plafond) if plafond is not None else nouveau
+        ARTIST_PANEL["until"] = time.time() + 60
+        return True
+
+
+def avec_volet(info):
+    """Joint à l'état le volet ouvert, tel qu'il est à l'instant. Une seule
+    lecture : il peut être fermé par une touche pendant le relevé."""
+    volet = ARTIST_PANEL["data"]
+    if not volet or ARTIST_PANEL["until"] <= time.time():
+        return info
+    noter_longueur_volet(request.args.get("volet_pas", ""))
+    return {**info, "panel": {**volet, "scroll": ARTIST_PANEL["scroll"],
+                              "page": ARTIST_PANEL["page"]}}
 
 
 def toggle_artist_panel():
@@ -2495,13 +2516,14 @@ document.getElementById('testbtn').onclick = async function() {{
   const btn = this, res = document.getElementById('testres');
   const original = btn.textContent;
   btn.textContent = {json.dumps(t['hw_test_wait'])}; btn.disabled = true; res.textContent = '';
-  let seen = 0;
+  let seen = null;
   try {{ seen = (await (await fetch('/api/ir/last')).json()).at; }} catch (e) {{}}
   const started = Date.now();
   while (Date.now() - started < 15000) {{
     await new Promise(r => setTimeout(r, 500));
     try {{
       const d = await (await fetch('/api/ir/last')).json();
+      if (seen === null || seen === undefined) {{ seen = d.at; continue; }}
       if (d.code && d.at !== seen) {{
         res.textContent = {json.dumps(t['hw_test_ok'])} + ' (code ' + d.code + ')';
         res.className = 'hwres ok';
@@ -2520,13 +2542,14 @@ document.querySelectorAll('.pairbtn').forEach(function(btn) {{
     const started = Date.now();
     const res = document.getElementById('pairres');
     res.textContent = '';
-    let seen = 0;
+    let seen = null;
     try {{ const r0 = await fetch('/api/ir/last'); seen = (await r0.json()).at; }} catch (e) {{}}
     while (Date.now() - started < 20000) {{
       await new Promise(res => setTimeout(res, 500));
       try {{
         const r = await fetch('/api/ir/last');
         const d = await r.json();
+        if (seen === null || seen === undefined) {{ seen = d.at; continue; }}
         if (d.code && d.at !== seen) {{
           document.getElementById('pf_action').value = btn.dataset.action;
           document.getElementById('pf_code').value = d.code;
@@ -2958,9 +2981,8 @@ def etat_de_repli(panne_reseau):
         STATE_CACHE["down_since"] = time.time()
         print(f"[diagnostic] Eversolo injoignable ({CONFIG.get('eversolo_ip')})", flush=True)
     if STATE_CACHE["info"] and STATE_CACHE["failures"] < 3:
-        stale = dict(STATE_CACHE["info"])
-        stale["server_time"] = time.time()
-        return jsonify(stale)
+        # le volet ouvert suit : sans lui l'écran le refermerait le temps du raté
+        return jsonify(avec_volet({**STATE_CACHE["info"], "server_time": time.time()}))
     return jsonify({
         "connected": False,
         "lang": CONFIG.get("language", "fr"),
@@ -3027,13 +3049,7 @@ def api_state():
         durée = int(time.time() - STATE_CACHE["down_since"])
         print(f"[diagnostic] Eversolo de retour après {durée} s d'indisponibilité", flush=True)
     STATE_CACHE.update({"info": info, "failures": 0, "down_since": None})
-    # une seule lecture : le volet peut être fermé par une touche pendant le relevé
-    volet = ARTIST_PANEL["data"]
-    if volet and ARTIST_PANEL["until"] > time.time():
-        noter_longueur_volet(request.args.get("volet_pas", ""))
-        info = {**info, "panel": {**volet, "scroll": ARTIST_PANEL["scroll"],
-                                  "page": ARTIST_PANEL["page"]}}
-    return jsonify(info)
+    return jsonify(avec_volet(info))
 
 
 def adresse_privee(texte):

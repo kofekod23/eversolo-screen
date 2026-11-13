@@ -1684,8 +1684,13 @@ def security_headers(resp):
         "default-src 'self'; img-src 'self' data:; "
         "style-src 'self' 'unsafe-inline'; "
         "font-src 'self'; script-src 'self' 'unsafe-inline'; "
-        "connect-src 'self'; frame-ancestors 'none'"
+        "connect-src 'self'; frame-ancestors 'none'; "
+        "base-uri 'none'; form-action 'self'; object-src 'none'"
     ))
+    # Les pages de réglage portent un jeton, des clés et l'adresse du streamer :
+    # ni le navigateur ni un cache intermédiaire ne doivent les garder.
+    if resp.mimetype == "text/html" and request.path != "/":
+        resp.headers["Cache-Control"] = "no-store"
     return resp
 
 
@@ -2071,7 +2076,7 @@ def config_page():
                 revenir_version()
                 message = t["maj_retour_lance"]
             except (versions.ErreurMaj, versions.Occupe, OSError) as exc:
-                error = str(exc)
+                error = escape(str(exc))
         elif request.form.get("op") == "affichage":
             CONFIG.update(affichage.reglages_depuis_formulaire(request.form))
             save_config(CONFIG)
@@ -2086,7 +2091,7 @@ def config_page():
                 finally:
                     CAPTURE_VERROU.release()
                 if fichier:
-                    message = f"{t['capture_done']} : {fichier}"
+                    message = f"{t['capture_done']} : {escape(fichier)}"
                 else:
                     error = t["capture_failed"]
             else:
@@ -2584,7 +2589,7 @@ def blaster_page():
     warn = "" if tx else f'<div class="msg err">{t["no_tx"]}</div>'
     rows = []
     for f in sorted(glob.glob(os.path.join(IR_CODES_DIR, "*.ir"))):
-        n = os.path.basename(f)[:-3]
+        n = escape(os.path.basename(f)[:-3])
         rows.append(f'''
 <div class="rrow">
   <div class="rname">{n}</div>

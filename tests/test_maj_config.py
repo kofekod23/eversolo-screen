@@ -60,6 +60,18 @@ def test_retour_manuel_et_csrf(versionne, distant):
     assert appels == [("revenir",)]
 
 
+def test_erreur_de_retour_echappee(versionne, distant, monkeypatch):
+    srv, _, _ = versionne
+
+    def echec():
+        raise srv.versions.ErreurMaj("<script>x</script>")
+    monkeypatch.setattr(srv, "revenir_version", echec)
+    csrf = connecter(distant)
+    html = distant.post("/config", data={"csrf": csrf, "op": "retour"}).get_data(as_text=True)
+    assert "<script>x</script>" not in html
+    assert "&lt;script&gt;x&lt;/script&gt;" in html
+
+
 def test_echec_affiche_sur_la_page(versionne, distant):
     import versions
     _, dispo, _ = versionne

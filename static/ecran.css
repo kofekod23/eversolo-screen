@@ -176,16 +176,17 @@ body.pointer { cursor: default; }
 
 /* ---------- Volume à l'écran ---------- */
 #osd {
-  position: fixed; z-index: 4; left: 50%; top: 50%;
+  /* posé sur la pochette : le titre reste lisible pendant le réglage */
+  position: fixed; z-index: 4; left: 8vw; top: 50%;
   min-width: calc(var(--u) * 44);
   padding: calc(var(--u) * 3.6) calc(var(--u) * 5.4) calc(var(--u) * 4);
   background: var(--surface); color: var(--texte);
   text-align: center;
-  opacity: 0; transform: translate(-50%, -47%) scale(0.96);
+  opacity: 0; transform: translateY(-47%) scale(0.96);
   transition: opacity 0.2s ease, transform 0.25s var(--sortie);
   pointer-events: none;
 }
-#osd.on { opacity: 1; transform: translate(-50%, -50%); }
+#osd.on { opacity: 1; transform: translateY(-50%); }
 #osd .ok { font-size: calc(var(--u) * 2.7); color: var(--texte-2); }
 #osd .val { font-family: var(--f-titre); font-size: calc(var(--u) * 14); line-height: 1.05; margin: calc(var(--u) * 0.8) 0 calc(var(--u) * 2.2); font-variant-numeric: tabular-nums; }
 #osd .jauge { height: calc(var(--u) * 1.1); background: var(--piste); overflow: hidden; }

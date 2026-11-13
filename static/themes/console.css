@@ -20,7 +20,7 @@ body[data-theme="console"] {
   --alerte-texte: #120403;
   text-transform: uppercase;
 }
-body[data-theme="console"].nuit { --texte: #5fae9e; --texte-2: #4a8a7d; --texte-3: #386b61; --barre: #5fae9e; --accent: #5fae9e; }
+body[data-theme="console"].nuit { --texte: #5fae9e; --texte-2: #559c8d; --texte-3: #4a8a7d; --barre: #5fae9e; --accent: #5fae9e; }
 
 /* Verre de l'afficheur : lignes de balayage fixes, aucune animation */
 body[data-theme="console"]::after {

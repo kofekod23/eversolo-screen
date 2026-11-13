@@ -38,7 +38,7 @@ body[data-theme="cadre"].nuit {
   background:
     linear-gradient(90deg, var(--fond) 0%, hsl(var(--h) calc(var(--s) * 0.38%) 8% / 0.82) 14%, transparent 46%),
     linear-gradient(0deg, hsl(var(--h) calc(var(--s) * 0.38%) 6% / 0.92) 0%, transparent 24%),
-    linear-gradient(180deg, hsl(var(--h) calc(var(--s) * 0.38%) 6% / 0.6) 0%, transparent 16%);
+    linear-gradient(180deg, hsl(var(--h) calc(var(--s) * 0.38%) 6% / 0.88) 0%, transparent 24%);
 }
 [data-theme="cadre"] .cover { transform: scale(1.03); }
 [data-theme="cadre"] .cover.on { transform: none; }
@@ -58,6 +58,8 @@ body[data-theme="cadre"].nuit {
 [data-theme="cadre"] .transport { position: relative; z-index: 1; }
 [data-theme="cadre"] .brand b { color: var(--texte); }
 [data-theme="cadre"] .clock { color: var(--texte); }
+[data-theme="cadre"] .volmini { color: var(--texte); }
+[data-theme="cadre"] .volbarre i { background: var(--texte); }
 
 /* Colonne de texte : déborde un peu sur l'image, là où le fondu la porte */
 [data-theme="cadre"] .meta { flex: 0 1 auto; max-width: min(60vw, calc(100vw - 100vh + 22vh)); }
@@ -82,7 +84,8 @@ body[data-theme="cadre"].nuit {
 [data-theme="cadre"] .filament { height: calc(var(--u) * 0.5); }
 [data-theme="cadre"] #reste { font-family: var(--f-titre); font-weight: 700; font-stretch: 112%; }
 
-[data-theme="cadre"] #osd { box-shadow: 0 40px 120px hsl(var(--h) 40% 3% / 0.7); }
+/* ici le texte est à gauche et la pochette à droite */
+[data-theme="cadre"] #osd { left: auto; right: 5vw; box-shadow: 0 40px 120px hsl(var(--h) 40% 3% / 0.7); }
 [data-theme="cadre"] #osd .val { font-weight: 800; font-stretch: 120%; letter-spacing: -0.04em; }
 [data-theme="cadre"] #panel .pname { font-weight: 800; font-stretch: 116%; letter-spacing: -0.02em; }
 [data-theme="cadre"] #idle .grande-heure { font-weight: 800; font-stretch: 125%; letter-spacing: -0.04em; }

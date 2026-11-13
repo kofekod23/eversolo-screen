@@ -5,10 +5,10 @@
 
 const $ = id => document.getElementById(id);
 const I18N = {
-  fr: { maj: "Mise à jour", maj_telechargement: "téléchargement", maj_verification: "vérification de la signature", maj_installation: "installation", playing: "En lecture", paused: "Pause", stopped: "Arrêté", waiting: "Eversolo en veille", offline: "Streamer introuvable sur le réseau", live: "En direct", muted: "Muet", volume: "Volume", next: "Ensuite", last: "Dernière écoute", hires: "Hi-Res", cd: "Qualité CD", hintArtist: "SUIV : album   VOL : défiler   INFO : fermer", hintAlbum: "SUIV : production   PRÉC : artiste   INFO : fermer", hintProd: "PRÉC : album   VOL : défiler   INFO : fermer", tracksSec: "Plages", prodSec: "Production", noAlbum: "Aucune information trouvée pour ce disque.", noProd: "Aucun crédit de production trouvé pour cette édition.", loading: "Chargement…" },
-  en: { maj: "Update", maj_telechargement: "downloading", maj_verification: "checking the signature", maj_installation: "installing", playing: "Now playing", paused: "Paused", stopped: "Stopped", waiting: "Eversolo on standby", offline: "Streamer not found on the network", live: "Live", muted: "Muted", volume: "Volume", next: "Up next", last: "Last played", hires: "Hi-Res", cd: "CD quality", hintArtist: "NEXT: album   VOL: scroll   INFO: close", hintAlbum: "NEXT: production   PREV: artist   INFO: close", hintProd: "PREV: album   VOL: scroll   INFO: close", tracksSec: "Tracks", prodSec: "Production", noAlbum: "No information found for this record.", noProd: "No production credits found for this edition.", loading: "Loading…" },
-  es: { maj: "Actualización", maj_telechargement: "descarga", maj_verification: "verificación de la firma", maj_installation: "instalación", playing: "Reproduciendo", paused: "Pausa", stopped: "Detenido", waiting: "Eversolo en espera", offline: "Streamer no encontrado en la red", live: "En directo", muted: "Silencio", volume: "Volumen", next: "A continuación", last: "Última escucha", hires: "Hi-Res", cd: "Calidad CD", hintArtist: "SIG: álbum   VOL: desplazar   INFO: cerrar", hintAlbum: "SIG: producción   ANT: artista   INFO: cerrar", hintProd: "ANT: álbum   VOL: desplazar   INFO: cerrar", tracksSec: "Pistas", prodSec: "Producción", noAlbum: "No se encontró información de este disco.", noProd: "No se encontraron créditos de producción de esta edición.", loading: "Cargando…" },
-  de: { maj: "Update", maj_telechargement: "Download", maj_verification: "Signaturprüfung", maj_installation: "Installation", playing: "Wiedergabe", paused: "Pause", stopped: "Gestoppt", waiting: "Eversolo im Standby", offline: "Streamer im Netzwerk nicht gefunden", live: "Live", muted: "Stumm", volume: "Lautstärke", next: "Als Nächstes", last: "Zuletzt gehört", hires: "Hi-Res", cd: "CD-Qualität", hintArtist: "WEITER: Album   VOL: blättern   INFO: schließen", hintAlbum: "WEITER: Produktion   ZURÜCK: Künstler   INFO: schließen", hintProd: "ZURÜCK: Album   VOL: blättern   INFO: schließen", tracksSec: "Titel", prodSec: "Produktion", noAlbum: "Keine Informationen zu diesem Album gefunden.", noProd: "Keine Produktions-Credits zu dieser Ausgabe gefunden.", loading: "Wird geladen…" }
+  fr: { maj: "Mise à jour", maj_telechargement: "téléchargement", maj_verification: "vérification de la signature", maj_installation: "installation", playing: "En lecture", paused: "Pause", stopped: "Arrêté", waiting: "Eversolo en veille", offline: "Streamer introuvable sur le réseau", sansPi: "Écran sans réponse du Pi, nouvel essai…", live: "En direct", muted: "Muet", volume: "Volume", next: "Ensuite", last: "Dernière écoute", hires: "Hi-Res", cd: "Qualité CD", hintArtist: "SUIV : album   VOL : défiler   INFO : fermer", hintAlbum: "SUIV : production   PRÉC : artiste   INFO : fermer", hintProd: "PRÉC : album   VOL : défiler   INFO : fermer", tracksSec: "Plages", prodSec: "Production", noAlbum: "Aucune information trouvée pour ce disque.", noProd: "Aucun crédit de production trouvé pour cette édition.", loading: "Chargement…" },
+  en: { maj: "Update", maj_telechargement: "downloading", maj_verification: "checking the signature", maj_installation: "installing", playing: "Now playing", paused: "Paused", stopped: "Stopped", waiting: "Eversolo on standby", offline: "Streamer not found on the network", sansPi: "No answer from the Pi, retrying…", live: "Live", muted: "Muted", volume: "Volume", next: "Up next", last: "Last played", hires: "Hi-Res", cd: "CD quality", hintArtist: "NEXT: album   VOL: scroll   INFO: close", hintAlbum: "NEXT: production   PREV: artist   INFO: close", hintProd: "PREV: album   VOL: scroll   INFO: close", tracksSec: "Tracks", prodSec: "Production", noAlbum: "No information found for this record.", noProd: "No production credits found for this edition.", loading: "Loading…" },
+  es: { maj: "Actualización", maj_telechargement: "descarga", maj_verification: "verificación de la firma", maj_installation: "instalación", playing: "Reproduciendo", paused: "Pausa", stopped: "Detenido", waiting: "Eversolo en espera", offline: "Streamer no encontrado en la red", sansPi: "El Pi no responde, nuevo intento…", live: "En directo", muted: "Silencio", volume: "Volumen", next: "A continuación", last: "Última escucha", hires: "Hi-Res", cd: "Calidad CD", hintArtist: "SIG: álbum   VOL: desplazar   INFO: cerrar", hintAlbum: "SIG: producción   ANT: artista   INFO: cerrar", hintProd: "ANT: álbum   VOL: desplazar   INFO: cerrar", tracksSec: "Pistas", prodSec: "Producción", noAlbum: "No se encontró información de este disco.", noProd: "No se encontraron créditos de producción de esta edición.", loading: "Cargando…" },
+  de: { maj: "Update", maj_telechargement: "Download", maj_verification: "Signaturprüfung", maj_installation: "Installation", playing: "Wiedergabe", paused: "Pause", stopped: "Gestoppt", waiting: "Eversolo im Standby", offline: "Streamer im Netzwerk nicht gefunden", sansPi: "Keine Antwort vom Pi, neuer Versuch…", live: "Live", muted: "Stumm", volume: "Lautstärke", next: "Als Nächstes", last: "Zuletzt gehört", hires: "Hi-Res", cd: "CD-Qualität", hintArtist: "WEITER: Album   VOL: blättern   INFO: schließen", hintAlbum: "WEITER: Produktion   ZURÜCK: Künstler   INFO: schließen", hintProd: "ZURÜCK: Album   VOL: blättern   INFO: schließen", tracksSec: "Titel", prodSec: "Produktion", noAlbum: "Keine Informationen zu diesem Album gefunden.", noProd: "Keine Produktions-Credits zu dieser Ausgabe gefunden.", loading: "Wird geladen…" }
 };
 
 const DECOUVERTE_MS = 9000;    // durée d'une fiche
@@ -62,6 +62,7 @@ function relancer(el, classe) {
 const RELEVE_MAX_MS = 4000;     // délai maximal d'un relevé
 const RATES_TOLERES = 3;        // relevés manqués avant d'afficher « introuvable »
 let rates = 0;
+let gelA = 0;                   // instant du premier relevé manqué : la progression s'y fige
 
 async function relever() {
   const arret = new AbortController();
@@ -84,8 +85,10 @@ async function poll() {
     rates = 0;
   } catch (e) {
     rates += 1;
+    if (rates === 1) gelA = performance.now();
     if (state && rates < RATES_TOLERES) return;  // un raté isolé ne vide pas l'écran
-    recu = { connected: false };
+    // le serveur du Pi ne répond plus : ce n'est pas le streamer qui manque
+    recu = { connected: false, sansPi: true };
   }
   if (recu.setup) { location = "/setup"; return; }
   if (recu.lang && I18N[recu.lang]) {
@@ -336,7 +339,7 @@ function render() {
     fermerVolet();
     $("stage").classList.add("pause", "arret");
     $("ensuite").classList.remove("on");
-    texte("idleMsg", s && s.connected ? L.waiting : L.offline);
+    texte("idleMsg", s && s.connected ? L.waiting : s && s.sansPi ? L.sansPi : L.offline);
     texte("derniere", derniereEcoute ? `${L.last} : ${derniereEcoute}` : "");
     renderVolume(s && s.volume);
     return;
@@ -465,7 +468,9 @@ function tick() {
       $("ensuite").classList.remove("on");
     } else if (s.duration > 0) {
       let pos = s.position;
-      if (s.etat === "lecture" || (!s.etat && s.playing)) pos += (maintenantMs - receivedAt) / 1000;
+      // relevés manqués : on n'avance pas une lecture dont on ne sait plus rien
+      const jusqua = rates > 0 ? gelA : maintenantMs;
+      if (s.etat === "lecture" || (!s.etat && s.playing)) pos += Math.max(0, jusqua - receivedAt) / 1000;
       pos = Math.min(pos, s.duration);
       const frac = pos / s.duration;
       $("glow").style.transform = `scaleX(${frac})`;

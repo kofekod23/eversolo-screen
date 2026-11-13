@@ -2965,6 +2965,10 @@ def etat_de_repli(panne_reseau):
         "connected": False,
         "lang": CONFIG.get("language", "fr"),
         "server_time": time.time(),
+        # l'écran de repos garde l'interface réglée et voit passer les mises à jour
+        "display": affichage.reglages_affichage(CONFIG),
+        "rev": LOCAL_REV,
+        "maj": maj_en_cours() if requete_locale() else None,
     })
 
 

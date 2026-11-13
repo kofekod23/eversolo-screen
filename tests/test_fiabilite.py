@@ -218,3 +218,19 @@ def test_echec_d_ecriture_des_fiches_est_journalise(srv, monkeypatch, capsys):
     monkeypatch.setattr(srv, "FICHIER_FICHES", os.path.join(str(srv.DATA_DIR), "absent", "fiches.json"))
     srv.sauver_fiches()
     assert "fiches" in capsys.readouterr().out
+
+
+# ------------------------------------------------------ écran de repos
+
+def test_streamer_absent_garde_l_interface_choisie(configure, local, monkeypatch):
+    """Sans streamer dès l'allumage, l'écran de repos doit quand même connaître
+    l'interface et le mode nuit réglés, sinon il retombe sur ceux par défaut."""
+    configure.CONFIG["ecran_theme"] = "cadre"
+
+    def panne(url, *a, **k):
+        raise OSError("réseau coupé")
+    monkeypatch.setattr(configure.http, "get", panne)
+    e = local.get("/api/state").get_json()
+    assert e["connected"] is False
+    assert e["display"]["theme"] == "cadre"
+    assert e["rev"] == configure.LOCAL_REV
